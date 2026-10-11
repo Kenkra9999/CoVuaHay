@@ -1,0 +1,49 @@
+{
+  "_framework-17oI_uPK.js": {
+    "file": "CoVuaHay/_next/static/chunks/framework-17oI_uPK.js",
+    "name": "framework",
+    "imports": [
+      "_rolldown-runtime-BHFcRGel.js"
+    ]
+  },
+  "_rolldown-runtime-BHFcRGel.js": {
+    "file": "CoVuaHay/_next/static/chunks/rolldown-runtime-BHFcRGel.js",
+    "name": "rolldown-runtime"
+  },
+  "app/chess-app.tsx": {
+    "file": "CoVuaHay/_next/static/chunks/chess-app-B_SWHXML.js",
+    "name": "chess-app",
+    "src": "app/chess-app.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-BHFcRGel.js",
+      "_framework-17oI_uPK.js"
+    ]
+  },
+  "node_modules/vinext/dist/shims/layout-segment-context.js": {
+    "file": "CoVuaHay/_next/static/chunks/layout-segment-context-Dl5r7sB9.js",
+    "name": "layout-segment-context",
+    "src": "node_modules/vinext/dist/shims/layout-segment-context.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-BHFcRGel.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-17oI_uPK.js"
+    ]
+  },
+  "virtual:vinext-app-browser-entry": {
+    "file": "CoVuaHay/_next/static/chunks/index-B1xxNLCJ.js",
+    "name": "index",
+    "src": "virtual:vinext-app-browser-entry",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-BHFcRGel.js",
+      "_framework-17oI_uPK.js"
+    ],
+    "dynamicImports": [
+      "virtual:vinext-app-browser-entry",
+      "app/chess-app.tsx",
+      "node_modules/vinext/dist/shims/layout-segment-context.js"
+    ]
+  }
+}

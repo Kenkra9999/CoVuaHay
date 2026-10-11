@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Black rook">
+  <defs>
+    <linearGradient id="metal" x1="20" y1="18" x2="79" y2="79" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#789b95"/><stop offset=".32" stop-color="#3b5e64"/><stop offset=".68" stop-color="#1b353e"/><stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+    <linearGradient id="trim" x1="29" y1="30" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b9d4cd"/><stop offset=".4" stop-color="#78c8bd"/><stop offset=".7" stop-color="#b9d4cd"/><stop offset="1" stop-color="#78c8bd"/>
+    </linearGradient>
+    <linearGradient id="plinth" x1="27" y1="75" x2="73" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3b5e64"/><stop offset=".38" stop-color="#789b95"/><stop offset=".7" stop-color="#1b353e"/><stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+    <style>.gleam{fill:none;stroke:#b7ddd3;stroke-width:2.2;stroke-linecap:round;stroke-opacity:.72}</style>
+  </defs>
+  <ellipse cx="50" cy="89" rx="28" ry="4" fill="#07151c" opacity=".24"/>
+  <g stroke="#88aaa6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M29 20h11v10h6V20h8v10h6V20h11v23H29Z" fill="url(#metal)"/><path d="M32 43h36v9H32z" fill="url(#trim)"/><path d="M37 52h26l4 24H33Z" fill="url(#metal)"/><path d="M41 56 39 71m10-15v15m10-15 2 15" fill="none" stroke="#0a1c24" stroke-opacity=".38" stroke-width="2"/><path d="M33 24v14m9 17-2 15" class="gleam"/><path d="M34 39h32" fill="none" stroke="#b9d4cd" stroke-opacity=".5" stroke-width="1.5"/>
+    <path d="M32 75h36l3 6H29Z" fill="url(#trim)"/>
+    <path d="M29 81h42l5 6v3H24v-3Z" fill="url(#plinth)"/>
+    <path d="M30 85h40" fill="none" stroke="#b9d4cd" stroke-width="1.6" stroke-opacity=".75"/>
+  </g>
+</svg>
