@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme:light only" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path stroke-linejoin="miter" d="M22.5 11.6V6"/><path fill="#000" stroke-linecap="butt" stroke-linejoin="miter" d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path fill="#000" d="M11.5 37a22.3 22.3 0 0 0 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10z"/><path stroke-linejoin="miter" d="M20 8h5"/><path stroke="#ececec" d="M32 29.5s8.5-4 6-9.7C34.1 14 25 18 22.5 24.6v2.1-2.1C20 18 9.9 14 7 19.9c-2.5 5.6 4.8 9 4.8 9"/><path stroke="#ececec" d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Black king">
+  <defs>
+    <linearGradient id="metal" x1="20" y1="18" x2="79" y2="79" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#789b95"/><stop offset=".32" stop-color="#3b5e64"/><stop offset=".68" stop-color="#1b353e"/><stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+    <linearGradient id="trim" x1="29" y1="30" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b9d4cd"/><stop offset=".4" stop-color="#78c8bd"/><stop offset=".7" stop-color="#b9d4cd"/><stop offset="1" stop-color="#78c8bd"/>
+    </linearGradient>
+    <linearGradient id="plinth" x1="27" y1="75" x2="73" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3b5e64"/><stop offset=".38" stop-color="#789b95"/><stop offset=".7" stop-color="#1b353e"/><stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+    <style>.gleam{fill:none;stroke:#b7ddd3;stroke-width:2.2;stroke-linecap:round;stroke-opacity:.72}</style>
+  </defs>
+  <ellipse cx="50" cy="89" rx="28" ry="4" fill="#07151c" opacity=".24"/>
+  <g stroke="#88aaa6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46 10h8v9h9v8h-9v10h-8V27h-9v-8h9Z" fill="url(#trim)"/><path d="M35 38c4-6 10-4 15 0 5-4 11-6 15 0 6 8 2 14-3 19H38c-5-5-9-11-3-19Z" fill="url(#metal)"/><path d="M37 56h26v8H37z" fill="url(#trim)"/><path d="M42 64h16c1 4 4 8 9 12H33c5-4 8-8 9-12Z" fill="url(#metal)"/><path d="M39 39c-4 4-2 8 1 12m8-37v10" class="gleam"/><path d="m50 43-4 6 4 5 4-5Z" fill="url(#trim)" stroke-width="1.2"/>
+    <path d="M32 75h36l3 6H29Z" fill="url(#trim)"/>
+    <path d="M29 81h42l5 6v3H24v-3Z" fill="url(#plinth)"/>
+    <path d="M30 85h40" fill="none" stroke="#b9d4cd" stroke-width="1.6" stroke-opacity=".75"/>
+  </g>
+</svg>

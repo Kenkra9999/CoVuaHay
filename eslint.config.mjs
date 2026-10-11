@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "public/engine/**",
+    ".wrangler/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

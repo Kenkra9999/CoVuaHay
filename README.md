@@ -1,6 +1,6 @@
-# Nước Cờ
+# Nước Cờ — The Chess Atelier
 
-Webapp cờ vua với nền chiến trường phủ toàn màn hình, bàn cờ xanh ngọc / đá đêm và menu ba gạch thu gọn. Chơi với Stockfish, trên cùng một thiết bị hoặc cùng bạn bè qua mã phòng 6 ký tự. Giao diện hỗ trợ chuột, bàn phím và thao tác chạm/kéo trên điện thoại.
+Ứng dụng cờ vua với bàn cờ tự co giãn, 12 quân cờ SVG ánh kim và sáu không gian màu. Chơi với Stockfish, hai người trên cùng thiết bị hoặc online bằng mã phòng. Hỗ trợ chuột, bàn phím, chạm và kéo quân trên điện thoại.
 
 ## Chạy trên máy
 
@@ -11,34 +11,49 @@ npm install
 npm run dev
 ```
 
-Mở địa chỉ mà lệnh `npm run dev` in ra, thường là `http://localhost:3000`. Bản chạy trên `localhost` chỉ dùng được trên máy của bạn. Để bạn bè chơi qua Internet, cần đưa ứng dụng cùng cơ sở dữ liệu D1 lên máy chủ.
+Mở địa chỉ mà lệnh in ra, thường là http://localhost:3000. Online qua Internet cần bản triển khai Worker với cơ sở dữ liệu D1; localhost chỉ dùng trên máy đang chạy ứng dụng.
+
+Schema nằm trong `db/schema.ts`, migration trong `drizzle/`. Áp dụng migration vào D1 trước khi chạy các API phòng. API không tự thay đổi schema. Sites quản lý migration cho bản triển khai theo binding `DB` trong `.openai/hosting.json`. Với server local, dùng Wrangler D1 và các tệp SQL trong `drizzle/`, áp dụng mỗi migration một lần theo thứ tự. Dữ liệu local dùng thư mục `.wrangler/state`.
+
+## Chơi và khám phá
+
+- **Đấu với AI:** Stockfish WASM chạy trên thiết bị, bốn mức từ dễ đến kỳ thủ. Chọn cầm Trắng hoặc Đen, hoàn tác và tiếp tục ván sau khi tải lại.
+- **Cùng thiết bị:** hai người luân phiên đi quân, sửa tên ngay trên thẻ người chơi. Ván được lưu trên trình duyệt.
+- **Trợ lý AI:** ba phương án, mũi tên gợi ý, đánh giá lợi thế, biến dự kiến và phân tích sâu. Đánh giá dương có lợi cho Trắng; `M` là khoảng cách chiếu hết dự kiến. Gợi ý cũng dùng được trong phòng online.
+- **Biên bản:** xem lại từng nước, trở về ván trực tiếp, sao chép FEN và tải PGN có tên người chơi.
+- **Không gian:** sáu chủ đề, bốn màu bàn, hiệu ứng nền, âm thanh, xoay bàn và toàn màn hình. Các lựa chọn được lưu sau khi tải lại.
+
+## Phòng online
+
+1. Chọn **Tạo phòng**, nhập tên và kéo thanh thời gian: 5–100 phút **mỗi bên**, tối đa 60–300 giây **mỗi nước**. Đồng hồ chưa chạy khi đang đợi người thứ hai.
+2. Chia sẻ mã sáu ký tự hoặc link mời. Người tạo cầm Trắng; người đầu tiên vào bằng mã nhận Đen. Phòng đủ hai ghế thì người đến sau chỉ xem.
+3. Người chơi sửa tên trực tiếp trên thẻ của mình. Máy còn lại nhận tên mới qua lần đồng bộ tiếp theo, thường trong khoảng một giây khi trang đang mở.
+4. Nước đi được máy chủ kiểm tra, lưu và đồng bộ; mỗi ghế có token riêng. Có đề nghị hòa, chấp nhận/từ chối, thu hồi đề nghị và xin thua.
+5. Tải lại hoặc mở lại trên **cùng trình duyệt còn dữ liệu lưu** sẽ khôi phục phòng và ghế. Cũng có thể nhập lại mã, mở link hoặc chọn phòng gần đây. Mã phòng chỉ xác định trận; quyền ghế đã có được khôi phục bằng token trên trình duyệt.
+6. Đồng hồ dựa trên thời gian máy chủ và tiếp tục chạy khi đóng trang. Hết thời gian tổng hoặc giới hạn một nước đều xử thua; khi quay lại sẽ thấy kết quả **Bạn đã thua do quá giờ**. Kết quả được ghi vào D1 khi có yêu cầu tiếp theo, kể cả khi cả hai đã đóng trang.
+
+Nếu đổi thiết bị, dùng trình duyệt riêng tư hoặc xóa dữ liệu trình duyệt, mã mời không chuyển quyền một ghế đã có người giữ. Cần giữ dữ liệu trình duyệt cũ để tiếp tục chơi ghế đó. Người được mời cũng cần quyền mở website nếu website đang ở chế độ riêng tư.
+
+## Kiểm tra
 
 ```bash
 npm test
 ```
 
-Lệnh trên kiểm tra engine cục bộ, Stockfish WASM thực (ba biến hợp lệ, ba mức độ, chiếu hết, chuẩn hóa đánh giá theo quân trắng và hủy tìm kiếm), TypeScript, bản build và worker. `npm run db:generate` tạo migration khi thay đổi `db/schema.ts`.
+Kiểm tra engine cục bộ, Stockfish WASM thật, đồng hồ và biên thời gian, TypeScript, build và worker.
 
-## Cách chơi
+Các kiểm tra API cần một server local đang chạy:
 
-- Nút ba gạch ở góc trái mở menu chọn chế độ, độ khó và màu quân. Đóng bằng nút ×, phím Escape hoặc bấm ra ngoài ngăn kéo.
-- “Đấu với AI” dùng Stockfish 19 bản lite WASM chạy trong Web Worker, không cần API key. Có ba mức Dễ / Vừa / Khó, chọn cầm trắng hoặc đen. Ván AI không được lưu khi tải lại trang.
-- “Gợi ý nước đi” dùng Stockfish ở sức mạnh tối đa, độc lập với mức độ đối thủ. Khoanh quân cần đi và vẽ mũi tên đến ô đích, kể cả khi xoay bàn cờ. Nút mắt ẩn/hiện mũi tên; chọn một trong ba phương án để đổi gợi ý.
-- Phân tích hiển thị đánh giá lợi thế, độ sâu và chuỗi nước dự kiến của hai bên. Điểm luôn theo góc nhìn quân trắng: số dương có lợi cho trắng, số âm có lợi cho đen; `M` là số nước chiếu hết dự kiến. “Phân tích sâu” tăng thời gian tìm kiếm. Giải thích chiến thuật được tạo từ nước đi và kết quả engine; các biến là dự đoán khi hai bên đi tối ưu. Gợi ý được xóa khi thế cờ thay đổi.
-- Tệp Stockfish được phục vụ ngay từ `public/engine/` (khoảng 1,9 MB), không tải engine từ CDN khi chơi. Giấy phép và liên kết mã nguồn tương ứng nằm trong `public/engine/README.md` và `COPYING.txt`.
-- Nút biểu tượng toàn màn hình trên thanh đầu phóng ứng dụng ra toàn màn hình nếu trình duyệt hỗ trợ; trên iPhone tùy trình duyệt, bố cục vẫn tự co giãn.
-- “Chơi online” hoặc “Mời bạn chơi” tạo mã riêng. “Chia sẻ mã” sao chép mã 6 ký tự; “Sao chép link” sao chép liên kết mời. Người tạo cầm quân trắng.
-- “Nhập mã mời” luôn hiện trên thanh đầu và phần kết nối, kể cả khi đã ở một phòng. Nhập mã khác để chuyển phòng. Phòng cũ không bị xóa khi bạn rời giao diện.
-- Người thứ hai nhập mã để nhận quân đen. Phòng chỉ có hai ghế; người đến sau có thể xem ván cờ.
-- Chạm vào quân rồi chạm ô đích, hoặc kéo quân để đi. Luật cờ vua, chiếu hết, hòa và phong cấp được kiểm tra bằng `chess.js` trên cả giao diện và máy chủ.
-- Ván online được lưu trong Cloudflare D1 và đồng bộ giữa hai thiết bị khoảng mỗi 1,3 giây. Mã phòng và quyền chơi vẫn dùng được sau khi tải lại trang trên cùng trình duyệt.
+```bash
+node --test tests/rooms.integration.test.mjs tests/rooms-clock.integration.test.mjs
+```
 
-## Đưa lên mạng sau này
+Đặt `CHESS_TEST_DB` thành đường dẫn SQLite D1 local để kiểm tra cả tình huống hết giờ khi đóng trang. Fixture chỉ được dùng với server loopback và các phòng do kiểm tra tạo; không trỏ vào dữ liệu production. Không có biến này, các kiểm tra cần sửa thời gian fixture sẽ được bỏ qua.
 
-Dự án dùng vinext và Cloudflare Workers. `.openai/hosting.json` khai báo binding D1 tên `DB`; schema nằm trong `db/schema.ts`, migration trong `drizzle/`. API tự tạo bảng nếu chưa tồn tại ở lần dùng đầu tiên. Khi triển khai bằng Sites, giữ nguyên binding D1 và cấu trúc dự án. Chỉ đưa mã nguồn lên hosting tĩnh sẽ không chạy được tính năng phòng online vì các API `/api/rooms` cần Worker và D1.
+## Tài nguyên và triển khai
 
-## Ghi nhận
+Quân cờ SVG hiện tại được thiết kế riêng cho Nước Cờ. Bộ Cburnett trước đây đến từ [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces/Standard), theo [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Các ảnh xem trước và nền cũ được tạo riêng bằng ImageGen.
 
-Quân cờ Cburnett từ [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces/Standard), giấy phép [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Ảnh xem trước liên kết `public/og.png` được tạo riêng cho dự án bằng công cụ ImageGen.
+Engine [Stockfish.js](https://github.com/nmrugg/stockfish.js/tree/v19.0.1) được phân phối theo GNU GPL v3. JavaScript, WASM, giấy phép và liên kết mã nguồn tương ứng nằm trong `public/engine/`; giữ nguyên thông báo bản quyền.
 
-Nền chiến trường `public/chess-battlefield.png` được tạo riêng bằng ImageGen. Engine [Stockfish.js](https://github.com/nmrugg/stockfish.js/tree/v19.0.1) được phân phối theo GNU GPL v3; bản JavaScript và WASM giữ nguyên thông báo bản quyền của dự án gốc.
+Dự án dùng vinext và Cloudflare Workers. Khi cập nhật qua Sites, giữ nguyên project ID, binding `DB` và các migration. Hosting tĩnh không chạy được `/api/rooms` vì luồng online cần Worker và D1.

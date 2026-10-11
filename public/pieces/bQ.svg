@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" style="color-scheme:light only" width="45" height="45" viewBox="0 0 45 45"><g fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><g stroke="none"><circle cx="6" cy="12" r="2.75"/><circle cx="14" cy="9" r="2.75"/><circle cx="22.5" cy="8" r="2.75"/><circle cx="31" cy="9" r="2.75"/><circle cx="39" cy="12" r="2.75"/></g><path stroke-linecap="butt" d="M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5z"/><path stroke-linecap="butt" d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"/><path fill="none" stroke-linecap="butt" d="M11 38.5a35 35 1 0 0 23 0"/><path fill="none" stroke="#ececec" d="M11 29a35 35 1 0 1 23 0m-21.5 2.5h20m-21 3a35 35 1 0 0 22 0m-23 3a35 35 1 0 0 24 0"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Black queen">
+  <defs>
+    <linearGradient id="metal" x1="20" y1="18" x2="79" y2="79" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#789b95"/><stop offset=".32" stop-color="#3b5e64"/><stop offset=".68" stop-color="#1b353e"/><stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+    <linearGradient id="trim" x1="29" y1="30" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b9d4cd"/><stop offset=".4" stop-color="#78c8bd"/><stop offset=".7" stop-color="#b9d4cd"/><stop offset="1" stop-color="#78c8bd"/>
+    </linearGradient>
+    <linearGradient id="plinth" x1="27" y1="75" x2="73" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3b5e64"/><stop offset=".38" stop-color="#789b95"/><stop offset=".7" stop-color="#1b353e"/><stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+    <style>.gleam{fill:none;stroke:#b7ddd3;stroke-width:2.2;stroke-linecap:round;stroke-opacity:.72}</style>
+  </defs>
+  <ellipse cx="50" cy="89" rx="28" ry="4" fill="#07151c" opacity=".24"/>
+  <g stroke="#88aaa6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m27 27 13 12 10-21 10 21 13-12-8 23H35Z" fill="url(#metal)"/><path d="m39 23 2 15m18-15-2 15" fill="none" stroke="url(#trim)" stroke-width="3"/><circle cx="27" cy="24" r="4.5" fill="url(#trim)"/><circle cx="39" cy="19" r="4" fill="url(#trim)"/><circle cx="50" cy="14" r="5" fill="url(#trim)"/><circle cx="61" cy="19" r="4" fill="url(#trim)"/><circle cx="73" cy="24" r="4.5" fill="url(#trim)"/><path d="M35 50h30v8H35z" fill="url(#trim)"/><path d="M41 58h18c0 7 3 12 9 18H32c6-6 9-11 9-18Z" fill="url(#metal)"/><path d="m42 62-4 10m1-27h22" class="gleam"/><path d="m50 48-3 6 3 3 3-3Z" fill="#b7ddd3" stroke="none"/>
+    <path d="M32 75h36l3 6H29Z" fill="url(#trim)"/>
+    <path d="M29 81h42l5 6v3H24v-3Z" fill="url(#plinth)"/>
+    <path d="M30 85h40" fill="none" stroke="#b9d4cd" stroke-width="1.6" stroke-opacity=".75"/>
+  </g>
+</svg>

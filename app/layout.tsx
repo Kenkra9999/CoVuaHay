@@ -8,12 +8,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   const image = `${protocol}://${host}/og-v3.png`;
   return {
-    title: "Nước Cờ — Chiến trường cờ vua & cố vấn AI",
-    description: "Đấu Stockfish, nhận gợi ý có mũi tên và phân tích chiến thuật, hoặc mời bạn bè vào chiến trường cờ vua bằng mã phòng.",
+    title: "Nước Cờ — The Chess Atelier · AI & đấu cùng bạn",
+    description: "Bàn cờ thủ công, quân cờ ánh kim, trợ lý Stockfish và phòng đấu online có đồng hồ. Mời bạn bằng mã, đổi tên trực tiếp và tiếp tục ván sau khi tải lại.",
     icons: { icon: "/pieces/bN.svg" },
     openGraph: {
-      title: "Nước Cờ — Làm chủ chiến cuộc.",
-      description: "Đấu Stockfish · Gợi ý nước đi · Phân tích chiến thuật · Chơi cùng bạn bè.",
+      title: "Nước Cờ — Nước đi của riêng bạn.",
+      description: "Quân cờ ánh kim · Trợ lý Stockfish · Phòng đấu online · Đồng hồ và khôi phục ván.",
       type: "website",
       images: [{ url: image, width: 1733, height: 907, alt: "Nước Cờ — Làm chủ từng nước cờ" }],
     },

@@ -1,24 +1,102 @@
 import { Chess, type Move, type Square } from "chess.js";
 
-export type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty = "easy" | "medium" | "hard" | "master";
 export type AiMove = { from: Square; to: Square; promotion?: string };
 const value: Record<string, number> = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 0 };
-const limits = { easy: { depth: 1, ms: 180 }, medium: { depth: 3, ms: 650 }, hard: { depth: 4, ms: 1500 } };
+const limits: Record<Difficulty, { depth: number; ms: number }> = {
+  easy: { depth: 1, ms: 220 },
+  medium: { depth: 3, ms: 750 },
+  hard: { depth: 4, ms: 1600 },
+  master: { depth: 5, ms: 2400 }
+};
+
+const pstPawn = [
+  0,  0,  0,  0,  0,  0,  0,  0,
+  50, 50, 50, 50, 50, 50, 50, 50,
+  10, 10, 20, 30, 30, 20, 10, 10,
+   5,  5, 10, 26, 26, 10,  5,  5,
+   0,  0,  0, 22, 22,  0,  0,  0,
+   5, -5,-10,  0,  0,-10, -5,  5,
+   5, 10, 10,-24,-24, 10, 10,  5,
+   0,  0,  0,  0,  0,  0,  0,  0
+];
+
+const pstKnight = [
+  -50,-40,-30,-30,-30,-30,-40,-50,
+  -40,-20,  0,  5,  5,  0,-20,-40,
+  -30,  5, 10, 15, 15, 10,  5,-30,
+  -30,  0, 15, 20, 20, 15,  0,-30,
+  -30,  5, 15, 20, 20, 15,  5,-30,
+  -30,  0, 10, 15, 15, 10,  0,-30,
+  -40,-20,  0,  0,  0,  0,-20,-40,
+  -50,-40,-30,-30,-30,-30,-40,-50
+];
+
+const pstBishop = [
+  -20,-10,-10,-10,-10,-10,-10,-20,
+  -10,  5,  0,  0,  0,  0,  5,-10,
+  -10, 10, 10, 10, 10, 10, 10,-10,
+  -10,  0, 10, 10, 10, 10,  0,-10,
+  -10,  5,  5, 10, 10,  5,  5,-10,
+  -10,  0,  5, 10, 10,  5,  0,-10,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -20,-10,-10,-10,-10,-10,-10,-20
+];
+
+const pstRook = [
+   0,  0,  0,  5,  5,  0,  0,  0,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+   5, 12, 12, 12, 12, 12, 12,  5,
+   0,  0,  0,  0,  0,  0,  0,  0
+];
+
+const pstQueen = [
+  -20,-10,-10, -5, -5,-10,-10,-20,
+  -10,  0,  5,  0,  0,  0,  0,-10,
+  -10,  5,  5,  5,  5,  5,  0,-10,
+    0,  0,  5,  5,  5,  5,  0, -5,
+   -5,  0,  5,  5,  5,  5,  0, -5,
+  -10,  0,  5,  5,  5,  5,  0,-10,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -20,-10,-10, -5, -5,-10,-10,-20
+];
+
+const pstKing = [
+   20, 30, 10,  0,  0, 10, 30, 20,
+   20, 20,  0,  0,  0,  0, 20, 20,
+  -10,-20,-20,-20,-20,-20,-20,-10,
+  -20,-30,-30,-40,-40,-30,-30,-20,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30
+];
+
+const pstMap: Record<string, number[]> = {
+  p: pstPawn,
+  n: pstKnight,
+  b: pstBishop,
+  r: pstRook,
+  q: pstQueen,
+  k: pstKing
+};
 
 function evaluate(game: Chess) {
   let score = 0;
-  for (const row of game.board()) for (const piece of row) {
-    if (!piece) continue;
-    const file = piece.square.charCodeAt(0) - 97;
-    const rank = Number(piece.square[1]) - 1;
-    const progress = piece.color === "w" ? rank : 7 - rank;
-    const center = 7 - Math.abs(file - 3.5) - Math.abs(rank - 3.5);
-    const positional = piece.type === "p" ? progress * 9 + center * 3
-      : piece.type === "n" ? center * 15
-      : piece.type === "b" ? center * 8
-      : piece.type === "k" ? (progress < 2 && (file < 3 || file > 4) ? 25 : -center * 3)
-      : piece.type === "r" ? progress * 2 : center * 3;
-    score += (piece.color === "w" ? 1 : -1) * (value[piece.type] + positional);
+  for (const row of game.board()) {
+    for (const piece of row) {
+      if (!piece) continue;
+      const file = piece.square.charCodeAt(0) - 97;
+      const rank = Number(piece.square[1]) - 1;
+      const table = pstMap[piece.type];
+      const tableIdx = piece.color === "w" ? (7 - rank) * 8 + file : rank * 8 + file;
+      const positional = table ? table[tableIdx] : 0;
+      score += (piece.color === "w" ? 1 : -1) * (value[piece.type] + positional);
+    }
   }
   return score * (game.turn() === "w" ? 1 : -1);
 }
@@ -26,9 +104,12 @@ function evaluate(game: Chess) {
 function ordered(game: Chess): Move[] {
   return game.moves({ verbose: true }).sort((a, b) => priority(b) - priority(a));
 }
+
 function priority(move: Move) {
-  return (move.captured ? 10 * value[move.captured] - value[move.piece] : 0)
-    + (move.promotion ? value[move.promotion] : 0) + (move.san.includes("+") ? 35 : 0);
+  return (move.captured ? 15 * value[move.captured] - value[move.piece] : 0)
+    + (move.promotion ? value[move.promotion] + 200 : 0)
+    + (move.san.includes("+") ? 45 : 0)
+    + (move.san.includes("#") ? 10000 : 0);
 }
 
 // Iterative deepening retains the last complete result when the time budget expires.
