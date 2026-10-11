@@ -12,12 +12,14 @@ test("deployment includes unchanged Stockfish JS, WASM and license", () => {
   assert.ok(WebAssembly.validate(wasm));
 });
 
-test("deployment includes the battlefield background", () => {
-  assert.deepEqual(readFileSync(new URL("../dist/client/chess-battlefield.png", import.meta.url)), readFileSync(new URL("../public/chess-battlefield.png", import.meta.url)));
+test("deployment includes every selectable cover and the battlefield background", () => {
+  for (const asset of ["chess-battlefield.png", "chess-duel.png", "covers/sakura.svg", "covers/frost.svg", "covers/nebula.svg"]) {
+    assert.deepEqual(readFileSync(new URL(`../dist/client/${asset}`, import.meta.url)), readFileSync(new URL(`../public/${asset}`, import.meta.url)), asset);
+  }
 });
 
-test("deployment includes all 60 pieces in the five selectable collections", () => {
-  for (const set of ["elemental", "royal", "nebula", "jade", "mecha"]) {
+test("deployment includes all 72 pieces in the six selectable collections", () => {
+  for (const set of ["sakura", "elemental", "royal", "nebula", "jade", "mecha"]) {
     for (const color of ["w", "b"]) {
       for (const kind of ["P", "N", "B", "R", "Q", "K"]) {
         const asset = `pieces/${set}/${color}${kind}.svg`;

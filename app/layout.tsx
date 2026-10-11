@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Nước Cờ — The Chess Atelier · AI & đấu cùng bạn",
     description: "Năm bộ quân độc bản: Dung nham & Băng giá, Hoàng gia, Tinh vân, Ngọc phong và Cơ giáp. Bàn cờ rộng, trợ lý Stockfish và phòng đấu online có đồng hồ.",
-    icons: { icon: "/pieces/royal/bN.svg" },
+    icons: { icon: "/pieces/sakura/bN.svg" },
     openGraph: {
       title: "Nước Cờ — Nước đi của riêng bạn.",
       description: "Năm bộ quân độc bản · Trợ lý Stockfish · Phòng đấu online · Đồng hồ và khôi phục ván.",

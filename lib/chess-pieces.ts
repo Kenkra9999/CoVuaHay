@@ -1,4 +1,5 @@
 export const PIECE_SETS = [
+  { id: "sakura", name: "Hoa anh đào", subtitle: "Thanh tao. Kiêu hãnh. Sắc bén.", white: "Bạch ngọc hồng", black: "Hắc kim anh đào", caption: "Vương miện cánh hoa, mã giáp samurai và thành quách dưới dấu ấn anh đào đỏ.", number: "06" },
   { id: "elemental", name: "Dung nham & Băng giá", subtitle: "Hai nguyên tố. Một cuộc đối đầu.", white: "Băng pha lê", black: "Dung nham", caption: "Pha lê xanh lạnh đối đầu đá núi lửa với những đường nứt rực lửa.", number: "01" },
   { id: "royal", name: "Hoàng gia", subtitle: "Thanh lịch trong từng đường nét.", white: "Ngà & vàng", black: "Hắc kim", caption: "Vương miện tinh xảo, thân quân chạm khắc và đế kim loại sang trọng.", number: "02" },
   { id: "nebula", name: "Tinh vân", subtitle: "Một ván cờ giữa các vì sao.", white: "Nguyệt bạc", black: "Tử tinh", caption: "Bạc ánh trăng và tím thiên hà, những quỹ đạo ôm lấy từng quân cờ.", number: "03" },
@@ -7,7 +8,7 @@ export const PIECE_SETS = [
 ] as const;
 
 export type PieceSetId = typeof PIECE_SETS[number]["id"];
-export const DEFAULT_PIECE_SET: PieceSetId = "royal";
+export const DEFAULT_PIECE_SET: PieceSetId = "sakura";
 export function validPieceSet(value: unknown): value is PieceSetId {
   return PIECE_SETS.some(set => set.id === value);
 }

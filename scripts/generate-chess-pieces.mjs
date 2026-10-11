@@ -74,6 +74,21 @@ const collections = {
   },
 };
 
+const flower = (x, y, size = 5) => `<g transform="translate(${x} ${y})" stroke-width=".7">${Array.from({ length: 5 }, (_, i) => `<path transform="rotate(${i * 72})" d="M0 0Q${-size} ${-size * 1.3} 0 ${-size * 2}Q${size} ${-size * 1.3} 0 0Z" fill="var(--accent)"/>`).join("")}<circle r="1.5" fill="url(#trim)"/></g>`;
+collections.sakura = {
+  white: ["#fff8f0", "#f2e3dd", "#ceaaa7", "#765563", "#795b61", "#d95776", "#ffe9c2", "#a56c52"],
+  black: ["#65616e", "#302b3c", "#171727", "#0c0c1a", "#ae7b72", "#f0657c", "#f8d7a0", "#9d614f"],
+  base: path("M29 78Q50 71 71 78L75 83L72 88Q80 89 83 94H17Q20 89 28 88L25 83Z") + path("M25 83Q50 88 75 83L72 89H28Z", "trim") + line("M22 93H78", 'stroke="var(--accent)" stroke-width="1.3"'),
+  shapes: {
+    k: path("M33 35Q50 44 67 35L70 46L61 53Q53 65 67 79H33Q47 65 39 53L30 46Z") + path("M45 5H55V15H64V24H55V36H45V24H36V15H45Z", "trim") + path("M31 43Q50 48 69 43L65 50H35Z", "trim") + line("M43 55Q45 67 40 73M57 55Q55 67 60 73", 'stroke="var(--shine)" stroke-width="1.2"') + flower(50, 63, 3.2),
+    q: path("M24 23Q30 18 34 31L39 14Q45 13 50 31Q55 13 61 14L66 31Q70 18 76 23L68 43L60 49Q53 65 67 79H33Q47 65 40 49L32 43Z") + path("M32 40Q50 44 68 40L65 48H35Z", "trim") + flower(50, 16, 3.8) + orb(26, 21, 2.5) + orb(74, 21, 2.5) + line("M45 52L43 71M55 52L57 71", 'stroke="var(--shine)" stroke-width="1.2"') + flower(50, 62, 3.4),
+    r: path("M28 26H72V40L65 47L63 67L70 79H30L37 67L35 47L28 40Z") + path("M21 22Q30 24 35 16H65Q70 24 79 22L75 30H25Z", "trim") + path("M34 10H43V19H57V10H66V25H34Z") + path("M29 37H71L66 44H34Z", "trim") + path("M43 56Q50 48 57 56V73H43Z", "trim") + line("M37 48L40 71M63 48L60 71", 'stroke="var(--shine)" stroke-width="1.2"') + flower(50, 59, 2.5),
+    b: path("M50 12Q68 27 66 40Q64 47 56 51L58 64L67 79H33L42 64L44 51Q36 47 34 40Q32 27 50 12Z") + orb(50, 9, 3) + line("M55 23L44 40", 'stroke="var(--cut)" stroke-width="4"') + path("M37 45Q50 50 63 45L60 53H40Z", "trim") + path("M36 73Q50 77 64 73L68 79H32Z", "trim") + flower(50, 64, 3.3),
+    n: path("M26 79Q30 67 40 55L29 59L17 52L20 40L38 28L43 11L54 22L62 13L65 32Q79 37 82 52Q85 67 75 79Z") + path("M62 30L72 31L69 40L78 43L73 51L82 56L74 62L79 68L70 76L69 79H58Q68 57 57 37Z", "trim") + path("M34 28L43 19L50 27L47 33Z", "trim") + line("M27 44L39 36L47 37M21 50L30 53", 'stroke="var(--cut)" stroke-width="2"') + orb(45, 38, 2.4) + flower(58, 61, 3.6) + line("M49 48Q47 62 38 73", 'stroke="var(--shine)" stroke-width="1.4"'),
+    p: `<ellipse cx="50" cy="29" rx="11" ry="12" fill="url(#body)"/>` + path("M38 41Q50 46 62 41L59 48L56 54Q53 65 63 78H37Q47 65 44 54L41 48Z") + path("M38 42Q50 45 62 42L60 49H40Z", "trim") + flower(50, 29, 3.3) + line("M46 53Q44 65 43 69", 'stroke="var(--shine)" stroke-width="1.4"') + path("M35 73Q50 77 65 73L68 79H32Z", "trim"),
+  },
+};
+
 const names = { k: "king", q: "queen", r: "rook", b: "bishop", n: "knight", p: "pawn" };
 const silhouettes = new Set();
 for (const [set, collection] of Object.entries(collections)) {

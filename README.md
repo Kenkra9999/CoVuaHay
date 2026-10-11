@@ -1,6 +1,6 @@
 # Nước Cờ — The Chess Atelier
 
-Ứng dụng cờ vua với bàn cờ rộng tự co giãn, chữ và nút dễ đọc, năm bộ quân SVG riêng cùng sáu không gian màu. Chơi với Stockfish, hai người trên cùng thiết bị hoặc online bằng mã phòng. Hỗ trợ chuột, bàn phím, chạm và kéo quân trên điện thoại.
+Ứng dụng cờ vua với bàn cờ rộng tự co giãn, chữ và nút dễ đọc, sáu bộ quân SVG riêng, năm chất liệu bàn, tám hiệu ứng nền và bốn bìa chuyển động. Hoa anh đào đỏ cùng tàn lửa là mặc định; mọi lựa chọn có thể đổi giữa ván, bật/tắt và tự lưu trên thiết bị. Chơi với Stockfish, hai người trên cùng thiết bị hoặc online bằng mã phòng. Hỗ trợ chuột, bàn phím, chạm và kéo quân trên điện thoại.
 
 ## Chạy trên máy
 

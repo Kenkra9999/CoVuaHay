@@ -4,9 +4,15 @@
 
 Ảnh người dùng cung cấp, 1672 × 941, giữ nguyên bản gốc. Banner phía trên bàn cờ sử dụng ảnh với lớp phủ tối và vị trí cắt riêng cho máy tính, điện thoại. Ảnh cũng làm nền rất nhẹ sau các bảng để giữ bàn cờ và điều khiển dễ đọc.
 
-## Năm bộ quân — `public/pieces/{set}/*.svg`
+## Sáu bộ quân — `public/pieces/{set}/*.svg`
 
-60 SVG được vẽ bằng đường vector trong `scripts/generate-chess-pieces.mjs`, tương ứng 30 thiết kế riêng của sáu loại quân trong năm bộ. Hai màu của cùng một quân giữ chung hình dáng. Hoàng gia dùng đường cong Staunton và ngà–hắc kim; Nguyên tố dùng các mảnh pha lê; Tinh vân dùng đường cong và vòng quỹ đạo; Ngọc phong dùng tháp, bệ sen và đầu mã chạm; Cơ giáp dùng giáp góc cạnh và lõi sáng. Chạy `node scripts/generate-chess-pieces.mjs` để tạo lại các tài nguyên.
+72 SVG được vẽ bằng đường vector trong `scripts/generate-chess-pieces.mjs`, tương ứng 36 thiết kế riêng của sáu loại quân trong sáu bộ. Hai màu của cùng một quân giữ chung hình dáng. Bộ Hoa anh đào mới dùng ngọc hồng, hắc kim, hoa năm cánh, thành quách và mã giáp samurai. Hoàng gia dùng đường cong Staunton; Nguyên tố dùng pha lê; Tinh vân dùng quỹ đạo; Ngọc phong dùng bệ sen; Cơ giáp dùng giáp đa giác. Chạy `node scripts/generate-chess-pieces.mjs` để tạo lại các tài nguyên.
+
+## Bìa và chuyển động
+
+`scripts/generate-chess-covers.mjs` tạo ba phong cảnh SVG gốc: Dạ anh đào, Thành băng nguyệt và Cổng tinh vân. Cùng ảnh đối đầu, bốn bìa có chuyển động pan/zoom và ánh sáng nhẹ bằng CSS, có thể tắt riêng. Tám hiệu ứng canvas chạy tối đa 30 khung/giây với mật độ thấp hơn trên điện thoại, dừng khi tab ẩn và tôn trọng tùy chọn giảm chuyển động của hệ thống. Anh đào đỏ mặc định hòa với những tàn lửa nhỏ. Năm mặt bàn có màu, vân và viền ánh sáng riêng; bật/tắt hiệu ứng cũng điều khiển ánh viền.
+
+Lựa chọn giao diện lưu trong nhóm `nuocco:boardTheme`, `nuocco:pieceSet`, `nuocco:effect`, `nuocco:particles`, `nuocco:cover` và `nuocco:coverMotion`. Tùy chọn cũ được chuyển đổi, không thay đổi dữ liệu ván đấu hoặc phòng online.
 
 ## Nền chiến trường — `public/chess-battlefield.png`
 
