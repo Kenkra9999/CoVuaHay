@@ -13,13 +13,15 @@ import { ChessAtmosphere } from "./chess-atmosphere";
 import { ChessInspiration } from "./chess-inspiration";
 import type { Difficulty } from "@/lib/chess-ai";
 import { describeMove, parseUciMove, principalVariation, searchStockfish, type EngineAnalysis, type EngineLine } from "@/lib/stockfish";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const assetUrl = (src: string) => src.startsWith("/") ? BASE_PATH + src : src;
 
 type Color = "w" | "b";
 type Mode = "ai" | "local";
 type LocalGame = { fen: string; moves: MoveRecord[]; status: RoomStatus; version: number };
 type Piece = { id: string; square: Square; color: Color; type: string };
 type OnlineGame = RoomView & { receivedAt: number };
-type Modal = "menu" | "create" | "join" | "appearance" | "pieces" | "audio" | "help" | null;
+type Modal = "menu" | "create" | "join" | "appearance" | "effects" | "pieces" | "audio" | "help" | null;
 type Appearance = VisualAppearance & { pieceSet: PieceSetId };
 type RecentRoom = { code: string; color: Color | null; name: string; savedAt: number };
 type ApiData = { room?: RoomView; token?: string; error?: string };
@@ -647,43 +649,42 @@ export default function ChessApp() {
     <ChessAtmosphere effect={appearance.effect} />
     <header className="topbar">
       <button className="brand" onClick={() => newLocal()} aria-label="Nước Cờ - Ván mới"><span className="brand-mark"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /></span><span>Nước Cờ<small>THE CHESS ATELIER</small></span></button>
-      <nav className="header-nav" aria-label="Chế độ chơi"><span className="nav-current"><span className="live-dot" /> {online ? "Đấu trường online" : aiMode ? "Không gian luyện tập" : "Cùng một bàn cờ"}</span><button onClick={() => setModal("help")}>Cách chơi</button></nav>
+      <nav className="header-style-controls" aria-label="Tùy chỉnh bàn cờ">
+        <button onClick={() => setModal("appearance")} aria-label={"Chọn bàn cờ: " + currentBoardStyle.name}>{vipBoard ? <Crown size={17} /> : <Palette size={17} />}<span><strong>Bàn cờ</strong><small>{currentBoardStyle.name}</small></span></button>
+        <button onClick={() => setModal("effects")} aria-label={"Chọn hiệu ứng: " + currentEffect.name}><Sparkles size={17} /><span><strong>Hiệu ứng</strong><small>{currentEffect.name}</small></span></button>
+        <button onClick={() => setModal("pieces")} aria-label={"Chọn bộ quân cờ: " + currentPieceSet.name}><Crown size={17} /><span><strong>Bộ quân</strong><small>{currentPieceSet.name}</small></span></button>
+      </nav>
       <div className="header-actions"><button className="header-music" aria-label="Âm nhạc và âm thanh" aria-haspopup="dialog" onClick={() => setModal("audio")}><Music2 size={18} /><span>Âm nhạc</span></button><button className="header-join" aria-label="Nhập mã mời" onClick={() => { setModal("join"); setMessage(""); }}><Hash size={16} /><span>Nhập mã mời</span></button><button className="primary-button header-create" onClick={() => setModal("create")}><Plus size={17} /><span>Tạo phòng</span></button></div>
     </header>
     <main className="arena-layout">
-      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
+      <div className="side-player side-player-left">{playerBar(topColor)}</div>
+      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={assetUrl(currentCover.image)} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
 
       <section className={"board-column theme-" + appearance.boardTheme + (vipBoard ? " board-vip" : "")} aria-label="Bàn cờ vua">
-        <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
-          <button className={!online && aiMode ? "quick-control-active" : ""} aria-label="Chơi với AI" onClick={() => newLocal("ai")}><Bot size={18} /> Đấu AI</button>
-          <button className={!online && !aiMode ? "quick-control-active" : ""} aria-label="Chơi hai người cùng máy" onClick={() => newLocal("local")}><Crown size={18} /> Cùng máy</button>
-          <button className={online ? "quick-control-active" : ""} aria-label="Tạo trận online" onClick={() => setModal("create")}><Users size={18} /> Online</button>
-        </div>
-        <div className="board-options">
-        <div className="style-toolbar"><button onClick={() => setModal("appearance")} aria-label="Chọn bàn cờ và hiệu ứng">{vipBoard ? <Crown size={16} /> : <Palette size={16} />}<span>{currentBoardStyle.name}<small>{vipBoard ? "Bàn VIP · Hiệu ứng động" : "Bàn thường · Đổi phong cách"}</small></span><ChevronRight size={15} /></button><button onClick={() => setModal("appearance")} aria-label="Đổi hiệu ứng nền"><Sparkles size={16} /><span>{currentEffect.name}<small>Chọn hiệu ứng khác</small></span><ChevronRight size={15} /></button></div>
-        <button className="collection-strip" onClick={() => setModal("pieces")} aria-label="Chọn bộ quân cờ">
-          <span className="collection-mini"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><img src={pieceImage({ color: "b", type: "n" }, appearance.pieceSet)} alt="" /></span>
-          <span><small>BỘ QUÂN ĐANG DÙNG</small><strong>{currentPieceSet.name}</strong></span><span className="collection-change">Đổi bộ quân <ChevronRight size={18} /></span>
-        </button>
-        </div>
         <div className="board-stage">
-          <div className="players-row">{playerBar(topColor)}{playerBar(orientation)}</div>
           <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": vipBoard.inset } as CSSProperties : undefined}>
-            {vipBoard && <><img className="vip-board-art" src={vipBoard.art} width={1254} height={1254} alt="" draggable={false} /><VipFrameEffects /></>}
+            {vipBoard && <><img className="vip-board-art" src={assetUrl(vipBoard.art)} width={1254} height={1254} alt="" draggable={false} /><VipFrameEffects /></>}
             <ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
             checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} dragFrom={drag?.from} boardRef={boardRef}
-            showHint={showHint} hintMove={hintMove} actions={stableBoardActions} /></div>
+            showHint={showHint} hintMove={hintMove} actions={stableBoardActions} />
           {ended && <div className="result-overlay" role="dialog" aria-labelledby="result-title" aria-describedby="result-detail"><div className="result-panel"><span className="result-crown"><Crown size={22} /></span><span className="eyebrow">KẾT THÚC VÁN ĐẤU</span><h2 id="result-title">{resultTitle}</h2><p id="result-detail">{resultDetail}</p>
             {online?.color && <div className="rematch-status"><span className={online.rematchReady.white ? "ready-dot" : ""}>{online.rematchReady.white ? "✓ " : "○ "}Trắng {online.rematchReady.white ? "đã sẵn sàng" : "đang chờ"}</span><span className={online.rematchReady.black ? "ready-dot" : ""}>{online.rematchReady.black ? "✓ " : "○ "}Đen {online.rematchReady.black ? "đã sẵn sàng" : "đang chờ"}</span></div>}
             {online && !online.color ? <p>Chỉ hai kỳ thủ trong phòng mới có thể bắt đầu đấu lại.</p> : <button className="primary-button rematch-button" disabled={busy || Boolean(online?.color && online.rematchReady[online.color === "w" ? "white" : "black"])} onClick={() => void requestRematch()}>{busy ? <LoaderCircle size={16} className="spin" /> : online?.color && online.rematchReady[online.color === "w" ? "white" : "black"] ? <Clock3 size={16} /> : <RotateCcw size={16} />}{online?.color && online.rematchReady[online.color === "w" ? "white" : "black"] ? "Đang chờ đối thủ sẵn sàng" : "Đấu lại"}</button>}
           </div></div>}
+          </div>
           <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
           <div className="board-toolbar"><div><button onClick={() => setFlipped(value => !value)} title="Xoay bàn cờ" aria-label="Xoay bàn cờ"><ArrowUpDown size={17} /></button><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => setModal("audio")} title="Âm nhạc và âm thanh" aria-label="Âm nhạc và âm thanh"><Music2 size={17} /></button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
           {reviewPly !== null && <div className="replay-controls"><button onClick={() => setReviewPly(0)} aria-label="Về đầu ván"><ChevronFirst size={16} /></button><button onClick={() => setReviewPly(Math.max(0, reviewPly - 1))} aria-label="Nước trước"><ChevronLeft size={16} /></button><span>{reviewPly} / {current.moves.length}</span><button onClick={() => setReviewPly(Math.min(current.moves.length, reviewPly + 1))} aria-label="Nước tiếp"><ChevronRight size={16} /></button><button onClick={() => { setReviewPly(null); setSelected(null); }}><ChevronLast size={16} /> Trở lại trận</button></div>}
         </div>
+        <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
+          <button className={!online && aiMode ? "quick-control-active" : ""} aria-label="Chơi với AI" onClick={() => newLocal("ai")}><Bot size={18} /> Đấu AI</button>
+          <button className={!online && !aiMode ? "quick-control-active" : ""} aria-label="Chơi hai người cùng máy" onClick={() => newLocal("local")}><Crown size={18} /> Cùng máy</button>
+          <button className={online ? "quick-control-active" : ""} aria-label="Tạo trận online" onClick={() => setModal("create")}><Users size={18} /> Online</button>
+        </div>
         <div className="board-caption"><span>ATELIER No. {currentPieceSet.number}</span><span>SÁU BỘ QUÂN · MỘT DẤU ẤN RIÊNG</span><span>64 Ô. VÔ VÀN CÂU CHUYỆN.</span></div>
       </section>
+      <div className="side-player side-player-right">{playerBar(orientation)}</div>
       <aside className="right-rail">
         <div className="tools-panel"><div className="tools-tabs" role="tablist" aria-label="Công cụ trận đấu">{(["ai", "moves", "room"] as const).map(tab => <button key={tab} role="tab" aria-selected={activeTab === tab} className={activeTab === tab ? "tab-active" : ""} onClick={() => setActiveTab(tab)}>{tab === "ai" ? <Sparkles size={15} /> : tab === "moves" ? <History size={15} /> : <Users size={15} />}{tab === "ai" ? "Trợ lý AI" : tab === "moves" ? "Biên bản" : "Phòng đấu"}</button>)}</div>
           {activeTab === "ai" && <section className="analysis-panel"><div className="engine-heading"><span className="engine-icon"><Sparkles size={22} /></span><div><h2>Một góc nhìn đi trước.</h2><span>STOCKFISH 19 <i /> CHẠY TRÊN THIẾT BỊ</span></div></div>
@@ -714,8 +715,8 @@ export default function ChessApp() {
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
     {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
-    <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
-      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
+    <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : modal === "effects" ? "Chọn hiệu ứng" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" || modal === "effects" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
+      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : modal === "effects" ? "HIỆU ỨNG CHO CUỘC CHƠI" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">
         <h2>Một chút jazz.<br /><em>Một nhịp cờ riêng.</em></h2>
         <p className="modal-description">Piano êm, bass ấm và chổi trống nhẹ. Một góc quán cà phê, ngay trên bàn cờ.</p>
@@ -752,16 +753,20 @@ export default function ChessApp() {
           <strong>{set.name}</strong><span className="set-subtitle">{set.subtitle}</span><span className="set-description">{set.caption}</span>
           <span className="set-sides"><span><i /> Trắng · {set.white}</span><span><i /> Đen · {set.black}</span></span>
         </button>)}</div><p className="collection-note"><ShieldCheck size={16} /> Hình vector sắc nét · Đổi bộ quân không làm mất ván đang chơi.</p></>}
-      {modal === "appearance" && <><h2>Thế giới trên<br /><em>64 ô cờ.</em></h2><p className="modal-description">Phối bàn cờ, bìa và chuyển động theo phong cách của bạn. Đổi ngay trong ván; nước đi và đồng hồ vẫn tiếp tục.</p>
+      {(modal === "appearance" || modal === "effects") && <><h2>{modal === "effects" ? <>Chuyển động theo<br /><em>nhịp cờ của bạn.</em></> : <>Thế giới trên<br /><em>64 ô cờ.</em></>}</h2><p className="modal-description">{modal === "effects" ? "Chọn bầu không khí bạn thích. Hiệu ứng đổi ngay trong ván cờ." : "Phối bàn cờ, bìa và chuyển động theo phong cách của bạn. Đổi ngay trong ván; nước đi và đồng hồ vẫn tiếp tục."}</p>
+        {modal === "appearance" && <>
         <section className="style-section vip-style-section"><div className="style-section-heading"><span><Crown size={16} /> BÀN VIP</span><small>5 phong cách · Viền & ô chuyển động</small></div>
           <div className="board-style-grid vip-style-grid">{VIP_BOARDS.map(item => <button key={item.id} className={"board-style-card vip-style-card theme-" + item.id} aria-label={"Bàn VIP " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}>
-            <span className="board-sample vip-sample"><img src={item.art} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
+            <span className="board-sample vip-sample"><img src={assetUrl(item.art)} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
             <strong>{item.name}</strong><small>{item.subtitle}</small><span className="vip-motion-label"><Sparkles size={11} /> Chuyển động riêng</span>
           </button>)}</div>
         </section>
         <section className="style-section"><div className="style-section-heading"><span>BÀN THƯỜNG</span><small>Chất liệu tĩnh · 5 phong cách</small></div><div className="board-style-grid">{STANDARD_BOARDS.map(item => <button key={item.id} className={"board-style-card theme-" + item.id} aria-label={"Bàn cờ " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}><span className="board-sample"><span className="sample-tiles">{Array.from({ length: 16 }, (_, i) => <i key={i} className={(Math.floor(i / 4) + i) % 2 === 0 ? "sample-light" : "sample-dark"} />)}</span><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><span className="sample-mark">{item.mark}</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
+        </>}
         <section className="style-section"><div className="style-section-heading"><span><b>02</b> CHUYỂN ĐỘNG TRONG KHÔNG GIAN</span><small>Chọn hiệu ứng cho cuộc chơi</small></div><div className="effect-grid">{ATMOSPHERES.map(item => <button key={item.id} className={"effect-card effect-" + item.id} aria-label={"Hiệu ứng " + item.name} aria-pressed={appearance.effect === item.id} onClick={() => changeEffect(item.id)}><span className="effect-mark">{item.mark}</span><span><strong>{item.name}</strong><small>{item.subtitle}</small></span>{appearance.effect === item.id && <Check size={14} />}</button>)}</div><p className="style-hint"><Flame size={13} /> Anh đào đỏ & tàn lửa là mặc định. Chọn một hiệu ứng khác để đổi không khí.</p></section>
-        <section className="style-section"><div className="style-section-heading"><span><b>03</b> BÌA CỦA CUỘC ĐẤU</span><button className="style-switch" role="switch" aria-checked={appearance.motionOn} aria-label="Bật chuyển động bìa" onClick={() => changeMotion(!appearance.motionOn)}>{appearance.motionOn ? "Chuyển động" : "Ảnh tĩnh"}<i className={appearance.motionOn ? "switch-on" : ""} /></button></div><div className="cover-scene-grid">{COVER_SCENES.map(item => <button key={item.id} className="cover-scene-card" aria-label={"Chọn bìa " + item.name} aria-pressed={appearance.cover === item.id} onClick={() => changeCover(item.id)}><span><img src={item.image} width={400} height={180} loading="lazy" alt="" />{appearance.cover === item.id && <i className="style-check"><Check size={14} /></i>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
+        {modal === "appearance" &&
+        <section className="style-section"><div className="style-section-heading"><span><b>03</b> BÌA CỦA CUỘC ĐẤU</span><button className="style-switch" role="switch" aria-checked={appearance.motionOn} aria-label="Bật chuyển động bìa" onClick={() => changeMotion(!appearance.motionOn)}>{appearance.motionOn ? "Chuyển động" : "Ảnh tĩnh"}<i className={appearance.motionOn ? "switch-on" : ""} /></button></div><div className="cover-scene-grid">{COVER_SCENES.map(item => <button key={item.id} className="cover-scene-card" aria-label={"Chọn bìa " + item.name} aria-pressed={appearance.cover === item.id} onClick={() => changeCover(item.id)}><span><img src={assetUrl(item.image)} width={400} height={180} loading="lazy" alt="" />{appearance.cover === item.id && <i className="style-check"><Check size={14} /></i>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
+        }
         <div className="studio-footer"><span><ShieldCheck size={16} /> Tự lưu trên thiết bị · Ván đấu giữ nguyên</span><button className="primary-button" onClick={() => setModal(null)}>Trở lại bàn cờ <ArrowRight size={15} /></button></div>
       </>}
       {modal === "help" && <><h2>Mỗi người một màu.<br />Cùng một nhịp chơi.</h2><div className="help-steps"><p><b>01 · Di chuyển</b>Chạm quân rồi ô đích, kéo thả, hoặc dùng Tab và Enter. Các ô hợp lệ được đánh dấu.</p><p><b>02 · Đấu cùng bạn</b>Thiết lập thời gian, tạo phòng và gửi mã. Người thứ hai nhận quân Đen. Tên được sửa ngay trên thẻ người chơi.</p><p><b>03 · Thời gian</b>Tổng thời gian chỉ trừ vào bên đang đi. Giới hạn lượt được đặt lại sau mỗi nước. Hết một trong hai là thua.</p><p><b>04 · Trở lại trận</b>Trận online lưu trên server. Trình duyệt này giữ quyền ghế của bạn; tải lại hoặc nhập lại mã để tiếp tục. Đồng hồ vẫn chạy khi đóng trang.</p><p><b>05 · Khám phá</b>Trợ lý AI tìm ba phương án. Biên bản cho phép xem lại, xuất PGN và sao chép FEN. Khi xem lại, bấm “Trở lại trận” để đi tiếp.</p></div></>}

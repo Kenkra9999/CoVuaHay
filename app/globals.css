@@ -1185,3 +1185,64 @@ button, input { -webkit-tap-highlight-color: transparent; }
   .audio-modal .modal-inner { padding: 22px 17px; }
   .audio-channel { padding: 12px; }
 }
+
+/* The three appearance choices live in the main header. */
+.topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: clamp(10px, 1.5vw, 28px); padding-inline: clamp(14px, 2vw, 36px); }
+.header-style-controls { display: flex; align-items: center; justify-self: center; width: min(100%, 670px); gap: 8px; min-width: 0; }
+.header-style-controls button { display: flex; align-items: center; min-width: 0; flex: 1 1 0; gap: 9px; padding: 7px 10px; min-height: 48px; color: var(--ink); text-align: left; border: 1px solid #c6ac8140; border-radius: 9px; background: #152326c9; }
+.header-style-controls button:hover, .header-style-controls button:focus-visible { border-color: var(--gold); background: #253431; }
+.header-style-controls button > svg { color: var(--gold-light); flex: 0 0 auto; }
+.header-style-controls button > span { display: block; min-width: 0; }
+.header-style-controls strong, .header-style-controls small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-style-controls strong { font-size: 12px; line-height: 1.2; }
+.header-style-controls small { color: var(--muted); font-size: 10px; margin-top: 3px; }
+
+/* Player cards frame the board without taking room above it. */
+.arena-layout { --board-fit: min(960px, calc(100svh - 225px)); display: grid; grid-template-columns: clamp(178px, 12vw, 226px) minmax(0, var(--board-fit)) clamp(196px, 13vw, 250px); grid-template-areas: "left board right" "hero board tools"; column-gap: clamp(12px, 1.2vw, 22px); row-gap: 12px; justify-content: center; max-width: none; padding: 10px clamp(12px, 1.5vw, 28px) 28px; align-items: start; }
+.arena-layout > .side-player-left { grid-area: left; }
+.arena-layout > .inspiration-hero { grid-area: hero; width: 100%; min-width: 0; max-width: none; margin: 0; }
+.arena-layout > .board-column { grid-area: board; min-width: 0; --board-size: min(100%, var(--board-fit)); }
+.arena-layout > .side-player-right { grid-area: right; }
+.arena-layout > .right-rail { grid-area: tools; min-width: 0; margin: 0; }
+.side-player { min-width: 0; }
+.side-player .player-card { display: grid; grid-template-columns: 38px minmax(0, 1fr); grid-template-rows: auto auto; gap: 8px; align-content: center; min-width: 0; min-height: 98px; padding: 10px; }
+.side-player .player-avatar { grid-column: 1; grid-row: 1; width: 38px; height: 42px; }
+.side-player .player-info { grid-column: 2; grid-row: 1; min-width: 0; align-self: center; }
+.side-player .player-name-line { min-width: 0; }
+.side-player .player-name, .side-player .player-name-static { min-width: 0; width: 100%; font-size: 13px; }
+.side-player .you-tag { font-size: 9px; }
+.side-player .player-detail { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 9px; }
+.side-player .captured-pieces { display: none; }
+.side-player .player-clock { grid-column: 1 / -1; grid-row: 2; display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between; gap: 5px; width: 100%; min-width: 0; padding: 6px 0 0; border-top: 1px solid var(--line); }
+.side-player .player-clock > span { font-size: clamp(24px, 2vw, 32px); line-height: 1; }
+.side-player .player-clock > small { margin: 0; font-size: 9px; }
+.board-stage { display: flex; flex-direction: column; width: min(100%, var(--board-size)); margin: 0 auto; }
+.board-stage > .board-frame { width: 100%; margin: 0 0 7px; }
+.board-frame > .result-overlay { inset: 0; width: auto; aspect-ratio: auto; }
+.board-quick-controls { margin: 14px auto 0; width: min(100%, var(--board-size)); }
+.board-caption { margin-top: 12px; }
+
+@media (max-width: 1249px) {
+  .arena-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "board board" "left right" "hero tools"; }
+  .arena-layout > .board-column { --board-size: min(100%, var(--board-fit)); }
+  .arena-layout > .inspiration-hero, .arena-layout > .right-rail { margin-top: 0; }
+  .side-player .player-card { min-height: 80px; }
+}
+@media (max-width: 1100px) {
+  .topbar { height: auto; min-height: 74px; grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; padding-block: 9px; }
+  .header-style-controls { grid-column: 1 / -1; grid-row: 2; width: 100%; justify-self: stretch; }
+  .header-actions { grid-column: 2; grid-row: 1; }
+  .brand { grid-column: 1; grid-row: 1; }
+  .header-style-controls button { justify-content: center; min-height: 39px; padding: 5px 9px; }
+  .header-style-controls small { display: none; }
+}
+@media (max-width: 700px) {
+  .arena-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "board" "right" "tools" "left" "hero"; padding: 8px 10px 24px; gap: 10px; }
+  .arena-layout > .board-column, .arena-layout > .inspiration-hero, .arena-layout > .right-rail { width: 100%; }
+  .side-player .player-card { min-height: 72px; }
+  .board-quick-controls { display: flex; }
+  .header-style-controls { gap: 5px; }
+  .header-style-controls button { gap: 5px; font-size: 11px; padding-inline: 5px; }
+  .header-style-controls button > svg { width: 15px; height: 15px; }
+  .header-style-controls strong { font-size: 10px; }
+}

@@ -12,6 +12,8 @@ export const DEFAULT_PIECE_SET: PieceSetId = "sakura";
 export function validPieceSet(value: unknown): value is PieceSetId {
   return PIECE_SETS.some(set => set.id === value);
 }
+const BASE_PATH = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_PATH ? process.env.NEXT_PUBLIC_BASE_PATH : "";
+
 export function pieceImage(piece: { color: string; type: string }, set: PieceSetId = DEFAULT_PIECE_SET) {
-  return "/pieces/" + set + "/" + piece.color + piece.type.toUpperCase() + ".svg";
+  return BASE_PATH + "/pieces/" + set + "/" + piece.color + piece.type.toUpperCase() + ".svg";
 }

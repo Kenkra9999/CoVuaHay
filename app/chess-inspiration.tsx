@@ -3,6 +3,8 @@
 
 import { Menu, Pause, Play } from "lucide-react";
 import { memo, useEffect, useState } from "react";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const assetUrl = (src: string) => src.startsWith("/") ? BASE_PATH + src : src;
 
 const quotes = [
   { lead: "Đừng để xuất phát điểm quyết định bạn là ai,", rest: "bởi giá trị của một con người nằm ở những gì họ có thể trở thành" },
@@ -30,7 +32,7 @@ export const ChessInspiration = memo(function ChessInspiration({ knight, scene, 
   }, [motion, paused, active]);
 
   return <section className="inspiration-hero" aria-label="Cảm hứng trước mỗi nước đi">
-    <img className="inspiration-scene" src={scene} alt="" aria-hidden="true" />
+    <img className="inspiration-scene" src={assetUrl(scene)} alt="" aria-hidden="true" />
     <div className="inspiration-top">
       <button className="inspiration-collection" onClick={onCollection}><img src={knight} width={44} height={50} alt="" /><span>ATELIER COLLECTION<small>BỘ QUÂN CỜ ĐỘC BẢN</small></span></button>
       <button className="game-menu-toggle" onClick={onMenu} aria-label="Mở menu cuộc chơi" aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="game-menu-dialog"><Menu size={24} /><span>Cuộc chơi</span></button>
@@ -42,6 +44,6 @@ export const ChessInspiration = memo(function ChessInspiration({ knight, scene, 
       </div>
       <div className="inspiration-controls"><div className="quote-dots" aria-label="Chọn câu nói">{quotes.map((_, index) => <button key={index} aria-label={"Câu nói " + (index + 1)} aria-pressed={index === active} onClick={() => setActive(index)}><span /></button>)}</div><span className="quote-count">0{active + 1} <i>/</i> 02</span>{motion && <button className="quote-pause" aria-label={paused ? "Tiếp tục luân phiên câu nói" : "Tạm dừng luân phiên câu nói"} aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? <Play size={13} /> : <Pause size={13} />}</button>}</div>
     </div>
-    <figure className="inspiration-art"><img src="/chess-becoming.png" width={720} height={720} fetchPriority="high" alt="Quân tốt vàng trên bàn cờ, phía sau là bóng hình vương miện — tiềm năng trở thành của mỗi người." /><figcaption><span /> TIỀM NĂNG KHÔNG CÓ GIỚI HẠN</figcaption></figure>
+    <figure className="inspiration-art"><img src={assetUrl("/chess-becoming.png")} width={720} height={720} fetchPriority="high" alt="Quân tốt vàng trên bàn cờ, phía sau là bóng hình vương miện — tiềm năng trở thành của mỗi người." /><figcaption><span /> TIỀM NĂNG KHÔNG CÓ GIỚI HẠN</figcaption></figure>
   </section>;
 });

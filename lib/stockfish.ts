@@ -56,7 +56,8 @@ export function searchStockfish(moves: AiMove[], options: EngineOptions = {}): P
   return new Promise((resolve, reject) => {
     if (options.signal?.aborted) { reject(new DOMException("Cancelled", "AbortError")); return; }
     let worker: Worker;
-    try { worker = new Worker("/engine/stockfish-19-lite-single.js"); }
+    const basePath = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_PATH ? process.env.NEXT_PUBLIC_BASE_PATH : "";
+    try { worker = new Worker(`${basePath}/engine/stockfish-19-lite-single.js`); }
     catch (error) { reject(error); return; }
     const game = new Chess();
     try { for (const move of moves) game.move(move); }
