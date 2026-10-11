@@ -9,7 +9,7 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "node --experimental-strip-types --test tests/chess-ai.test.mjs tests/stockfish.test.mjs tests/chess-clock.test.mjs tests/chess-appearance.test.mjs && tsc --noEmit && vinext build && node --test tests/chess-worker.test.mjs",
+    "test": "node --experimental-strip-types --test tests/chess-ai.test.mjs tests/stockfish.test.mjs tests/chess-clock.test.mjs tests/chess-appearance.test.mjs tests/chess-audio.test.mjs && tsc --noEmit && vinext build && node --test tests/chess-worker.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

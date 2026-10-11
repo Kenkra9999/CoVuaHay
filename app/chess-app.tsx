@@ -2,10 +2,11 @@
 /* eslint-disable @next/next/no-img-element -- Local vector pieces stay crisp at every board size. */
 
 import { Chess, type Square } from "chess.js";
-import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Maximize2, Minimize2, Palette, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Undo2, Users, Volume2, VolumeX, Wifi, WifiOff, X } from "lucide-react";
+import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Maximize2, Minimize2, Music2, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Undo2, Users, Volume2, VolumeX, Wifi, WifiOff, X } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type RefObject } from "react";
 import type { MoveRecord, RoomStatus, RoomView } from "@/lib/rooms";
 import { chessClock } from "@/lib/chess-clock";
+import { ChessAudio, DEFAULT_AUDIO, restoreAudio, type AudioChannel, type AudioSettings } from "@/lib/chess-audio";
 import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
 import { ATMOSPHERES, BOARD_STYLES, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
 import { ChessAtmosphere } from "./chess-atmosphere";
@@ -18,7 +19,7 @@ type Mode = "ai" | "local";
 type LocalGame = { fen: string; moves: MoveRecord[]; status: RoomStatus; version: number };
 type Piece = { id: string; square: Square; color: Color; type: string };
 type OnlineGame = RoomView & { receivedAt: number };
-type Modal = "menu" | "create" | "join" | "appearance" | "pieces" | "help" | null;
+type Modal = "menu" | "create" | "join" | "appearance" | "pieces" | "audio" | "help" | null;
 type Appearance = VisualAppearance & { pieceSet: PieceSetId };
 type RecentRoom = { code: string; color: Color | null; name: string; savedAt: number };
 type ApiData = { room?: RoomView; token?: string; error?: string };
@@ -136,7 +137,8 @@ export default function ChessApp() {
   const [selected, setSelected] = useState<Square | null>(null);
   const [promotion, setPromotion] = useState<{ from: Square; to: Square } | null>(null);
   const [flipped, setFlipped] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
+  const [audioSettings, setAudioSettings] = useState<AudioSettings>(DEFAULT_AUDIO);
+  const [audioStarted, setAudioStarted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<"ai" | "moves" | "room">("ai");
   const [reviewPly, setReviewPly] = useState<number | null>(null);
@@ -151,7 +153,7 @@ export default function ChessApp() {
   const boardRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDialogElement>(null);
   const promotionRef = useRef<HTMLDialogElement>(null);
-  const audioRef = useRef<AudioContext | null>(null);
+  const audioRef = useRef<ChessAudio | null>(null);
   const pointerRef = useRef<{ from: Square; x: number; y: number; moved: boolean } | null>(null);
   const analysisAbort = useRef<AbortController | null>(null);
   const current = online || local;
@@ -220,7 +222,7 @@ export default function ChessApp() {
     const pieceSet = stored("nuocco:pieceSet");
     setAppearance({ ...restoreVisuals(stored), pieceSet: validPieceSet(pieceSet) ? pieceSet : DEFAULT_PIECE_SET });
     const savedName = stored("nuocco:playerName") || "Kỳ thủ";
-    setProfileName(savedName); setNameDraft(savedName); setSoundOn(stored("nuocco:sound") !== "false");
+    setProfileName(savedName); setNameDraft(savedName); setAudioSettings(restoreAudio(stored("nuocco:audio:v1")));
     try {
       const recent: unknown = JSON.parse(stored("nuocco:recentRooms") || "[]");
       if (Array.isArray(recent)) setRecentRooms(recent.filter(item => item && typeof item.code === "string" && normalizeCode(item.code).length === 6).slice(0, 6));
@@ -329,18 +331,41 @@ export default function ChessApp() {
     return () => analysisAbort.current?.abort();
   }, [positionKey]);
 
-  const playSound = useCallback((capture = false) => {
-    if (!soundOn) return;
-    try {
-      const context = audioRef.current || (audioRef.current = new AudioContext());
-      void context.resume();
-      const osc = context.createOscillator(), gain = context.createGain();
-      osc.type = "sine"; osc.frequency.setValueAtTime(capture ? 420 : 650, context.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(110, context.currentTime + .09);
-      gain.gain.setValueAtTime(.055, context.currentTime); gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .12);
-      osc.connect(gain).connect(context.destination); osc.start(); osc.stop(context.currentTime + .12);
-    } catch { /* Audio is optional. */ }
-  }, [soundOn]);
+  useEffect(() => {
+    const audio = new ChessAudio();
+    audioRef.current = audio;
+    audio.setHidden(document.hidden);
+    let mounted = true;
+    const unlock = () => { void audio.unlock().then(started => { if (mounted && started) setAudioStarted(true); }); };
+    const visibility = () => audio.setHidden(document.hidden);
+    document.addEventListener("pointerdown", unlock, { capture: true, passive: true });
+    document.addEventListener("keydown", unlock, true);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      mounted = false;
+      document.removeEventListener("pointerdown", unlock, true);
+      document.removeEventListener("keydown", unlock, true);
+      document.removeEventListener("visibilitychange", visibility);
+      audio.dispose(); audioRef.current = null;
+    };
+  }, []);
+  useEffect(() => { audioRef.current?.configure(audioSettings); }, [audioSettings]);
+  function changeAudio(channel: AudioChannel | "musicEnabled", value: number | boolean) {
+    const next = restoreAudio(JSON.stringify({ ...audioSettings, [channel]: value }));
+    setAudioSettings(next); audioRef.current?.configure(next);
+    remember("nuocco:audio:v1", JSON.stringify(next));
+  }
+  const playSound = useCallback((capture = false) => { audioRef.current?.effect("placement", capture); }, []);
+  const heardOnlineMove = useRef({ code: "", count: 0 });
+  useEffect(() => {
+    const previous = heardOnlineMove.current;
+    const count = online?.moves.length || 0, code = online?.code || "";
+    heardOnlineMove.current = { code, count };
+    if (!online || !ready || restoring || previous.code !== code || count !== previous.count + 1) return;
+    const last = online.moves.at(-1)!;
+    const mover = count % 2 === 1 ? "w" : "b";
+    if (mover !== online.color) playSound(last.flags.includes("c") || last.flags.includes("e"));
+  }, [online, ready, restoring, playSound]);
 
   useEffect(() => {
     if (!ready || restoring || !aiMode || aiFailed || local.status !== "playing" || turn === humanColor) return;
@@ -456,10 +481,14 @@ export default function ChessApp() {
   function onSquareClick(square: Square) {
     if (!canMove) return;
     if (selected && legal.includes(square)) attemptMove(selected, square);
-    else setSelected(game.get(square)?.color === turn ? square : null);
+    else {
+      if (game.get(square)?.color === turn && selected !== square) audioRef.current?.effect("pickup");
+      setSelected(game.get(square)?.color === turn ? square : null);
+    }
   }
   function onPieceDown(event: PointerEvent<HTMLDivElement>, piece: Piece) {
     if (!canMove || piece.color !== turn || event.button !== 0) return;
+    audioRef.current?.effect("pickup");
     event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId);
     pointerRef.current = { from: piece.square, x: event.clientX, y: event.clientY, moved: false };
     setSelected(piece.square);
@@ -582,7 +611,7 @@ export default function ChessApp() {
     <header className="topbar">
       <button className="brand" onClick={() => newLocal()} aria-label="Nước Cờ - Ván mới"><span className="brand-mark"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /></span><span>Nước Cờ<small>THE CHESS ATELIER</small></span></button>
       <nav className="header-nav" aria-label="Chế độ chơi"><span className="nav-current"><span className="live-dot" /> {online ? "Đấu trường online" : aiMode ? "Không gian luyện tập" : "Cùng một bàn cờ"}</span><button onClick={() => setModal("help")}>Cách chơi</button></nav>
-      <div className="header-actions"><button className="header-join" onClick={() => { setModal("join"); setMessage(""); }}><Hash size={16} /><span>Nhập mã mời</span></button><button className="primary-button header-create" onClick={() => setModal("create")}><Plus size={17} /><span>Tạo phòng</span></button></div>
+      <div className="header-actions"><button className="header-music" aria-label="Âm nhạc và âm thanh" aria-haspopup="dialog" onClick={() => setModal("audio")}><Music2 size={18} /><span>Âm nhạc</span></button><button className="header-join" aria-label="Nhập mã mời" onClick={() => { setModal("join"); setMessage(""); }}><Hash size={16} /><span>Nhập mã mời</span></button><button className="primary-button header-create" onClick={() => setModal("create")}><Plus size={17} /><span>Tạo phòng</span></button></div>
     </header>
     <main className="arena-layout">
       <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
@@ -605,7 +634,7 @@ export default function ChessApp() {
             showHint={showHint} hintMove={hintMove} actions={stableBoardActions} /></div>
           <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
-          <div className="board-toolbar"><div><button onClick={() => setFlipped(value => !value)} title="Xoay bàn cờ" aria-label="Xoay bàn cờ"><ArrowUpDown size={17} /></button><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => { setSoundOn(value => !value); remember("nuocco:sound", String(!soundOn)); }} title={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}>{soundOn ? <Volume2 size={17} /> : <VolumeX size={17} />}</button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
+          <div className="board-toolbar"><div><button onClick={() => setFlipped(value => !value)} title="Xoay bàn cờ" aria-label="Xoay bàn cờ"><ArrowUpDown size={17} /></button><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => setModal("audio")} title="Âm nhạc và âm thanh" aria-label="Âm nhạc và âm thanh"><Music2 size={17} /></button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
           {reviewPly !== null && <div className="replay-controls"><button onClick={() => setReviewPly(0)} aria-label="Về đầu ván"><ChevronFirst size={16} /></button><button onClick={() => setReviewPly(Math.max(0, reviewPly - 1))} aria-label="Nước trước"><ChevronLeft size={16} /></button><span>{reviewPly} / {current.moves.length}</span><button onClick={() => setReviewPly(Math.min(current.moves.length, reviewPly + 1))} aria-label="Nước tiếp"><ChevronRight size={16} /></button><button onClick={() => { setReviewPly(null); setSelected(null); }}><ChevronLast size={16} /> Trở lại trận</button></div>}
         </div>
         <div className="board-caption"><span>ATELIER No. {currentPieceSet.number}</span><span>SÁU BỘ QUÂN · MỘT DẤU ẤN RIÊNG</span><span>64 Ô. VÔ VÀN CÂU CHUYỆN.</span></div>
@@ -641,8 +670,22 @@ export default function ChessApp() {
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
     {drag && draggedPiece && <div className="drag-piece" style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
-    <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" ? "appearance-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
-      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
+    <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
+      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
+      {modal === "audio" && <div className="audio-studio">
+        <h2>Một chút jazz.<br /><em>Một nhịp cờ riêng.</em></h2>
+        <p className="modal-description">Piano êm, bass ấm và chổi trống nhẹ. Một góc quán cà phê, ngay trên bàn cờ.</p>
+        <div className="audio-now-playing"><span className={"audio-record " + (audioStarted && audioSettings.musicEnabled && audioSettings.music > 0 ? "record-playing" : "")}><Music2 size={23} /></span><span><strong>Café jazz</strong><small>{!audioSettings.musicEnabled || audioSettings.music === 0 ? "Nhạc nền đang tắt" : audioStarted ? "Đang phát · Nhẹ nhàng & thư thái" : "Chạm vào trang để bắt đầu nghe"}</small></span><button className="audio-play" aria-label={audioSettings.musicEnabled ? "Tạm dừng nhạc nền" : "Phát nhạc nền"} aria-pressed={audioSettings.musicEnabled} onClick={() => changeAudio("musicEnabled", !audioSettings.musicEnabled)}>{audioSettings.musicEnabled ? <Pause size={18} /> : <Play size={18} />}</button></div>
+        <div className="audio-channels">{([
+          { id: "music", title: "Nhạc nền", detail: "Jazz chill · Không gian cà phê", icon: <Music2 size={18} /> },
+          { id: "pickup", title: "Nhấc quân", detail: "Một tiếng chạm thanh, mềm và nhẹ", icon: <ArrowUpDown size={18} /> },
+          { id: "placement", title: "Đặt quân", detail: "Âm gỗ ấm, gọn và có chiều sâu", icon: <Crown size={18} /> },
+        ] as const).map(channel => <section className="audio-channel" key={channel.id}>
+          <div className="audio-channel-heading"><span className="audio-channel-icon">{channel.icon}</span><label htmlFor={"audio-" + channel.id}><strong>{channel.title}</strong><small>{channel.detail}</small></label>{channel.id !== "music" && <button className="audio-preview" aria-label={"Nghe thử tiếng " + channel.title.toLowerCase()} onClick={() => audioRef.current?.effect(channel.id as "pickup" | "placement")}><Play size={12} /> Nghe thử</button>}</div>
+          <div className="audio-volume"><VolumeX size={15} /><input id={"audio-" + channel.id} type="range" min="0" max="100" step="1" value={audioSettings[channel.id]} aria-label={"Âm lượng " + channel.title.toLowerCase()} onChange={event => changeAudio(channel.id, Number(event.target.value))} style={{ "--volume": audioSettings[channel.id] + "%" } as React.CSSProperties} /><Volume2 size={15} /><output htmlFor={"audio-" + channel.id}>{audioSettings[channel.id]}%</output></div>
+        </section>)}</div>
+        <p className="audio-note">Âm lượng được lưu trên máy. Kéo về 0 để tắt riêng từng âm thanh.</p>
+      </div>}
       {modal === "menu" && <div className="game-menu-content">
 <h2 id="game-menu-title">Nước đi của bạn.<small>Chọn cuộc chơi của bạn.</small></h2>
         <section className="rail-card"><div className="section-label">CHỌN CUỘC CHƠI <Swords size={14} /></div>
