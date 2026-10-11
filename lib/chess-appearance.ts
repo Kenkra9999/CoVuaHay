@@ -24,7 +24,7 @@ export const COVER_SCENES = [
 export type BoardStyle = typeof BOARD_STYLES[number]["id"];
 export type Atmosphere = typeof ATMOSPHERES[number]["id"];
 export type CoverScene = typeof COVER_SCENES[number]["id"];
-export type VisualAppearance = { boardTheme: BoardStyle; effect: Atmosphere; cover: CoverScene; particlesOn: boolean; motionOn: boolean };
+export type VisualAppearance = { boardTheme: BoardStyle; effect: Atmosphere; cover: CoverScene; particlesOn: true; motionOn: boolean };
 export const DEFAULT_VISUALS: VisualAppearance = { boardTheme: "sakura", effect: "sakura", cover: "duel", particlesOn: true, motionOn: true };
 
 // Older palette names migrate without touching saved games or room state.
@@ -35,7 +35,7 @@ export function restoreVisuals(read: (key: string) => string | null): VisualAppe
     boardTheme: BOARD_STYLES.find(item => item.id === board)?.id || (board && legacy.get(board)) || DEFAULT_VISUALS.boardTheme,
     effect: ATMOSPHERES.find(item => item.id === read("nuocco:effect"))?.id || DEFAULT_VISUALS.effect,
     cover: COVER_SCENES.find(item => item.id === read("nuocco:cover"))?.id || DEFAULT_VISUALS.cover,
-    particlesOn: read("nuocco:particles") !== "false",
+    particlesOn: true,
     motionOn: read("nuocco:coverMotion") !== "false",
   };
 }

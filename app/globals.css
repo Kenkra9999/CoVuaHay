@@ -632,7 +632,7 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .battlefield-sakura { --bg: #1b171f; --panel: #29222c; --panel-deep: #211c26; --gold: #ddb69b; --gold-light: #f6dbc7; --teal: #d6a9b9; --line: #d4a5b822; }
 .piece-style-sakura { --gold: #dfb39a; --gold-light: #ffe1cc; --teal: #e1aebc; }
 .battlefield-sakura.site-shell { background: radial-gradient(ellipse at 70% 10%, #69344d32, transparent 56%), var(--bg); }
-.battlefield-canvas { z-index: 0; }
+.battlefield-canvas { z-index: 2; }
 .topbar, .arena-layout, .site-footer { position: relative; z-index: 1; }
 .duel-hero { z-index: 1; min-height: 304px; }
 .duel-art { animation: cover-drift 24s ease-in-out infinite alternate; transform-origin: 65% 45%; will-change: transform; }
@@ -778,7 +778,7 @@ button, input { -webkit-tap-highlight-color: transparent; }
   .studio-footer > span { font-size: 10px; }
   .style-hint { font-size: 10px; }
 }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } .battlefield-canvas, .hero-motes { display: none; } .duel-art { will-change: auto; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } .hero-motes { display: none; } .duel-art { will-change: auto; } }
 
 /* A pawn's potential: editorial typography, original artwork, and a compact game menu. */
 .inspiration-hero { position: relative; isolation: isolate; overflow: hidden; max-width: 1576px; width: calc(100% - 64px); margin: 24px auto 0; border: 1px solid #d7b78540; border-radius: 20px; background: #101719; display: grid; grid-template-columns: 1.25fr 1fr; box-shadow: 0 22px 70px -35px #000c; }
