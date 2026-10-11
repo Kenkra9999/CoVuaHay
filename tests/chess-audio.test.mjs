@@ -11,6 +11,7 @@ class Parameter {
 }
 class Node {
   gain = new Parameter(); frequency = new Parameter(); Q = new Parameter(); delayTime = new Parameter();
+  threshold = new Parameter(); knee = new Parameter(); ratio = new Parameter(); attack = new Parameter(); release = new Parameter();
   connect(target) { return target; }
   disconnect() {}
   start() { this.context.sounds++; }
@@ -28,6 +29,7 @@ function environment(t) {
     createBufferSource() { const node = new Node(); node.context = this; return node; }
     createBiquadFilter() { return new Node(); }
     createDelay() { return new Node(); }
+    createDynamicsCompressor() { return new Node(); }
     createBuffer(_, length) { return { getChannelData: () => new Float32Array(length) }; }
     async resume() { this.state = "running"; }
     async suspend() { this.state = "suspended"; }
@@ -70,7 +72,7 @@ test("muting one effect leaves the other effect and café music available", asyn
   assert.ok(context.sounds > before);
   assert.equal(timers.size, 1);
   assert.equal(context.gains[1].gain.value, 0);
-  assert.equal(context.gains[2].gain.value, .8);
+  assert.equal(context.gains[2].gain.value, 1.16);
   audio.configure({ ...DEFAULT_AUDIO, musicEnabled: false });
   assert.equal(timers.size, 0);
   assert.equal(context.gains[0].gain.value, 0);
