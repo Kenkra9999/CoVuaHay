@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ATMOSPHERES, BOARD_STYLES, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals } from "../lib/chess-appearance.ts";
+import { ATMOSPHERES, BOARD_STYLES, STANDARD_BOARDS, VIP_BOARDS, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals } from "../lib/chess-appearance.ts";
+import { access } from "node:fs/promises";
 
 test("first visit starts with red sakura, sparks and cover movement", () => {
   assert.deepEqual(restoreVisuals(() => null), DEFAULT_VISUALS);
@@ -22,9 +23,23 @@ test("old palettes migrate and invalid device preferences fall back safely", () 
   assert.equal(restoreVisuals(key => key === "nuocco:boardTheme" ? "__proto__" : null).boardTheme, "sakura");
 });
 test("every selectable appearance can be restored", () => {
-  assert.equal(BOARD_STYLES.length, 5); assert.equal(ATMOSPHERES.length, 8); assert.equal(COVER_SCENES.length, 4);
+  assert.equal(BOARD_STYLES.length, 10); assert.equal(STANDARD_BOARDS.length, 5); assert.equal(VIP_BOARDS.length, 5);
+  assert.equal(ATMOSPHERES.length, 8); assert.equal(COVER_SCENES.length, 4);
   for (const [items, key, field] of [[BOARD_STYLES, "nuocco:boardTheme", "boardTheme"], [ATMOSPHERES, "nuocco:effect", "effect"], [COVER_SCENES, "nuocco:cover", "cover"]]) {
     for (const item of items) assert.equal(restoreVisuals(storedKey => storedKey === key ? item.id : null)[field], item.id);
+  }
+});
+
+test("VIP selections have packaged artwork and preserve game and other preferences", async () => {
+  const saved = new Map([["nuocco:effect", "rain"], ["nuocco:cover", "nebula"], ["nuocco:local:v2", "saved-game"]]);
+  for (const board of VIP_BOARDS) {
+    await access(new URL("../public" + board.art, import.meta.url));
+    saved.set("nuocco:boardTheme", board.id);
+    const restored = restoreVisuals(key => saved.get(key) ?? null);
+    assert.equal(restored.boardTheme, board.id);
+    assert.equal(restored.effect, "rain");
+    assert.equal(restored.cover, "nebula");
+    assert.equal(saved.get("nuocco:local:v2"), "saved-game");
   }
 });
 

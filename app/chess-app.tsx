@@ -3,12 +3,12 @@
 
 import { Chess, type Square } from "chess.js";
 import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Maximize2, Minimize2, Music2, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Undo2, Users, Volume2, VolumeX, Wifi, WifiOff, X } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type RefObject } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from "react";
 import type { MoveRecord, RoomStatus, RoomView } from "@/lib/rooms";
 import { chessClock } from "@/lib/chess-clock";
 import { ChessAudio, DEFAULT_AUDIO, restoreAudio, type AudioChannel, type AudioSettings } from "@/lib/chess-audio";
 import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
-import { ATMOSPHERES, BOARD_STYLES, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
+import { ATMOSPHERES, BOARD_STYLES, STANDARD_BOARDS, VIP_BOARDS, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
 import { ChessAtmosphere } from "./chess-atmosphere";
 import { ChessInspiration } from "./chess-inspiration";
 import type { Difficulty } from "@/lib/chess-ai";
@@ -76,6 +76,21 @@ type BoardActions = {
   up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
   cancel: () => void;
 };
+function RoyalAura({ type }: { type: string }) {
+  if (type !== "k" && type !== "q") return null;
+  return <span className={"royal-aura aura-" + (type === "k" ? "king" : "queen")} aria-hidden="true">
+    <span className="aura-halo" /><span className="aura-orbit" /><span className="aura-seal" /><span className="aura-crown" />
+    {Array.from({ length: 6 }, (_, i) => <i key={i} className="aura-mote" style={{ "--mote-angle": i * 60 + "deg", "--mote-delay": -i * .45 + "s" } as CSSProperties} />)}
+  </span>;
+}
+function VipFrameEffects() {
+  return <span className="vip-frame-effects" aria-hidden="true"><span className="vip-rim" />
+    {Array.from({ length: 16 }, (_, i) => {
+      const side = Math.floor(i / 4), offset = 15 + (i % 4) * 23;
+      return <i key={i} style={{ left: (side === 0 || side === 2 ? offset : side === 1 ? 96 : 4) + "%", top: (side === 1 || side === 3 ? offset : side === 0 ? 4 : 96) + "%", "--spark-delay": -i * .43 + "s" } as CSSProperties} />;
+    })}
+  </span>;
+}
 const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, dragFrom, boardRef, showHint, hintMove, actions }: {
   pieces: Piece[]; moves: MoveRecord[]; orientation: Color; selected: Square | null; legal: Square[];
   checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; dragFrom?: Square;
@@ -92,6 +107,7 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
       const piece = pieces.find(item => item.square === square);
       return <button type="button" key={square} data-square={square}
         className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (square === checkKing ? " square-check" : "")}
+        style={{ "--tile-delay": -((rank * 8 + file) % 13) * .47 + "s" } as CSSProperties}
         aria-label={square + (piece ? ", " + names[piece.type] + " " + (piece.color === "w" ? "trắng" : "đen") : "")} onClick={() => actions.click(square)}>
         {file === 0 && <span className="rank-label">{square[1]}</span>}{rank === 7 && <span className="file-label">{square[0]}</span>}
         {legal.includes(square) && <span className={piece ? "legal-capture" : "legal-dot"} />}
@@ -100,10 +116,10 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
     {pieces.map(piece => {
       const file = files.indexOf(piece.square[0]), rank = 8 - Number(piece.square[1]);
       const x = orientation === "w" ? file : 7 - file, y = orientation === "w" ? rank : 7 - rank;
-      return <div key={piece.id} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
+      return <div key={piece.id} data-piece-type={piece.type} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
         style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" }}
         onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
-        <img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
+        <RoyalAura type={piece.type} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
     })}
     {showHint && hintMove && (() => {
       const from = coordinates(hintMove.from), to = coordinates(hintMove.to);
@@ -179,6 +195,7 @@ export default function ChessApp() {
   const hintMove = useMemo(() => bestLine ? parseUciMove(bestLine.pv[0]) : analysis?.result?.move, [bestLine, analysis?.result?.move]);
   const canAnalyze = !aiThinking && !busy && ready && !restoring;
   const currentBoardStyle = BOARD_STYLES.find(item => item.id === appearance.boardTheme)!;
+  const vipBoard = VIP_BOARDS.find(item => item.id === appearance.boardTheme);
   const currentCover = COVER_SCENES.find(item => item.id === appearance.cover)!;
   const currentEffect = ATMOSPHERES.find(item => item.id === appearance.effect)!;
   const currentPieceSet = PIECE_SETS.find(item => item.id === appearance.pieceSet)!;
@@ -616,20 +633,22 @@ export default function ChessApp() {
     <main className="arena-layout">
       <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
 
-      <section className={"board-column theme-" + appearance.boardTheme} aria-label="Bàn cờ vua">
+      <section className={"board-column theme-" + appearance.boardTheme + (vipBoard ? " board-vip" : "")} aria-label="Bàn cờ vua">
         <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
           <button className={!online && aiMode ? "quick-control-active" : ""} aria-label="Chơi với AI" onClick={() => newLocal("ai")}><Bot size={18} /> Đấu AI</button>
           <button className={!online && !aiMode ? "quick-control-active" : ""} aria-label="Chơi hai người cùng máy" onClick={() => newLocal("local")}><Crown size={18} /> Cùng máy</button>
           <button className={online ? "quick-control-active" : ""} aria-label="Tạo trận online" onClick={() => setModal("create")}><Users size={18} /> Online</button>
         </div>
-        <div className="style-toolbar"><button onClick={() => setModal("appearance")} aria-label="Chọn bàn cờ và hiệu ứng"><Palette size={16} /><span>{currentBoardStyle.name}<small>Bàn & hiệu ứng</small></span><ChevronRight size={15} /></button><button onClick={() => setModal("appearance")} aria-label="Đổi hiệu ứng nền"><Sparkles size={16} /><span>{currentEffect.name}<small>Chọn hiệu ứng khác</small></span><ChevronRight size={15} /></button></div>
+        <div className="style-toolbar"><button onClick={() => setModal("appearance")} aria-label="Chọn bàn cờ và hiệu ứng">{vipBoard ? <Crown size={16} /> : <Palette size={16} />}<span>{currentBoardStyle.name}<small>{vipBoard ? "Bàn VIP · Hiệu ứng động" : "Bàn thường · Đổi phong cách"}</small></span><ChevronRight size={15} /></button><button onClick={() => setModal("appearance")} aria-label="Đổi hiệu ứng nền"><Sparkles size={16} /><span>{currentEffect.name}<small>Chọn hiệu ứng khác</small></span><ChevronRight size={15} /></button></div>
         <button className="collection-strip" onClick={() => setModal("pieces")} aria-label="Chọn bộ quân cờ">
           <span className="collection-mini"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><img src={pieceImage({ color: "b", type: "n" }, appearance.pieceSet)} alt="" /></span>
           <span><small>BỘ QUÂN ĐANG DÙNG</small><strong>{currentPieceSet.name}</strong></span><span className="collection-change">Đổi bộ quân <ChevronRight size={18} /></span>
         </button>
         <div className="board-stage">
           <div className="players-row">{playerBar(topColor)}{playerBar(orientation)}</div>
-          <div className="board-frame"><ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
+          <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": vipBoard.inset } as CSSProperties : undefined}>
+            {vipBoard && <><img className="vip-board-art" src={vipBoard.art} width={1254} height={1254} alt="" draggable={false} /><VipFrameEffects /></>}
+            <ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
             checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} dragFrom={drag?.from} boardRef={boardRef}
             showHint={showHint} hintMove={hintMove} actions={stableBoardActions} /></div>
           <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
@@ -669,7 +688,7 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div className="drag-piece" style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
+    {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
     <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
       <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">
@@ -709,7 +728,13 @@ export default function ChessApp() {
           <span className="set-sides"><span><i /> Trắng · {set.white}</span><span><i /> Đen · {set.black}</span></span>
         </button>)}</div><p className="collection-note"><ShieldCheck size={16} /> Hình vector sắc nét · Đổi bộ quân không làm mất ván đang chơi.</p></>}
       {modal === "appearance" && <><h2>Thế giới trên<br /><em>64 ô cờ.</em></h2><p className="modal-description">Phối bàn cờ, bìa và chuyển động theo phong cách của bạn. Đổi ngay trong ván; nước đi và đồng hồ vẫn tiếp tục.</p>
-        <section className="style-section"><div className="style-section-heading"><span><b>01</b> CHẤT LIỆU BÀN CỜ</span><small>5 thế giới riêng</small></div><div className="board-style-grid">{BOARD_STYLES.map(item => <button key={item.id} className={"board-style-card theme-" + item.id} aria-label={"Bàn cờ " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}><span className="board-sample"><span className="sample-tiles">{Array.from({ length: 16 }, (_, i) => <i key={i} className={(Math.floor(i / 4) + i) % 2 === 0 ? "sample-light" : "sample-dark"} />)}</span><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><span className="sample-mark">{item.mark}</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
+        <section className="style-section vip-style-section"><div className="style-section-heading"><span><Crown size={16} /> BÀN VIP</span><small>5 phong cách · Viền & ô chuyển động</small></div>
+          <div className="board-style-grid vip-style-grid">{VIP_BOARDS.map(item => <button key={item.id} className={"board-style-card vip-style-card theme-" + item.id} aria-label={"Bàn VIP " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}>
+            <span className="board-sample vip-sample"><img src={item.art} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
+            <strong>{item.name}</strong><small>{item.subtitle}</small><span className="vip-motion-label"><Sparkles size={11} /> Chuyển động riêng</span>
+          </button>)}</div>
+        </section>
+        <section className="style-section"><div className="style-section-heading"><span>BÀN THƯỜNG</span><small>Chất liệu tĩnh · 5 phong cách</small></div><div className="board-style-grid">{STANDARD_BOARDS.map(item => <button key={item.id} className={"board-style-card theme-" + item.id} aria-label={"Bàn cờ " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}><span className="board-sample"><span className="sample-tiles">{Array.from({ length: 16 }, (_, i) => <i key={i} className={(Math.floor(i / 4) + i) % 2 === 0 ? "sample-light" : "sample-dark"} />)}</span><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><span className="sample-mark">{item.mark}</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
         <section className="style-section"><div className="style-section-heading"><span><b>02</b> CHUYỂN ĐỘNG TRONG KHÔNG GIAN</span><small>Chọn hiệu ứng cho cuộc chơi</small></div><div className="effect-grid">{ATMOSPHERES.map(item => <button key={item.id} className={"effect-card effect-" + item.id} aria-label={"Hiệu ứng " + item.name} aria-pressed={appearance.effect === item.id} onClick={() => changeEffect(item.id)}><span className="effect-mark">{item.mark}</span><span><strong>{item.name}</strong><small>{item.subtitle}</small></span>{appearance.effect === item.id && <Check size={14} />}</button>)}</div><p className="style-hint"><Flame size={13} /> Anh đào đỏ & tàn lửa là mặc định. Chọn một hiệu ứng khác để đổi không khí.</p></section>
         <section className="style-section"><div className="style-section-heading"><span><b>03</b> BÌA CỦA CUỘC ĐẤU</span><button className="style-switch" role="switch" aria-checked={appearance.motionOn} aria-label="Bật chuyển động bìa" onClick={() => changeMotion(!appearance.motionOn)}>{appearance.motionOn ? "Chuyển động" : "Ảnh tĩnh"}<i className={appearance.motionOn ? "switch-on" : ""} /></button></div><div className="cover-scene-grid">{COVER_SCENES.map(item => <button key={item.id} className="cover-scene-card" aria-label={"Chọn bìa " + item.name} aria-pressed={appearance.cover === item.id} onClick={() => changeCover(item.id)}><span><img src={item.image} width={400} height={180} loading="lazy" alt="" />{appearance.cover === item.id && <i className="style-check"><Check size={14} /></i>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
         <div className="studio-footer"><span><ShieldCheck size={16} /> Tự lưu trên thiết bị · Ván đấu giữ nguyên</span><button className="primary-button" onClick={() => setModal(null)}>Trở lại bàn cờ <ArrowRight size={15} /></button></div>
