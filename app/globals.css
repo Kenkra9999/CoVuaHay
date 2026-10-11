@@ -866,7 +866,7 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .arena-layout { max-width: 1640px; grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) 300px; }
 .arena-layout > .inspiration-hero { width: 100%; min-width: 0; max-width: none; margin: 0; grid-template-columns: 1fr; border-radius: 16px; }
 @media (min-width: 1250px) {
-  .arena-layout { --side-panel-offset: 160px; }
+  .arena-layout { --side-panel-offset: 96px; }
   .arena-layout > .inspiration-hero, .arena-layout > .right-rail { margin-top: var(--side-panel-offset); }
 }
 .arena-layout > .inspiration-hero .inspiration-top { padding: 18px 16px 0; gap: 8px; }
@@ -906,3 +906,7 @@ button, input { -webkit-tap-highlight-color: transparent; }
   .arena-layout > .inspiration-hero .inspiration-quote p > span { font-size: clamp(25px, 5vw, 32px); }
   .arena-layout > .inspiration-hero .inspiration-art { min-height: 280px; max-height: 390px; aspect-ratio: 1.22; }
 }
+
+/* Bring the game closer to the header after removing the board title block. */
+.arena-layout { padding-top: 14px; }
+@media (max-width: 540px) { .arena-layout { padding-top: 12px; } }
