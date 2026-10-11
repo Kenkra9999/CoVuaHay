@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Black royal king">
+<defs>
+<linearGradient id="metal" x1="20" y1="14" x2="79" y2="81" gradientUnits="userSpaceOnUse"><stop stop-color="#716052"/><stop offset=".32" stop-color="#342d28"/><stop offset=".67" stop-color="#151d21"/><stop offset="1" stop-color="#080c11"/></linearGradient>
+<linearGradient id="trim" x1="26" y1="28" x2="74" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#f4d79d"/><stop offset=".45" stop-color="#a16435"/><stop offset=".8" stop-color="#d9ad62"/><stop offset="1" stop-color="#a16435"/></linearGradient>
+<linearGradient id="facet" x1="38" y1="19" x2="64" y2="67" gradientUnits="userSpaceOnUse"><stop stop-color="#a18a6b"/><stop offset=".5" stop-color="#473c33"/><stop offset="1" stop-color="#1b252d"/></linearGradient>
+<clipPath id="surface"><path d="M29 39c4-9 15-6 21 1 6-7 17-10 21-1 6 11-1 18-7 22H36c-6-4-13-11-7-22Z" fill="#fff"/><path d="M40 67h20l8 6H32Z" fill="#fff"/></clipPath>
+<style>.spark{fill:none;stroke:#f3d5a1;stroke-width:1.7;stroke-linecap:round;stroke-opacity:.8}.edge{fill:none;stroke:#f3d5a1;stroke-width:1.1;stroke-linecap:round;stroke-opacity:.55}.detail{fill:none;stroke:#cc9148;stroke-width:2;stroke-linecap:round}</style>
+</defs>
+<ellipse cx="50" cy="95" rx="31" ry="1.7" fill="#020b12" opacity=".22"/>
+<g stroke="#a0825c" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+<path d="M45 7h10v10h10v9H55v12H45V26H35v-9h10Z" fill="url(#trim)"/><path d="M29 39c4-9 15-6 21 1 6-7 17-10 21-1 6 11-1 18-7 22H36c-6-4-13-11-7-22Z" fill="url(#metal)"/><path d="M34 40c-3 6 0 12 4 15" class="spark"/><path d="M34 60h32v7H34Z" fill="url(#trim)"/><path d="M40 67h20l8 6H32Z" fill="url(#metal)"/><path d="m50 44-6 8 6 6 6-6Z" fill="url(#trim)"/><path d="M48 10v11" class="spark"/>
+<g clip-path="url(#surface)" fill="none" stroke="#cc9148" stroke-width="1.1" opacity=".65"><path d="M50 58c-6-4-10 1-6 5l6 4 6-4c4-4 0-9-6-5m0 0v8"/></g>
+<path d="M31 70c-1 5-7 8-9 11v4h56v-4c-2-3-8-6-9-11Z" fill="url(#metal)"/><path d="M23 84h54l6 6v4H17v-4Z" fill="url(#trim)"/><path d="M29 77h42M23 88h54" class="edge"/><path d="M34 82h32" class="spark"/>
+</g>
+</svg>

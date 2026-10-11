@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="White royal knight">
+<defs>
+<linearGradient id="metal" x1="20" y1="14" x2="79" y2="81" gradientUnits="userSpaceOnUse"><stop stop-color="#fffefa"/><stop offset=".32" stop-color="#f3eddc"/><stop offset=".67" stop-color="#d4c29b"/><stop offset="1" stop-color="#8d774e"/></linearGradient>
+<linearGradient id="trim" x1="26" y1="28" x2="74" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#fff0b4"/><stop offset=".45" stop-color="#bc8537"/><stop offset=".8" stop-color="#f7d88b"/><stop offset="1" stop-color="#bc8537"/></linearGradient>
+<linearGradient id="facet" x1="38" y1="19" x2="64" y2="67" gradientUnits="userSpaceOnUse"><stop stop-color="#fffefa"/><stop offset=".5" stop-color="#d8c698"/><stop offset="1" stop-color="#a0844d"/></linearGradient>
+<clipPath id="surface"><path d="M32 72c1-7 4-13 9-18l-14 7-11-7 2-11 21-18 5-16 12 14 12-10-1 17c12 9 18 24 18 42Z" fill="#fff"/></clipPath>
+<style>.spark{fill:none;stroke:#fffdf0;stroke-width:1.7;stroke-linecap:round;stroke-opacity:.8}.edge{fill:none;stroke:#fffdf0;stroke-width:1.1;stroke-linecap:round;stroke-opacity:.55}.detail{fill:none;stroke:#c99537;stroke-width:2;stroke-linecap:round}</style>
+</defs>
+<ellipse cx="50" cy="95" rx="31" ry="1.7" fill="#020b12" opacity=".22"/>
+<g stroke="#786649" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+<path d="M32 72c1-7 4-13 9-18l-14 7-11-7 2-11 21-18 5-16 12 14 12-10-1 17c12 9 18 24 18 42Z" fill="url(#metal)"/><path d="M61 31c11 9 15 21 16 34" fill="none" stroke="url(#trim)" stroke-width="5"/><path d="M65 36c-3 14-14 18-18 32" class="spark"/><path d="m38 34 8-6m-21 22 17-9-8 12" class="detail"/><path d="m44 33 8 1-4 5-5-1Z" fill="#5d513b" stroke="none"/><circle cx="48" cy="35" r="1.2" fill="#fffdf0" stroke="none"/><path d="M39 71h35" stroke="url(#trim)" stroke-width="4"/><path d="m61 49 5 4-4 5 5 4-4 5" class="edge"/>
+<g clip-path="url(#surface)" fill="none" stroke="#c99537" stroke-width="1.1" opacity=".65"><path d="M50 58c-6-4-10 1-6 5l6 4 6-4c4-4 0-9-6-5m0 0v8"/></g>
+<path d="M31 70c-1 5-7 8-9 11v4h56v-4c-2-3-8-6-9-11Z" fill="url(#metal)"/><path d="M23 84h54l6 6v4H17v-4Z" fill="url(#trim)"/><path d="M29 77h42M23 88h54" class="edge"/><path d="M34 82h32" class="spark"/>
+</g>
+</svg>

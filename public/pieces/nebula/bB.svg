@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Black nebula bishop">
+<defs>
+<linearGradient id="metal" x1="20" y1="14" x2="79" y2="81" gradientUnits="userSpaceOnUse"><stop stop-color="#977fe7"/><stop offset=".32" stop-color="#53499f"/><stop offset=".67" stop-color="#24234e"/><stop offset="1" stop-color="#0e152a"/></linearGradient>
+<linearGradient id="trim" x1="26" y1="28" x2="74" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#ebd8ff"/><stop offset=".45" stop-color="#9397fa"/><stop offset=".8" stop-color="#bacaff"/><stop offset="1" stop-color="#9397fa"/></linearGradient>
+<linearGradient id="facet" x1="38" y1="19" x2="64" y2="67" gradientUnits="userSpaceOnUse"><stop stop-color="#c5acfb"/><stop offset=".5" stop-color="#5d6ac1"/><stop offset="1" stop-color="#242b64"/></linearGradient>
+<clipPath id="surface"><path d="M50 8C39 22 32 32 32 40c0 10 6 20 18 22 12-2 18-12 18-22 0-8-7-18-18-32Z" fill="#fff"/><path d="M38 62h24l6 9H32Z" fill="#fff"/></clipPath>
+<style>.spark{fill:none;stroke:#d5deff;stroke-width:1.7;stroke-linecap:round;stroke-opacity:.8}.edge{fill:none;stroke:#d5deff;stroke-width:1.1;stroke-linecap:round;stroke-opacity:.55}.detail{fill:none;stroke:#93ddff;stroke-width:2;stroke-linecap:round}</style>
+</defs>
+<ellipse cx="50" cy="95" rx="31" ry="1.7" fill="#020b12" opacity=".22"/>
+<g stroke="#a297db" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+<path d="M50 8C39 22 32 32 32 40c0 10 6 20 18 22 12-2 18-12 18-22 0-8-7-18-18-32Z" fill="url(#metal)"/><path d="M50 11c2 18 8 28 0 47-8-19-2-29 0-47Z" fill="url(#facet)" stroke="none"/><path d="m58 26-17 24" stroke="#111b37" stroke-width="4"/><path d="m60 26-17 24" class="detail"/><path d="M38 62h24l6 9H32Z" fill="url(#metal)"/><ellipse cx="50" cy="60" rx="23" ry="5" fill="none" stroke="url(#trim)" stroke-width="2"/><path d="M43 22c-5 8-7 13-6 18" class="spark"/>
+<g clip-path="url(#surface)" fill="#d5deff" stroke="none" opacity=".8"><circle cx="40" cy="26" r="1"/><circle cx="61" cy="44" r="1.1"/><circle cx="44" cy="64" r=".9"/><path d="m61 59 1-4 1 4 4 1-4 1-1 4-1-4-4-1Z"/></g>
+<path d="M29 74h42l8 9-7 8H28l-7-8Z" fill="url(#metal)"/><ellipse cx="50" cy="83" rx="33" ry="7" fill="none" stroke="url(#trim)" stroke-width="2.5"/><path d="M30 92h40" class="detail"/><path d="M27 79h46" class="spark"/>
+</g>
+</svg>

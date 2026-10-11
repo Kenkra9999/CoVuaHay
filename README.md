@@ -1,6 +1,6 @@
 # Nước Cờ — The Chess Atelier
 
-Ứng dụng cờ vua với bàn cờ tự co giãn, 12 quân cờ SVG ánh kim và sáu không gian màu. Chơi với Stockfish, hai người trên cùng thiết bị hoặc online bằng mã phòng. Hỗ trợ chuột, bàn phím, chạm và kéo quân trên điện thoại.
+Ứng dụng cờ vua với bàn cờ rộng tự co giãn, chữ và nút dễ đọc, năm bộ quân SVG riêng cùng sáu không gian màu. Chơi với Stockfish, hai người trên cùng thiết bị hoặc online bằng mã phòng. Hỗ trợ chuột, bàn phím, chạm và kéo quân trên điện thoại.
 
 ## Chạy trên máy
 
@@ -22,6 +22,8 @@ Schema nằm trong `db/schema.ts`, migration trong `drizzle/`. Áp dụng migrat
 - **Trợ lý AI:** ba phương án, mũi tên gợi ý, đánh giá lợi thế, biến dự kiến và phân tích sâu. Đánh giá dương có lợi cho Trắng; `M` là khoảng cách chiếu hết dự kiến. Gợi ý cũng dùng được trong phòng online.
 - **Biên bản:** xem lại từng nước, trở về ván trực tiếp, sao chép FEN và tải PGN có tên người chơi.
 - **Không gian:** sáu chủ đề, bốn màu bàn, hiệu ứng nền, âm thanh, xoay bàn và toàn màn hình. Các lựa chọn được lưu sau khi tải lại.
+- **Bộ quân:** nút **Đổi bộ quân** ngay trên bàn mở bộ sưu tập có ảnh xem trước. Mặc định **Dung nham & Băng giá** (Trắng là pha lê băng, Đen là đá dung nham); thêm **Hoàng gia**, **Tinh vân**, **Ngọc phong** và **Cơ giáp**. Đổi bộ ngay trong ván, tự lưu trên thiết bị. Tất cả 60 SVG có hình dáng riêng theo bộ, dưới 2,5 KB mỗi tệp, không dùng ảnh bitmap hay animation.
+- **Hiệu năng giao diện:** bàn cờ được memo hóa để tránh vẽ lại theo nhịp đồng hồ; giữ danh sách nước đi ổn định khi đồng bộ không thay đổi thế cờ. Hiệu ứng nền giới hạn 30 khung hình/giây và dừng khi tab bị ẩn; tôn trọng tùy chọn giảm chuyển động của hệ điều hành.
 
 ## Phòng online
 

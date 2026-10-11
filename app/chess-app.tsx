@@ -3,9 +3,10 @@
 
 import { Chess, type Square } from "chess.js";
 import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Maximize2, Minimize2, Palette, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Undo2, Users, Volume2, VolumeX, Wifi, WifiOff, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type RefObject } from "react";
 import type { MoveRecord, RoomStatus, RoomView } from "@/lib/rooms";
 import { chessClock } from "@/lib/chess-clock";
+import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
 import type { Difficulty } from "@/lib/chess-ai";
 import { describeMove, parseUciMove, principalVariation, searchStockfish, type EngineAnalysis, type EngineLine } from "@/lib/stockfish";
 
@@ -16,15 +17,15 @@ type Mode = "ai" | "local";
 type LocalGame = { fen: string; moves: MoveRecord[]; status: RoomStatus; version: number };
 type Piece = { id: string; square: Square; color: Color; type: string };
 type OnlineGame = RoomView & { receivedAt: number };
-type Modal = "create" | "join" | "appearance" | "help" | null;
-type Appearance = { battlefield: BattlefieldTheme; boardTheme: BoardThemeColor; particlesOn: boolean };
+type Modal = "create" | "join" | "appearance" | "pieces" | "help" | null;
+type Appearance = { battlefield: BattlefieldTheme; boardTheme: BoardThemeColor; particlesOn: boolean; pieceSet: PieceSetId };
 type RecentRoom = { code: string; color: Color | null; name: string; savedAt: number };
 type ApiData = { room?: RoomView; token?: string; error?: string };
 const files = "abcdefgh";
 const names: Record<string, string> = { p: "Tốt", n: "Mã", b: "Tượng", r: "Xe", q: "Hậu", k: "Vua" };
 const values: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const DEFAULT_GAME: LocalGame = { fen: new Chess().fen(), moves: [], status: "playing", version: 0 };
-const DEFAULT_APPEARANCE: Appearance = { battlefield: "citadel", boardTheme: "midnight", particlesOn: true };
+const DEFAULT_APPEARANCE: Appearance = { battlefield: "citadel", boardTheme: "midnight", particlesOn: true, pieceSet: DEFAULT_PIECE_SET };
 const BATTLEFIELDS: { id: BattlefieldTheme; name: string; caption: string; defaultBoard: BoardThemeColor }[] = [
   { id: "citadel", name: "Obsidian", caption: "Đá đêm · đồng cổ", defaultBoard: "midnight" },
   { id: "frost", name: "Băng ngọc", caption: "Bạc lạnh · xanh sương", defaultBoard: "frost" },
@@ -46,7 +47,6 @@ function resultStatus(game: Chess): RoomStatus {
   if (game.isCheckmate()) return game.turn() === "w" ? "black_won" : "white_won";
   return game.isGameOver() ? "draw" : "playing";
 }
-function pieceImage(piece: { color: string; type: string }) { return "/pieces/" + piece.color + piece.type.toUpperCase() + ".svg"; }
 function getPieces(moves: MoveRecord[]): Piece[] {
   const game = new Chess();
   const pieces: Piece[] = [];
@@ -75,7 +75,51 @@ function clockText(ms: number) {
 function evaluation(line: EngineLine) { return line.mate !== null ? "M" + Math.abs(line.mate) : (line.score >= 0 ? "+" : "") + line.score.toFixed(2); }
 function errorText(error: unknown) { return error instanceof Error ? error.message : "Chưa thực hiện được. Hãy thử lại."; }
 
-function BattlefieldParticles({ theme, enabled }: { theme: BattlefieldTheme; enabled: boolean }) {
+type BoardActions = {
+  click: (square: Square) => void;
+  down: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
+  move: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
+  up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
+  cancel: () => void;
+};
+const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, dragFrom, boardRef, showHint, hintMove, actions }: {
+  pieces: Piece[]; moves: MoveRecord[]; orientation: Color; selected: Square | null; legal: Square[];
+  checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; dragFrom?: Square;
+  boardRef: RefObject<HTMLDivElement | null>; showHint: boolean; hintMove?: { from: Square; to: Square } | null; actions: BoardActions;
+}) {
+  const last = moves.at(-1);
+  const coordinates = (square: Square) => {
+    const file = files.indexOf(square[0]), rank = 8 - Number(square[1]);
+    return { x: (orientation === "w" ? file : 7 - file) * 100 + 50, y: (orientation === "w" ? rank : 7 - rank) * 100 + 50 };
+  };
+  return <div className="board" ref={boardRef} data-piece-set={pieceSet}>
+    {Array.from({ length: 8 }, (_, rank) => Array.from({ length: 8 }, (_, file) => {
+      const square = (files[orientation === "w" ? file : 7 - file] + (orientation === "w" ? 8 - rank : rank + 1)) as Square;
+      const piece = pieces.find(item => item.square === square);
+      return <button type="button" key={square} data-square={square}
+        className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (square === checkKing ? " square-check" : "")}
+        aria-label={square + (piece ? ", " + names[piece.type] + " " + (piece.color === "w" ? "trắng" : "đen") : "")} onClick={() => actions.click(square)}>
+        {file === 0 && <span className="rank-label">{square[1]}</span>}{rank === 7 && <span className="file-label">{square[0]}</span>}
+        {legal.includes(square) && <span className={piece ? "legal-capture" : "legal-dot"} />}
+      </button>;
+    }))}
+    {pieces.map(piece => {
+      const file = files.indexOf(piece.square[0]), rank = 8 - Number(piece.square[1]);
+      const x = orientation === "w" ? file : 7 - file, y = orientation === "w" ? rank : 7 - rank;
+      return <div key={piece.id} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
+        style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" }}
+        onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
+        <img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
+    })}
+    {showHint && hintMove && (() => {
+      const from = coordinates(hintMove.from), to = coordinates(hintMove.to);
+      return <svg className="hint-overlay" viewBox="0 0 800 800" aria-hidden="true"><defs><marker id="hint-arrow" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="currentColor" /></marker></defs><circle cx={from.x} cy={from.y} r="30" /><line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd="url(#hint-arrow)" /></svg>;
+    })()}
+  </div>;
+});
+function liveTurn(moves: MoveRecord[]): Color { return moves.length % 2 === 0 ? "w" : "b"; }
+
+const BattlefieldParticles = memo(function BattlefieldParticles({ theme, enabled }: { theme: BattlefieldTheme; enabled: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (!enabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -87,7 +131,11 @@ function BattlefieldParticles({ theme, enabled }: { theme: BattlefieldTheme; ena
     resize();
     window.addEventListener("resize", resize);
     const points = Array.from({ length: 22 }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, speed: .12 + Math.random() * .25, size: .5 + Math.random() * 1.2 }));
-    const draw = () => {
+    let lastDraw = 0;
+    const draw = (time: number) => {
+      frame = requestAnimationFrame(draw);
+      if (time - lastDraw < 1000 / 30) return;
+      lastDraw = time;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = theme === "frost" ? "rgba(155,218,230,.3)" : "rgba(208,180,135,.2)";
       for (const point of points) {
@@ -95,13 +143,17 @@ function BattlefieldParticles({ theme, enabled }: { theme: BattlefieldTheme; ena
         if (point.y < 0) point.y = canvas.height;
         ctx.beginPath(); ctx.arc(point.x, point.y, point.size, 0, Math.PI * 2); ctx.fill();
       }
-      frame = requestAnimationFrame(draw);
     };
-    draw();
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", resize); };
+    const visibility = () => {
+      cancelAnimationFrame(frame);
+      if (!document.hidden) { lastDraw = 0; frame = requestAnimationFrame(draw); }
+    };
+    visibility();
+    document.addEventListener("visibilitychange", visibility);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", resize); document.removeEventListener("visibilitychange", visibility); };
   }, [theme, enabled]);
   return enabled ? <canvas ref={canvasRef} className="battlefield-canvas" aria-hidden="true" /> : null;
-}
+});
 
 export default function ChessApp() {
   const [local, setLocal] = useState<LocalGame>(DEFAULT_GAME);
@@ -165,16 +217,17 @@ export default function ChessApp() {
   const positionKey = (online?.code || localMode) + ":" + current.version + ":" + game.fen();
   const analysis = analysisState?.key === positionKey ? analysisState : null;
   const bestLine = analysis?.lines.find(line => line.rank === activeLine) || analysis?.lines[0];
-  const hintMove = bestLine ? parseUciMove(bestLine.pv[0]) : analysis?.result?.move;
+  const hintMove = useMemo(() => bestLine ? parseUciMove(bestLine.pv[0]) : analysis?.result?.move, [bestLine, analysis?.result?.move]);
   const canAnalyze = !aiThinking && !busy && ready && !restoring;
   const currentBattlefield = BATTLEFIELDS.find(item => item.id === appearance.battlefield)!;
+  const currentPieceSet = PIECE_SETS.find(item => item.id === appearance.pieceSet)!;
 
   const applyRoom = useCallback((room: RoomView) => {
     if (sessionRef.current.code !== room.code) return;
     const receivedAt = Date.now();
     setOnline(previous => previous && previous.code === room.code &&
       (previous.version > room.version || (previous.version === room.version && previous.updatedAt > room.updatedAt))
-      ? previous : { ...room, receivedAt });
+      ? previous : { ...room, receivedAt, moves: previous?.code === room.code && previous.fen === room.fen && previous.moves.length === room.moves.length ? previous.moves : room.moves });
     setConnection("live");
   }, []);
 
@@ -207,7 +260,8 @@ export default function ChessApp() {
     /* eslint-disable react-hooks/set-state-in-effect -- One-time restoration of device preferences and saved games after hydration. */
     const battlefield = BATTLEFIELDS.find(item => item.id === stored("nuocco:battlefield"))?.id || "citadel";
     const board = stored("nuocco:boardTheme");
-    setAppearance({ battlefield, boardTheme: board === "walnut" || board === "midnight" || board === "crimson" || board === "frost" ? board : "midnight", particlesOn: stored("nuocco:particles") !== "false" });
+    const pieceSet = stored("nuocco:pieceSet");
+    setAppearance({ battlefield, boardTheme: board === "walnut" || board === "midnight" || board === "crimson" || board === "frost" ? board : "midnight", particlesOn: stored("nuocco:particles") !== "false", pieceSet: validPieceSet(pieceSet) ? pieceSet : DEFAULT_PIECE_SET });
     const savedName = stored("nuocco:playerName") || "Kỳ thủ";
     setProfileName(savedName); setNameDraft(savedName); setSoundOn(stored("nuocco:sound") !== "false");
     try {
@@ -245,13 +299,19 @@ export default function ChessApp() {
   }, [ready, online, restoring, local, localMode, difficulty, humanColor, localNames]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setTick(Date.now()), 200);
     const onFullscreen = () => setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", onFullscreen);
-    return () => { window.clearInterval(timer); document.removeEventListener("fullscreenchange", onFullscreen); };
+    return () => document.removeEventListener("fullscreenchange", onFullscreen);
   }, []);
 
   const onlineCode = online?.code;
+  useEffect(() => {
+    if (!onlineCode) return;
+    const pulse = () => { if (!document.hidden) setTick(Date.now()); };
+    const timer = window.setInterval(pulse, 250);
+    document.addEventListener("visibilitychange", pulse);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", pulse); };
+  }, [onlineCode]);
   useEffect(() => {
     if (!onlineCode) return;
     const session = sessionRef.current;
@@ -505,15 +565,13 @@ export default function ChessApp() {
     remember("nuocco:battlefield", theme); remember("nuocco:boardTheme", config.defaultBoard);
   }
   function changeBoardTheme(boardTheme: BoardThemeColor) { setAppearance(previous => ({ ...previous, boardTheme })); remember("nuocco:boardTheme", boardTheme); }
+  function changePieceSet(pieceSet: PieceSetId) { setAppearance(previous => ({ ...previous, pieceSet })); remember("nuocco:pieceSet", pieceSet); }
   function changeParticles(enabled: boolean) { setAppearance(previous => ({ ...previous, particlesOn: enabled })); remember("nuocco:particles", String(enabled)); }
   async function toggleFullscreen() {
     try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
     catch { setMessage("Trình duyệt chưa hỗ trợ toàn màn hình."); }
   }
-  function point(square: Square) {
-    const file = files.indexOf(square[0]), rank = 8 - Number(square[1]);
-    return { x: (orientation === "w" ? file : 7 - file) * 100 + 50, y: (orientation === "w" ? rank : 7 - rank) * 100 + 50 };
-  }
+
   const winner: Color | null = current.status === "white_won" ? "w" : current.status === "black_won" ? "b" : null;
   const draggedPiece = drag ? pieces.find(piece => piece.square === drag.from) : null;
   const ended = current.status !== "waiting" && current.status !== "playing";
@@ -525,6 +583,18 @@ export default function ChessApp() {
   const checkKing = game.isCheck() ? pieces.find(piece => piece.type === "k" && piece.color === game.turn())?.square : null;
   const captures = game.history({ verbose: true }).filter(move => move.captured);
   const material = game.board().flat().reduce((sum, piece) => sum + (piece ? values[piece.type] * (piece.color === "w" ? 1 : -1) : 0), 0);
+  const boardActionsRef = useRef<BoardActions>(null);
+  useEffect(() => {
+    boardActionsRef.current = { click: onSquareClick, down: onPieceDown, move: onPieceMove, up: onPieceUp,
+      cancel: () => { pointerRef.current = null; setDrag(null); } };
+  });
+  const stableBoardActions = useMemo<BoardActions>(() => ({
+    click: square => boardActionsRef.current?.click(square),
+    down: (event, piece) => boardActionsRef.current?.down(event, piece),
+    move: (event, piece) => boardActionsRef.current?.move(event, piece),
+    up: (event, piece) => boardActionsRef.current?.up(event, piece),
+    cancel: () => boardActionsRef.current?.cancel(),
+  }), []);
   function playerBar(color: Color) {
     const own = online ? online.color === color : !aiMode || humanColor === color;
     const editable = own && !restoring;
@@ -532,7 +602,7 @@ export default function ChessApp() {
     const connected = player?.seenAt ? serverNow - player.seenAt < 15000 : false;
     const milliseconds = clock ? color === "w" ? clock.whiteMs : clock.blackMs : null;
     return <div className={"player-card " + (turn === color && current.status === "playing" ? "player-active" : "")} data-color={color}>
-      <div className={"player-avatar avatar-" + color}><img src={pieceImage({ color, type: "k" })} alt="" /></div>
+      <div className={"player-avatar avatar-" + color}><img src={pieceImage({ color, type: "k" }, appearance.pieceSet)} alt="" /></div>
       <div className="player-info">
         <div className="player-name-line">{editable
           ? <input className="player-name" aria-label={"Tên người chơi " + (color === "w" ? "Trắng" : "Đen")} maxLength={24}
@@ -543,7 +613,7 @@ export default function ChessApp() {
         </div>
         <div className="player-detail"><span className={"presence-dot " + (online && !connected ? "presence-away" : "")} />
           {online ? (color === "b" && !online.hasBlack ? "Ghế Đen đang trống" : connected ? "Đang kết nối" : "Tạm ngoại tuyến") : aiMode && color !== humanColor ? difficulty === "master" ? "Đại kiện tướng · Engine WASM" : "Engine WASM · " + ({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Tối đa" }[difficulty]) : "Nhấn vào tên để chỉnh sửa"}
-          <span className="captured-pieces">{captures.filter(move => move.color === color).map((move, index) => <img key={index} src={pieceImage({ color: color === "w" ? "b" : "w", type: move.captured! })} alt={names[move.captured!]} />)}
+          <span className="captured-pieces">{captures.filter(move => move.color === color).map((move, index) => <img key={index} src={pieceImage({ color: color === "w" ? "b" : "w", type: move.captured! }, appearance.pieceSet)} alt={names[move.captured!]} />)}
             {(color === "w" ? material : -material) > 0 && <b>+{color === "w" ? material : -material}</b>}</span>
         </div>
       </div>
@@ -553,64 +623,51 @@ export default function ChessApp() {
     </div>;
   }
 
-  return <div className={"site-shell battlefield-" + appearance.battlefield}>
+  return <div className={"site-shell battlefield-" + appearance.battlefield + " piece-style-" + appearance.pieceSet}>
     <BattlefieldParticles theme={appearance.battlefield} enabled={appearance.particlesOn} />
     <header className="topbar">
-      <button className="brand" onClick={() => newLocal()} aria-label="Nước Cờ - Ván mới"><span className="brand-mark"><img src="/pieces/wN.svg" alt="" /></span><span>Nước Cờ<small>THE CHESS ATELIER</small></span></button>
+      <button className="brand" onClick={() => newLocal()} aria-label="Nước Cờ - Ván mới"><span className="brand-mark"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /></span><span>Nước Cờ<small>THE CHESS ATELIER</small></span></button>
       <nav className="header-nav" aria-label="Chế độ chơi"><span className="nav-current"><span className="live-dot" /> {online ? "Đấu trường online" : aiMode ? "Không gian luyện tập" : "Cùng một bàn cờ"}</span><button onClick={() => setModal("help")}>Cách chơi</button></nav>
       <div className="header-actions"><button className="header-join" onClick={() => { setModal("join"); setMessage(""); }}><Hash size={16} /><span>Nhập mã mời</span></button><button className="primary-button header-create" onClick={() => setModal("create")}><Plus size={17} /><span>Tạo phòng</span></button></div>
     </header>
     <main className="arena-layout">
       <aside className="left-rail">
-        <div className="atelier-intro"><span className="eyebrow">MỖI NƯỚC ĐI, MỘT DẤU ẤN</span><h1>Làm chủ<br />thế cờ.</h1><p>Một bàn cờ. Vô vàn khả năng.</p><div className="intro-knight"><img src="/pieces/wN.svg" alt="Quân mã thiết kế ánh kim" /><span>ATELIER COLLECTION<small>BỘ QUÂN CỜ ĐỘC BẢN</small></span></div></div>
+        <div className="atelier-intro"><span className="eyebrow">MỖI NƯỚC ĐI, MỘT DẤU ẤN</span><h1>Làm chủ<br />thế cờ.</h1><p>Một bàn cờ. Vô vàn khả năng.</p><div className="intro-knight"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="Quân mã thiết kế ánh kim" /><span>ATELIER COLLECTION<small>BỘ QUÂN CỜ ĐỘC BẢN</small></span></div></div>
         <section className="rail-card"><div className="section-label">CHỌN CUỘC CHƠI <Swords size={14} /></div>
           <div className="mode-list"><button className={!online && aiMode ? "mode-active" : ""} onClick={() => newLocal("ai")}><Bot size={20} /><span>Đấu với AI<small>Thử sức cùng Stockfish 19</small></span><ChevronRight size={15} /></button><button className={online ? "mode-active" : ""} onClick={() => setModal("create")}><Users size={20} /><span>Đấu cùng bạn<small>Hai thiết bị, một trận cờ</small></span><ChevronRight size={15} /></button><button className={!online && !aiMode ? "mode-active" : ""} onClick={() => newLocal("local")}><Crown size={20} /><span>Cùng thiết bị<small>Luân phiên Trắng và Đen</small></span><ChevronRight size={15} /></button></div>
-          {!online && aiMode && <div className="ai-options"><span className="small-label">ĐỘ KHÓ</span><div className="difficulty-options">{(["easy", "medium", "hard", "master"] as const).map(level => <button key={level} onClick={() => setDifficulty(level)} className={difficulty === level ? "selected-option" : ""}>{({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Master" })[level]}</button>)}</div><div className="color-options"><span>Cầm quân</span><button className={humanColor === "w" ? "selected-color" : ""} onClick={() => newLocal("ai", "w")}><i className="color-chip chip-white" /> Trắng</button><button className={humanColor === "b" ? "selected-color" : ""} onClick={() => newLocal("ai", "b")}><i className="color-chip chip-black" /> Đen</button></div></div>}
+          {!online && aiMode && <div className="ai-options"><span className="small-label">ĐỘ KHÓ</span><div className="difficulty-options">{(["easy", "medium", "hard", "master"] as const).map(level => <button key={level} onClick={() => setDifficulty(level)} className={difficulty === level ? "selected-option" : ""}>{({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Kỳ thủ" })[level]}</button>)}</div><div className="color-options"><span>Cầm quân</span><button className={humanColor === "w" ? "selected-color" : ""} onClick={() => newLocal("ai", "w")}><i className="color-chip chip-white" /> Trắng</button><button className={humanColor === "b" ? "selected-color" : ""} onClick={() => newLocal("ai", "b")}><i className="color-chip chip-black" /> Đen</button></div></div>}
         </section>
         <button className="appearance-button battlefield-badge-btn" onClick={() => setModal("appearance")}><span className={"theme-mini theme-mini-" + appearance.battlefield} /><span>{currentBattlefield.name}<small>Không gian & màu bàn cờ</small></span><Palette size={16} /></button>
         {recentRooms.length > 0 && <section className="recent-card"><div className="section-label">TRẬN GẦN ĐÂY <History size={14} /></div>{recentRooms.slice(0, 3).map(room => <button key={room.code} onClick={() => void joinRoom(room.code)} disabled={busy}><span><b>{room.code}</b><small>{room.color === "w" ? "Ghế Trắng" : room.color === "b" ? "Ghế Đen" : "Khán giả"}</small></span><ArrowRight size={14} /></button>)}</section>}
         <div className="rail-foot"><ShieldCheck size={15} /><span>Luật chuẩn. Nước đi được kiểm tra.<br />Ván online luôn được lưu.</span></div>
       </aside>
       <section className={"board-column theme-" + appearance.boardTheme} aria-label="Bàn cờ vua">
+        <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
+          <button className={!online && aiMode ? "quick-control-active" : ""} aria-label="Chơi với AI" onClick={() => newLocal("ai")}><Bot size={18} /> Đấu AI</button>
+          <button className={!online && !aiMode ? "quick-control-active" : ""} aria-label="Chơi hai người cùng máy" onClick={() => newLocal("local")}><Crown size={18} /> Cùng máy</button>
+          <button className={online ? "quick-control-active" : ""} aria-label="Tạo trận online" onClick={() => setModal("create")}><Users size={18} /> Online</button>
+        </div>
         <div className="board-heading"><div><span className="eyebrow">{online ? "PHÒNG " + online.code : aiMode ? "LUYỆN TẬP CÙNG AI" : "CHƠI CÙNG THIẾT BỊ"}</span><span className="board-session-title">{online ? "Một trận đấu. Hai kỳ thủ." : "Nước đi của riêng bạn."}</span></div><span className={"session-pill " + (online && connection !== "live" ? "session-reconnecting" : "")}>{online ? connection === "live" ? <><Wifi size={12} /> Đã đồng bộ</> : <><WifiOff size={12} /> Đang kết nối lại</> : <><Check size={12} /> {ready ? "Đã lưu trên máy" : "Sẵn sàng"}</>}</span></div>
+        <button className="collection-strip" onClick={() => setModal("pieces")} aria-label="Chọn bộ quân cờ">
+          <span className="collection-mini"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><img src={pieceImage({ color: "b", type: "n" }, appearance.pieceSet)} alt="" /></span>
+          <span><small>BỘ QUÂN ĐANG DÙNG</small><strong>{currentPieceSet.name}</strong></span><span className="collection-change">Đổi bộ quân <ChevronRight size={18} /></span>
+        </button>
         <div className="board-stage">
-          {playerBar(topColor)}
-          <div className="board-frame"><div className="board" ref={boardRef}>
-            {Array.from({ length: 8 }, (_, rank) => Array.from({ length: 8 }, (_, file) => {
-              const square = (files[orientation === "w" ? file : 7 - file] + (orientation === "w" ? 8 - rank : rank + 1)) as Square;
-              const piece = pieces.find(item => item.square === square), last = displayMoves.at(-1);
-              return <button type="button" key={square} data-square={square}
-                className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (square === checkKing ? " square-check" : "")}
-                aria-label={square + (piece ? ", " + names[piece.type] + " " + (piece.color === "w" ? "trắng" : "đen") : "")} onClick={() => onSquareClick(square)}>
-                {file === 0 && <span className="rank-label">{square[1]}</span>}{rank === 7 && <span className="file-label">{square[0]}</span>}
-                {legal.includes(square) && <span className={piece ? "legal-capture" : "legal-dot"} />}
-              </button>;
-            }))}
-            {pieces.map(piece => {
-              const file = files.indexOf(piece.square[0]), rank = 8 - Number(piece.square[1]);
-              const x = orientation === "w" ? file : 7 - file, y = orientation === "w" ? rank : 7 - rank;
-              return <div key={piece.id} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (drag?.from === piece.square ? " piece-dragging" : "")}
-                style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", pointerEvents: canMove && piece.color === turn ? "auto" : "none" }}
-                onPointerDown={event => onPieceDown(event, piece)} onPointerMove={event => onPieceMove(event, piece)} onPointerUp={event => onPieceUp(event, piece)} onPointerCancel={() => { pointerRef.current = null; setDrag(null); }}>
-                <img src={pieceImage(piece)} alt="" draggable={false} /></div>;
-            })}
-            {showHint && hintMove && (() => {
-              const from = point(hintMove.from), to = point(hintMove.to);
-              return <svg className="hint-overlay" viewBox="0 0 800 800" role="img" aria-label={"Gợi ý: đi " + hintMove.from + " đến " + hintMove.to}><defs><marker id="hint-arrow" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="currentColor" /></marker></defs><circle cx={from.x} cy={from.y} r="30" /><line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd="url(#hint-arrow)" /></svg>;
-            })()}
-          </div></div>
-          {playerBar(orientation)}
+          <div className="players-row">{playerBar(topColor)}{playerBar(orientation)}</div>
+          <div className="board-frame"><ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
+            checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} dragFrom={drag?.from} boardRef={boardRef}
+            showHint={showHint} hintMove={hintMove} actions={stableBoardActions} /></div>
           <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
           <div className="board-toolbar"><div><button onClick={() => setFlipped(value => !value)} title="Xoay bàn cờ" aria-label="Xoay bàn cờ"><ArrowUpDown size={17} /></button><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => { setSoundOn(value => !value); remember("nuocco:sound", String(!soundOn)); }} title={soundOn ? "Tắt âm thanh" : "Bật âm thanh"}>{soundOn ? <Volume2 size={17} /> : <VolumeX size={17} />}</button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
           {reviewPly !== null && <div className="replay-controls"><button onClick={() => setReviewPly(0)} aria-label="Về đầu ván"><ChevronFirst size={16} /></button><button onClick={() => setReviewPly(Math.max(0, reviewPly - 1))} aria-label="Nước trước"><ChevronLeft size={16} /></button><span>{reviewPly} / {current.moves.length}</span><button onClick={() => setReviewPly(Math.min(current.moves.length, reviewPly + 1))} aria-label="Nước tiếp"><ChevronRight size={16} /></button><button onClick={() => { setReviewPly(null); setSelected(null); }}><ChevronLast size={16} /> Trở lại trận</button></div>}
         </div>
-        <div className="board-caption"><span>ATELIER No. 01</span><span>QUÂN ÁNH KIM · BÀN CỜ THỦ CÔNG</span><span>64 Ô. VÔ VÀN CÂU CHUYỆN.</span></div>
+        <div className="board-caption"><span>ATELIER No. 01</span><span>NĂM BỘ QUÂN · MỘT DẤU ẤN RIÊNG</span><span>64 Ô. VÔ VÀN CÂU CHUYỆN.</span></div>
       </section>
       <aside className="right-rail">
         <div className="tools-panel"><div className="tools-tabs" role="tablist" aria-label="Công cụ trận đấu">{(["ai", "moves", "room"] as const).map(tab => <button key={tab} role="tab" aria-selected={activeTab === tab} className={activeTab === tab ? "tab-active" : ""} onClick={() => setActiveTab(tab)}>{tab === "ai" ? <Sparkles size={15} /> : tab === "moves" ? <History size={15} /> : <Users size={15} />}{tab === "ai" ? "Trợ lý AI" : tab === "moves" ? "Biên bản" : "Phòng đấu"}</button>)}</div>
           {activeTab === "ai" && <section className="analysis-panel"><div className="engine-heading"><span className="engine-icon"><Sparkles size={22} /></span><div><h2>Một góc nhìn đi trước.</h2><span>STOCKFISH 19 <i /> CHẠY TRÊN THIẾT BỊ</span></div></div>
-            {!analysis?.lines.length && <div className="analysis-empty"><div className="analysis-orbit"><img src="/pieces/wN.svg" alt="" /><span>✦</span></div><h3>Nước hay bắt đầu<br />từ một ý tưởng.</h3><p>Khám phá ba phương án, hiểu thế cờ và nhìn thấy đường đi ngay trên bàn.</p></div>}
+            {!analysis?.lines.length && <div className="analysis-empty"><div className="analysis-orbit"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><span>✦</span></div><h3>Nước hay bắt đầu<br />từ một ý tưởng.</h3><p>Khám phá ba phương án, hiểu thế cờ và nhìn thấy đường đi ngay trên bàn.</p></div>}
             <button className="primary-button analyze-button" disabled={!canAnalyze || analysis?.loading} onClick={() => void requestAnalysis()}>{analysis?.loading ? <LoaderCircle className="spin" size={17} /> : <Sparkles size={17} />}{analysis?.loading ? "Đang tìm nước hay…" : "Tìm nước đi hay"}</button>
             <div className="analysis-subactions"><button disabled={!canAnalyze || analysis?.loading} onClick={() => void requestAnalysis(true)}>Phân tích sâu <ArrowRight size={13} /></button><button disabled={!hintMove} onClick={() => setShowHint(value => !value)}>{showHint ? "Ẩn" : "Hiện"} mũi tên</button></div>
             {analysis?.error && <p className="inline-error">{analysis.error}</p>}
@@ -637,18 +694,25 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div className="drag-piece" style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><img src={pieceImage(draggedPiece)} alt="" /></div>}
-    <dialog className="atelier-modal" ref={modalRef} onCancel={() => setModal(null)}>
-      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
+    {drag && draggedPiece && <div className="drag-piece" style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
+    <dialog className={"atelier-modal " + (modal === "pieces" ? "collection-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
+      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "create" && <><h2>Thiết lập một cuộc đấu.</h2><p className="modal-description">Chọn nhịp chơi. Gửi lời mời. Phần còn lại là những nước cờ.</p><label className="form-label" htmlFor="creator-name">Tên của bạn</label><input id="creator-name" className="text-input" maxLength={24} value={profileName} onChange={event => { setProfileName(event.target.value); remember("nuocco:playerName", event.target.value); }} placeholder="Tên hiển thị trên bàn cờ" />
         <div className="slider-setting"><label htmlFor="total-time"><span>Thời gian mỗi bên<small>Tổng ngân sách cho toàn ván</small></span><b>{totalMinutes}<em>phút</em></b></label><input id="total-time" type="range" min="5" max="100" step="1" value={totalMinutes} onChange={event => setTotalMinutes(Number(event.target.value))} /><div className="range-labels"><span>5 phút</span><span>100 phút</span></div></div>
         <div className="slider-setting"><label htmlFor="move-time"><span>Giới hạn mỗi lượt<small>Phải đi trước khi đồng hồ lượt hết</small></span><b>{moveSeconds}<em>giây</em></b></label><input id="move-time" type="range" min="60" max="300" step="15" value={moveSeconds} onChange={event => setMoveSeconds(Number(event.target.value))} /><div className="range-labels"><span>60 giây</span><span>300 giây</span></div></div>
         <div className="preset-buttons">{[[5,60,"Nhanh"],[15,120,"Cân bằng"],[30,180,"Thư thái"]].map(([minutes, seconds, label]) => <button key={label} className={totalMinutes === minutes && moveSeconds === seconds ? "preset-active" : ""} onClick={() => { setTotalMinutes(Number(minutes)); setMoveSeconds(Number(seconds)); }}>{label}</button>)}</div><div className="modal-note"><ShieldCheck size={16} /><span>Bạn cầm Trắng. Đồng hồ bắt đầu khi đối thủ vào phòng. Đóng trang không dừng thời gian.</span></div><button className="primary-button full-width modal-submit" disabled={busy} onClick={() => void createRoom()}>{busy ? <LoaderCircle size={17} className="spin" /> : <Plus size={17} />} Tạo phòng & nhận mã mời</button></>}
       {modal === "join" && <><h2>Một mã mời.<br />Một người bạn cùng chơi.</h2><p className="modal-description">Nhập mã để nhận quân Đen, hoặc trở lại ghế của bạn trong trận đã lưu.</p><label className="form-label" htmlFor="guest-name">Tên của bạn</label><input id="guest-name" className="text-input" value={profileName} maxLength={24} onChange={event => { setProfileName(event.target.value); remember("nuocco:playerName", event.target.value); }} /><label className="form-label" htmlFor="invite-code">Mã mời 6 ký tự</label><input id="invite-code" className="code-input" placeholder="ABC234" autoComplete="off" value={joinCode} onChange={event => setJoinCode(normalizeCode(event.target.value))} onKeyDown={event => { if (event.key === "Enter") void joinRoom(); }} /><button className="primary-button full-width modal-submit" disabled={busy || joinCode.length !== 6} onClick={() => void joinRoom()}>{busy ? <LoaderCircle size={17} className="spin" /> : <ArrowRight size={17} />} Vào bàn cờ</button><p className="modal-footnote">Ghế đã đầy? Bạn vẫn có thể xem trận. Mã mời không thay thế quyền của người đang chơi.</p></>}
-      {modal === "appearance" && <><h2>Đổi không khí. Giữ cuộc chơi.</h2><p className="modal-description">Sáu sắc thái cho một bộ quân ánh kim.</p><div className="battlefield-grid">{BATTLEFIELDS.map(item => <button className={"battlefield-card " + (appearance.battlefield === item.id ? "card-selected" : "")} key={item.id} onClick={() => changeBattlefield(item.id)}><span className={"theme-preview theme-mini-" + item.id}><img src="/pieces/wN.svg" alt="" /><img src="/pieces/bR.svg" alt="" /></span><strong>{item.name}{appearance.battlefield === item.id && <Check size={15} />}</strong><small>{item.caption}</small></button>)}</div><div className="board-color-choice"><span>Màu mặt bàn</span><div>{(["midnight","frost","crimson","walnut"] as const).map(theme => <button key={theme} className={"theme-swatch swatch-" + theme + (appearance.boardTheme === theme ? " swatch-active" : "")} onClick={() => changeBoardTheme(theme)} aria-label={"Màu bàn " + theme} />)}</div></div><button className={"particle-toggle-btn " + (appearance.particlesOn ? "pt-active" : "")} onClick={() => changeParticles(!appearance.particlesOn)}><Flame size={17} /> Hạt sáng trong không gian <span>{appearance.particlesOn ? "Đang bật" : "Đã tắt"}</span></button></>}
+      {modal === "pieces" && <><h2>Năm cá tính.<br />Vô vàn nước đi.</h2><p className="modal-description">Chọn bộ quân để đổi ngay trên bàn. Lựa chọn được lưu trên thiết bị của bạn.</p>
+        <div className="piece-collection-grid">{PIECE_SETS.map(set => <button key={set.id} className={"piece-set-card set-" + set.id + (appearance.pieceSet === set.id ? " set-selected" : "")} aria-pressed={appearance.pieceSet === set.id} onClick={() => changePieceSet(set.id)}>
+          <span className="set-card-top"><span>COLLECTION {set.number}</span>{appearance.pieceSet === set.id ? <span className="set-active-label"><Check size={14} /> Đang dùng</span> : <span>Chọn bộ này <ArrowRight size={14} /></span>}</span>
+          <span className="set-showcase"><img src={pieceImage({color:"w",type:"k"},set.id)} alt="" /><img src={pieceImage({color:"w",type:"n"},set.id)} alt="" /><img src={pieceImage({color:"b",type:"q"},set.id)} alt="" /><img src={pieceImage({color:"b",type:"n"},set.id)} alt="" /></span>
+          <strong>{set.name}</strong><span className="set-subtitle">{set.subtitle}</span><span className="set-description">{set.caption}</span>
+          <span className="set-sides"><span><i /> Trắng · {set.white}</span><span><i /> Đen · {set.black}</span></span>
+        </button>)}</div><p className="collection-note"><ShieldCheck size={16} /> Hình vector sắc nét · Đổi bộ quân không làm mất ván đang chơi.</p></>}
+      {modal === "appearance" && <><h2>Đổi không khí. Giữ cuộc chơi.</h2><p className="modal-description">Chọn không gian phù hợp với bộ quân của bạn.</p><div className="battlefield-grid">{BATTLEFIELDS.map(item => <button className={"battlefield-card " + (appearance.battlefield === item.id ? "card-selected" : "")} key={item.id} onClick={() => changeBattlefield(item.id)}><span className={"theme-preview theme-mini-" + item.id}><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><img src={pieceImage({ color: "b", type: "r" }, appearance.pieceSet)} alt="" /></span><strong>{item.name}{appearance.battlefield === item.id && <Check size={15} />}</strong><small>{item.caption}</small></button>)}</div><div className="board-color-choice"><span>Màu mặt bàn</span><div>{(["midnight","frost","crimson","walnut"] as const).map(theme => <button key={theme} className={"theme-swatch swatch-" + theme + (appearance.boardTheme === theme ? " swatch-active" : "")} onClick={() => changeBoardTheme(theme)} aria-label={"Màu bàn " + theme} />)}</div></div><button className={"particle-toggle-btn " + (appearance.particlesOn ? "pt-active" : "")} onClick={() => changeParticles(!appearance.particlesOn)}><Flame size={17} /> Hạt sáng trong không gian <span>{appearance.particlesOn ? "Đang bật" : "Đã tắt"}</span></button></>}
       {modal === "help" && <><h2>Mỗi người một màu.<br />Cùng một nhịp chơi.</h2><div className="help-steps"><p><b>01 · Di chuyển</b>Chạm quân rồi ô đích, kéo thả, hoặc dùng Tab và Enter. Các ô hợp lệ được đánh dấu.</p><p><b>02 · Đấu cùng bạn</b>Thiết lập thời gian, tạo phòng và gửi mã. Người thứ hai nhận quân Đen. Tên được sửa ngay trên thẻ người chơi.</p><p><b>03 · Thời gian</b>Tổng thời gian chỉ trừ vào bên đang đi. Giới hạn lượt được đặt lại sau mỗi nước. Hết một trong hai là thua.</p><p><b>04 · Trở lại trận</b>Trận online lưu trên server. Trình duyệt này giữ quyền ghế của bạn; tải lại hoặc nhập lại mã để tiếp tục. Đồng hồ vẫn chạy khi đóng trang.</p><p><b>05 · Khám phá</b>Trợ lý AI tìm ba phương án. Biên bản cho phép xem lại, xuất PGN và sao chép FEN. Khi xem lại, bấm “Trở lại trận” để đi tiếp.</p></div></>}
       </div></dialog>
-    <dialog className="atelier-modal promotion-modal" ref={promotionRef} onCancel={() => setPromotion(null)}><div className="modal-inner"><span className="eyebrow">MỘT QUÂN TỐT, MỘT KHỞI ĐẦU MỚI</span><h2>Chọn quân phong cấp.</h2><div className="promotion-options">{["q", "r", "b", "n"].map(type => <button key={type} onClick={() => { if (promotion) void commitMove(promotion.from, promotion.to, type); }}><img src={pieceImage({ color: turn, type })} alt={names[type]} /><span>{names[type]}</span></button>)}</div></div></dialog>
+    <dialog className="atelier-modal promotion-modal" ref={promotionRef} onCancel={() => setPromotion(null)}><div className="modal-inner"><span className="eyebrow">MỘT QUÂN TỐT, MỘT KHỞI ĐẦU MỚI</span><h2>Chọn quân phong cấp.</h2><div className="promotion-options">{["q", "r", "b", "n"].map(type => <button key={type} onClick={() => { if (promotion) void commitMove(promotion.from, promotion.to, type); }}><img src={pieceImage({ color: turn, type }, appearance.pieceSet)} alt={names[type]} /><span>{names[type]}</span></button>)}</div></div></dialog>
     <footer className="site-footer"><span>NƯỚC CỜ <i>ATELIER</i></span><span>Đẹp trong từng nước đi.</span><button onClick={() => setModal("help")}>Hướng dẫn</button></footer>
   </div>;
 }

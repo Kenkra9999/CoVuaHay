@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="White elemental king">
+<defs>
+<linearGradient id="metal" x1="20" y1="14" x2="79" y2="81" gradientUnits="userSpaceOnUse"><stop stop-color="#ffffff"/><stop offset=".32" stop-color="#ddfcff"/><stop offset=".67" stop-color="#9cdde4"/><stop offset="1" stop-color="#3a8295"/></linearGradient>
+<linearGradient id="trim" x1="26" y1="28" x2="74" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#ffffff"/><stop offset=".45" stop-color="#79e5fa"/><stop offset=".8" stop-color="#edfaff"/><stop offset="1" stop-color="#79e5fa"/></linearGradient>
+<linearGradient id="facet" x1="38" y1="19" x2="64" y2="67" gradientUnits="userSpaceOnUse"><stop stop-color="#fffefe"/><stop offset=".5" stop-color="#c9f7ff"/><stop offset="1" stop-color="#62b7d0"/></linearGradient>
+<clipPath id="surface"><path d="m29 40 12-8 9 10 9-10 12 8 1 13-13 9H41l-13-9Z" fill="#fff"/><path d="M40 62h20l9 10H31Z" fill="#fff"/></clipPath>
+<style>.spark{fill:none;stroke:#ffffff;stroke-width:1.7;stroke-linecap:round;stroke-opacity:.8}.edge{fill:none;stroke:#ffffff;stroke-width:1.1;stroke-linecap:round;stroke-opacity:.55}.detail{fill:none;stroke:#5adfff;stroke-width:2;stroke-linecap:round}</style>
+</defs>
+<ellipse cx="50" cy="95" rx="31" ry="1.7" fill="#020b12" opacity=".22"/>
+<g stroke="#4c90a1" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+<path d="M45 7h10v11h10v9H55v13H45V27H35v-9h10Z" fill="url(#trim)"/><path d="m29 40 12-8 9 10 9-10 12 8 1 13-13 9H41l-13-9Z" fill="url(#metal)"/><path d="m50 42-9 20h18Z" fill="url(#facet)" stroke="none"/><path d="M40 62h20l9 10H31Z" fill="url(#metal)"/><path d="m29 40 21 8 21-8M28 53l22-5 22 5m-25-42v11" class="edge"/><path d="m50 50-4 5 4 4 4-4Z" fill="url(#trim)" stroke="none"/>
+<g clip-path="url(#surface)" fill="none" stroke="#eeffff" stroke-width="1.3" opacity=".8"><path d="m21 62 24-22 6-21 9 23 22 14M45 40l5 19 17 11M51 19l16 6M21 62l21 2M50 59l-7 10"/><path d="M52 48v12m-5-9 10 6m0-6-10 6m3-11 2 2 2-2m-4 16 2-2 2 2"/></g>
+<path d="m24 75 10-8h32l10 8-6 6 13 8v5H17v-5l13-8Z" fill="url(#metal)"/><path d="m24 75 26 6 26-6M30 81l20 4 20-4M17 89h66" class="edge"/><path d="m34 68 16 13 16-13-4 12H38Z" fill="url(#facet)" stroke="none"/>
+</g>
+</svg>

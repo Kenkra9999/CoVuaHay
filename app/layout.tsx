@@ -9,11 +9,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const image = `${protocol}://${host}/og-v3.png`;
   return {
     title: "Nước Cờ — The Chess Atelier · AI & đấu cùng bạn",
-    description: "Bàn cờ thủ công, quân cờ ánh kim, trợ lý Stockfish và phòng đấu online có đồng hồ. Mời bạn bằng mã, đổi tên trực tiếp và tiếp tục ván sau khi tải lại.",
-    icons: { icon: "/pieces/bN.svg" },
+    description: "Năm bộ quân độc bản: Dung nham & Băng giá, Hoàng gia, Tinh vân, Ngọc phong và Cơ giáp. Bàn cờ rộng, trợ lý Stockfish và phòng đấu online có đồng hồ.",
+    icons: { icon: "/pieces/elemental/bN.svg" },
     openGraph: {
       title: "Nước Cờ — Nước đi của riêng bạn.",
-      description: "Quân cờ ánh kim · Trợ lý Stockfish · Phòng đấu online · Đồng hồ và khôi phục ván.",
+      description: "Năm bộ quân độc bản · Trợ lý Stockfish · Phòng đấu online · Đồng hồ và khôi phục ván.",
       type: "website",
       images: [{ url: image, width: 1733, height: 907, alt: "Nước Cờ — Làm chủ từng nước cờ" }],
     },

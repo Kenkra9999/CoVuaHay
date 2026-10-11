@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="White jade pawn">
+<defs>
+<linearGradient id="metal" x1="20" y1="14" x2="79" y2="81" gradientUnits="userSpaceOnUse"><stop stop-color="#fffef2"/><stop offset=".32" stop-color="#e2efdd"/><stop offset=".67" stop-color="#b5d3bf"/><stop offset="1" stop-color="#557d73"/></linearGradient>
+<linearGradient id="trim" x1="26" y1="28" x2="74" y2="76" gradientUnits="userSpaceOnUse"><stop stop-color="#fff0b1"/><stop offset=".45" stop-color="#bc944c"/><stop offset=".8" stop-color="#e8d18d"/><stop offset="1" stop-color="#bc944c"/></linearGradient>
+<linearGradient id="facet" x1="38" y1="19" x2="64" y2="67" gradientUnits="userSpaceOnUse"><stop stop-color="#fdfff2"/><stop offset=".5" stop-color="#bcddd1"/><stop offset="1" stop-color="#79ae9a"/></linearGradient>
+<clipPath id="surface"><path d="M50 11c9 0 16 7 16 17S59 45 50 45s-16-7-16-17 7-17 16-17Z" fill="#fff"/><path d="M42 55h16l8 17H34Z" fill="#fff"/></clipPath>
+<style>.spark{fill:none;stroke:#ffffee;stroke-width:1.7;stroke-linecap:round;stroke-opacity:.8}.edge{fill:none;stroke:#ffffee;stroke-width:1.1;stroke-linecap:round;stroke-opacity:.55}.detail{fill:none;stroke:#a98136;stroke-width:2;stroke-linecap:round}</style>
+</defs>
+<ellipse cx="50" cy="95" rx="31" ry="1.7" fill="#020b12" opacity=".22"/>
+<g stroke="#5d8372" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+<path d="M50 11c9 0 16 7 16 17S59 45 50 45s-16-7-16-17 7-17 16-17Z" fill="url(#metal)"/><path d="M40 18c-3 3-4 6-4 10" class="spark"/><path d="m33 43 17 7 17-7-5 12H38Z" fill="url(#trim)"/><path d="M42 55h16l8 17H34Z" fill="url(#metal)"/><path d="m50 54-6 13 6 5 6-5Z" fill="url(#facet)" stroke="none"/><path d="M45 21c4-3 9-1 10 3s-4 6-8 7c-4 0-5 5-1 7" class="detail"/>
+<g clip-path="url(#surface)" fill="none" stroke="#ffffee" stroke-width="1.2" opacity=".55"><path d="M57 51c6 0 7 5 2 6-6 1-7 5-1 7m-23-9c-4 0-5 4-1 5"/></g>
+<path d="M32 72h36l7 6H25Z" fill="url(#trim)"/><path d="M26 78h48l-3 8H29Z" fill="url(#metal)"/><path d="M23 86h54l7 6v2H16v-2Z" fill="url(#trim)"/><path d="M32 82h36M24 91h52" class="edge"/><path d="M28 80h44" class="spark"/>
+</g>
+</svg>
