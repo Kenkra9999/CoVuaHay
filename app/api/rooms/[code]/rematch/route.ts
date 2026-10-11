@@ -24,7 +24,7 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
       let updated = await getRoom(code);
       if (!updated) return error("Không thể tải phòng.", 500);
       if (updated.white_rematch_ready && updated.black_rematch_ready) {
-        const started = await database().prepare("UPDATE rooms SET fen = ?, moves_json = '[]', status = 'playing', end_reason = NULL, draw_offer = NULL, white_remaining_ms = total_seconds * 1000, black_remaining_ms = total_seconds * 1000, turn_started_at = ?, white_rematch_ready = 0, black_rematch_ready = 0, version = version + 1, updated_at = ? WHERE code = ? AND version = ? AND status IN ('white_won','black_won','draw') AND white_rematch_ready = 1 AND black_rematch_ready = 1")
+        const started = await database().prepare("UPDATE rooms SET fen = ?, moves_json = '[]', status = 'playing', end_reason = NULL, draw_offer = NULL, white_token = black_token, black_token = white_token, white_name = black_name, black_name = white_name, white_remaining_ms = total_seconds * 1000, black_remaining_ms = total_seconds * 1000, turn_started_at = ?, white_rematch_ready = 0, black_rematch_ready = 0, version = version + 1, updated_at = ? WHERE code = ? AND version = ? AND status IN ('white_won','black_won','draw') AND white_rematch_ready = 1 AND black_rematch_ready = 1")
           .bind(new Chess().fen(), now, now, code, updated.version).run();
         if (started.meta.changes === 1) updated = await getRoom(code);
       }

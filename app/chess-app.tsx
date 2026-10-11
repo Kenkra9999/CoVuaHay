@@ -448,12 +448,27 @@ export default function ChessApp() {
     } catch (error) { setMessage(errorText(error)); }
     finally { setBusy(false); }
   }
-  function newLocal(mode: Mode = localMode, color: Color = humanColor) {
+  function newLocal(mode: Mode = localMode, color?: Color) {
     if (online?.status === "playing" && !window.confirm("Rời phòng không dừng đồng hồ. Bạn vẫn có thể vào lại bằng mã. Tiếp tục?")) return;
     analysisAbort.current?.abort();
     sessionRef.current = { code: "", token: "", epoch: sessionRef.current.epoch + 1 };
-    setOnline(null); setLocal({ ...DEFAULT_GAME, version: local.version + 1 }); setLocalMode(mode); setHumanColor(color);
-    setSelected(null); setPromotion(null); setReviewPly(null); setFlipped(false); setAiFailed(false); setAnalysisState(null); setMessage("");
+    const nextColor: Color = color ?? (humanColor === "w" ? "b" : "w");
+    setOnline(null); setLocal({ ...DEFAULT_GAME, version: local.version + 1 }); setLocalMode(mode); setHumanColor(nextColor);
+    let nextWhiteName = localNames.w;
+    if (mode === "local") {
+      setLocalNames(previous => {
+        nextWhiteName = previous.b;
+        return { w: previous.b, b: previous.w };
+      });
+    }
+    setSelected(null); setPromotion(null); setReviewPly(null); setFlipped(false); setAiFailed(false); setAnalysisState(null);
+    if (mode === "ai") {
+      setMessage("Ván mới: Bạn cầm quân " + (nextColor === "w" ? "Trắng (đi trước)." : "Đen. Stockfish cầm quân Trắng và đi trước."));
+    } else if (mode === "local") {
+      setMessage("Ván mới: " + nextWhiteName + " cầm quân Trắng và đi trước.");
+    } else {
+      setMessage("");
+    }
     forget("nuocco:lastRoom"); window.history.replaceState({}, "", window.location.pathname); setActiveTab("ai");
   }
   function undoMove() {
@@ -542,7 +557,7 @@ export default function ChessApp() {
     finally { setBusy(false); }
   }
   async function requestRematch() {
-    if (!online) { newLocal(localMode, humanColor); return; }
+    if (!online) { newLocal(localMode); return; }
     if (!online.color || busy || online.status === "playing") return;
     const session = { ...sessionRef.current }; setBusy(true);
     try {
@@ -674,7 +689,7 @@ export default function ChessApp() {
           </div>
           <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
-          <div className="board-toolbar"><div><button onClick={() => setFlipped(value => !value)} title="Xoay bàn cờ" aria-label="Xoay bàn cờ"><ArrowUpDown size={17} /></button><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => setModal("audio")} title="Âm nhạc và âm thanh" aria-label="Âm nhạc và âm thanh"><Music2 size={17} /></button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
+          <div className="board-toolbar"><div><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => setModal("audio")} title="Âm nhạc và âm thanh" aria-label="Âm nhạc và âm thanh"><Music2 size={17} /></button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
           {reviewPly !== null && <div className="replay-controls"><button onClick={() => setReviewPly(0)} aria-label="Về đầu ván"><ChevronFirst size={16} /></button><button onClick={() => setReviewPly(Math.max(0, reviewPly - 1))} aria-label="Nước trước"><ChevronLeft size={16} /></button><span>{reviewPly} / {current.moves.length}</span><button onClick={() => setReviewPly(Math.min(current.moves.length, reviewPly + 1))} aria-label="Nước tiếp"><ChevronRight size={16} /></button><button onClick={() => { setReviewPly(null); setSelected(null); }}><ChevronLast size={16} /> Trở lại trận</button></div>}
         </div>
         <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
