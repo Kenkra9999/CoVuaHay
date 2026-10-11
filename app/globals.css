@@ -160,9 +160,10 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .legal-dot { width: 23%; height: 23%; border-radius: 50%; position: absolute; top: 38.5%; left: 38.5%; background: #173c3388; z-index: 3; pointer-events: none; }
 .legal-capture { position: absolute; inset: 3px; border: 4px solid #e8d0a0a6; border-radius: 50%; z-index: 3; pointer-events: none; }
 .piece { position: absolute; width: 12.5%; height: 12.5%; top: 0; left: 0; display: grid; place-items: center; z-index: 2; transition: transform 180ms cubic-bezier(.2,.7,.25,1), opacity .12s; touch-action: none; cursor: grab; }
-.piece img { width: 91%; height: 91%; object-fit: contain; pointer-events: none; user-select: none; filter: drop-shadow(0 3px 2px #0006); }
-.piece-b img { filter: drop-shadow(0 2px 1px #071f2577); }
-.piece-selected img { filter: drop-shadow(0 0 5px #edd6aa99) drop-shadow(0 3px 2px #0006); }
+.piece img { width: 92%; height: 92%; object-fit: contain; pointer-events: none; user-select: none; transition: transform 180ms cubic-bezier(.2,.7,.25,1), filter 180ms cubic-bezier(.2,.7,.25,1); }
+.piece-w img { filter: drop-shadow(0 0 1.2px rgba(0, 0, 0, 0.95)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.85)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) contrast(1.22) saturate(1.22) brightness(1.02); }
+.piece-b img { filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 1)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) contrast(1.25) saturate(1.22); }
+.piece-selected img { filter: drop-shadow(0 0 10px var(--gold, #dfc487)) drop-shadow(0 0 3px #ffffff) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9)) contrast(1.28) saturate(1.28) !important; transform: scale(1.08) translateY(-2px); }
 .piece-dragging { opacity: .25; }
 .drag-piece { position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 100; }
 .drag-piece img { height: 100%; width: 100%; filter: drop-shadow(0 12px 8px #0008); }
@@ -802,36 +803,242 @@ button, input { -webkit-tap-highlight-color: transparent; }
 @keyframes vip-ember-tile { 0% { opacity: 0; transform: translateY(15%); } 40% { opacity: .85; } 100% { opacity: 0; transform: translateY(-25%); } }
 @keyframes vip-ember { 0% { opacity: 0; transform: translateY(8px) scale(.5); } 35% { opacity: 1; } 100% { opacity: 0; transform: translateY(-22px) scale(.3); } }
 /* Shared royal auras follow piece identity, including a promoted Queen. */
-.royal-aura { position: absolute; inset: 1%; pointer-events: none; color: var(--aura, #ffcf72); --aura-speed: 7s; }
-.aura-queen { --aura-speed: 4.5s; }
-.aura-halo { position: absolute; inset: 3%; border-radius: 45%; background: radial-gradient(ellipse at 50% 58%, transparent 27%, var(--aura, #ffcf72) 55%, transparent 76%); opacity: .32; animation: royal-breathe 2.6s ease-in-out infinite alternate; }
-.aura-orbit { position: absolute; inset: 5%; border-radius: 50%; background: conic-gradient(transparent 8%, #fff4d3 12%, var(--aura, #ffcf72) 21%, transparent 29% 51%, var(--aura, #ffcf72) 65%, #fff 69%, transparent 75%); mask: radial-gradient(closest-side, transparent 89%, #000 92% 97%, transparent 100%); animation: royal-orbit var(--aura-speed) linear infinite; }
-.aura-seal { position: absolute; left: 10%; bottom: 3%; width: 80%; height: 28%; border: 2px solid currentColor; border-radius: 50%; box-shadow: 0 0 8px currentColor, inset 0 0 6px currentColor; opacity: .8; animation: royal-seal 2.8s ease-in-out infinite alternate; }
-.aura-king .aura-seal { border-style: double; border-width: 3px; }
-.aura-king .aura-orbit { inset: 9%; animation-direction: reverse; }
-.aura-queen .aura-halo { inset: -1%; animation-duration: 1.8s; }
-.aura-crown { position: absolute; left: 47%; top: 1%; width: 6%; height: 6%; background: #fff3cf; transform: rotate(45deg); box-shadow: 0 0 6px 2px currentColor; animation: royal-crown 2s ease-in-out infinite alternate; }
-.aura-mote { position: absolute; inset: 7%; transform: rotate(var(--mote-angle)); }
-.aura-mote::after { content: ""; position: absolute; top: 0; left: 49%; width: 3px; height: 3px; border-radius: 50%; background: currentColor; box-shadow: 0 0 4px currentColor; animation: royal-mote 2.7s ease-out infinite; animation-delay: var(--mote-delay); }
-.aura-queen .aura-mote::after { width: 4px; height: 4px; }
 .piece > img, .drag-piece > img { position: relative; z-index: 1; }
-.board[data-piece-set="sakura"] .piece-w, .drag-piece[data-piece-set="sakura"].piece-w { --aura: #ff9fc9; }
-.board[data-piece-set="sakura"] .piece-b, .drag-piece[data-piece-set="sakura"].piece-b { --aura: #ff557d; }
-.board[data-piece-set="elemental"] .piece-w, .drag-piece[data-piece-set="elemental"].piece-w { --aura: #73e8ff; }
-.board[data-piece-set="elemental"] .piece-b, .drag-piece[data-piece-set="elemental"].piece-b { --aura: #ff8c40; }
-.board[data-piece-set="royal"] .piece-w, .drag-piece[data-piece-set="royal"].piece-w { --aura: #ffdf8b; }
-.board[data-piece-set="royal"] .piece-b, .drag-piece[data-piece-set="royal"].piece-b { --aura: #f2af40; }
-.board[data-piece-set="nebula"] .piece-w, .drag-piece[data-piece-set="nebula"].piece-w { --aura: #93dfff; }
-.board[data-piece-set="nebula"] .piece-b, .drag-piece[data-piece-set="nebula"].piece-b { --aura: #c77bff; }
-.board[data-piece-set="jade"] .piece-w, .drag-piece[data-piece-set="jade"].piece-w { --aura: #baffc9; }
-.board[data-piece-set="jade"] .piece-b, .drag-piece[data-piece-set="jade"].piece-b { --aura: #48efa7; }
-.board[data-piece-set="mecha"] .piece-w, .drag-piece[data-piece-set="mecha"].piece-w { --aura: #64e9ff; }
-.board[data-piece-set="mecha"] .piece-b, .drag-piece[data-piece-set="mecha"].piece-b { --aura: #ff6269; }
-@keyframes royal-breathe { to { opacity: .55; transform: scale(1.07); } }
-@keyframes royal-orbit { to { transform: rotate(360deg); } }
-@keyframes royal-seal { to { transform: scaleX(.88); opacity: .45; } }
-@keyframes royal-crown { to { opacity: .4; transform: rotate(135deg) scale(.6); } }
-@keyframes royal-mote { 0% { opacity: 0; transform: translateY(7px) scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-5px) scale(.2); } }
+
+/* ==========================================================
+   BÁ KHÍ KHÍ VƯƠNG (SUPREME OVERLORD SOVEREIGN AURA)
+   Swirling dragon qi currents, dual cyclones, & apex flare
+   ========================================================== */
+.royal-aura {
+  position: absolute;
+  inset: -15%;
+  pointer-events: none;
+  color: var(--aura, #ffcf72);
+  --aura-speed: 4.8s;
+  display: block;
+}
+.aura-queen { --aura-speed: 3.6s; }
+
+.aura-layer-back {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.aura-layer-front {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* Pulsing sovereign domain core */
+.aura-core-glow {
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 55%, var(--aura-glow, rgba(255, 207, 114, 0.58)) 0%, var(--aura, rgba(255, 207, 114, 0.28)) 42%, transparent 72%);
+  opacity: 0.72;
+  animation: royal-breathe 2.2s ease-in-out infinite alternate;
+}
+.aura-queen .aura-core-glow {
+  animation-duration: 1.7s;
+  opacity: 0.82;
+}
+
+/* Base imperial array / mandala domain seal */
+.aura-base-array {
+  position: absolute;
+  left: 6%;
+  bottom: 2%;
+  width: 88%;
+  height: 28%;
+  border-radius: 50%;
+  border: 2px solid var(--aura, #ffcf72);
+  box-shadow: 0 0 14px var(--aura, #ffcf72), inset 0 0 10px var(--aura, #ffcf72), 0 0 28px var(--aura-glow, rgba(255, 207, 114, 0.65));
+  opacity: 0.88;
+  animation: royal-array-pulse 2.2s ease-in-out infinite alternate;
+}
+.aura-base-runes {
+  position: absolute;
+  left: 12%;
+  bottom: 5%;
+  width: 76%;
+  height: 22%;
+  border-radius: 50%;
+  border: 1.5px dashed var(--aura, #ffcf72);
+  opacity: 0.6;
+  animation: royal-runes-rotate 12s linear infinite;
+}
+.aura-king .aura-base-array {
+  border-style: double;
+  border-width: 3.5px;
+}
+
+/* Dual intersecting energy cyclones (conic spiral currents) */
+.aura-cyclone {
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 8px var(--aura, #ffcf72));
+}
+.cyclone-cw {
+  background: conic-gradient(from 0deg, transparent 0%, var(--aura, #ffcf72) 18%, #ffffff 24%, var(--aura, #ffcf72) 34%, transparent 46% 62%, var(--aura, #ffcf72) 78%, #ffffff 84%, var(--aura, #ffcf72) 92%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 80%, #000 87% 96%, transparent 100%);
+  -webkit-mask: radial-gradient(closest-side, transparent 80%, #000 87% 96%, transparent 100%);
+  opacity: 0.92;
+  animation: royal-cyclone-spin var(--aura-speed) linear infinite;
+}
+.cyclone-ccw {
+  inset: 10%;
+  background: conic-gradient(from 180deg, transparent 0%, var(--aura, #ffcf72) 14%, #ffffff 20%, var(--aura, #ffcf72) 30%, transparent 44% 64%, var(--aura, #ffcf72) 76%, #ffffff 82%, var(--aura, #ffcf72) 90%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 78%, #000 85% 95%, transparent 100%);
+  -webkit-mask: radial-gradient(closest-side, transparent 78%, #000 85% 95%, transparent 100%);
+  opacity: 0.85;
+  animation: royal-cyclone-spin-reverse calc(var(--aura-speed) * 1.35) linear infinite;
+}
+
+/* Animated SVG energy dragon streams */
+.aura-streams-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 6px var(--aura, #ffcf72)) drop-shadow(0 0 14px var(--aura-glow, rgba(255, 207, 114, 0.75)));
+}
+.aura-stream-ribbon {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.ribbon-1 {
+  stroke-width: 3.4px;
+  stroke-dasharray: 75 140;
+  animation: royal-ribbon-spin 3.2s linear infinite;
+  transform-origin: 60px 60px;
+}
+.ribbon-2 {
+  stroke-width: 2.8px;
+  stroke-dasharray: 60 110;
+  animation: royal-ribbon-spin-reverse 4.5s linear infinite;
+  transform-origin: 60px 60px;
+}
+.ribbon-3 {
+  stroke-width: 2.4px;
+  stroke-dasharray: 85 160;
+  animation: royal-ribbon-spin 6s linear infinite;
+  transform-origin: 60px 60px;
+}
+.ribbon-queen {
+  stroke-width: 3.6px;
+  stroke-dasharray: 70 120;
+}
+
+/* Rising sovereign qi wisps */
+.aura-wisp {
+  position: absolute;
+  bottom: 22%;
+  width: 14%;
+  height: 48%;
+  background: linear-gradient(0deg, transparent 0%, var(--aura, #ffcf72) 50%, #ffffff 85%, transparent 100%);
+  border-radius: 50% 50% 0 0;
+  filter: blur(1.2px) drop-shadow(0 0 4px var(--aura, #ffcf72));
+  opacity: 0.75;
+}
+.wisp-left {
+  left: 17%;
+  animation: royal-wisp-flow 1.9s ease-out infinite;
+}
+.wisp-right {
+  right: 17%;
+  animation: royal-wisp-flow 2.3s ease-out infinite 0.6s;
+}
+
+/* Apex crown sovereign starburst flare */
+.aura-crown-flare {
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+}
+.flare-core {
+  width: 9px;
+  height: 9px;
+  background: #ffffff;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px 3px var(--aura, #ffcf72), 0 0 20px 6px var(--aura-glow, rgba(255, 207, 114, 0.85));
+  animation: royal-crown-pulse 1.8s ease-in-out infinite alternate;
+}
+.flare-rays {
+  position: absolute;
+  inset: -6px;
+  background: radial-gradient(circle, #ffffff 18%, transparent 70%);
+  opacity: 0.8;
+  animation: royal-crown-rotate 6s linear infinite;
+}
+.aura-king .flare-core {
+  width: 10px;
+  height: 10px;
+}
+.aura-queen .flare-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Orbiting overlord qi embers / sparks */
+.aura-ember {
+  position: absolute;
+  inset: 6%;
+  transform: rotate(calc(var(--ember-idx) * 60deg));
+}
+.aura-ember::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 48%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px 2px var(--aura, #ffcf72), 0 0 12px 4px var(--aura-glow, rgba(255, 207, 114, 0.7));
+  animation: royal-ember-orbit 2.8s ease-out infinite;
+  animation-delay: calc(var(--ember-idx) * -0.48s);
+}
+.aura-queen .aura-ember::after {
+  width: 5px;
+  height: 5px;
+}
+
+/* Color palettes per piece set */
+.board[data-piece-set="sakura"] .piece-w, .drag-piece[data-piece-set="sakura"].piece-w { --aura: #ff75a0; --aura-glow: rgba(255, 117, 160, 0.75); --aura-core: #ffe0eb; }
+.board[data-piece-set="sakura"] .piece-b, .drag-piece[data-piece-set="sakura"].piece-b { --aura: #ff2a6d; --aura-glow: rgba(255, 42, 109, 0.85); --aura-core: #ff80a4; }
+.board[data-piece-set="elemental"] .piece-w, .drag-piece[data-piece-set="elemental"].piece-w { --aura: #00e5ff; --aura-glow: rgba(0, 229, 255, 0.75); --aura-core: #b2ebf2; }
+.board[data-piece-set="elemental"] .piece-b, .drag-piece[data-piece-set="elemental"].piece-b { --aura: #ff6d00; --aura-glow: rgba(255, 109, 0, 0.85); --aura-core: #ffcc80; }
+.board[data-piece-set="royal"] .piece-w, .drag-piece[data-piece-set="royal"].piece-w { --aura: #ffd700; --aura-glow: rgba(255, 215, 0, 0.8); --aura-core: #fffde7; }
+.board[data-piece-set="royal"] .piece-b, .drag-piece[data-piece-set="royal"].piece-b { --aura: #ff9100; --aura-glow: rgba(255, 145, 0, 0.85); --aura-core: #ffe082; }
+.board[data-piece-set="nebula"] .piece-w, .drag-piece[data-piece-set="nebula"].piece-w { --aura: #80d8ff; --aura-glow: rgba(128, 216, 255, 0.75); --aura-core: #e1f5fe; }
+.board[data-piece-set="nebula"] .piece-b, .drag-piece[data-piece-set="nebula"].piece-b { --aura: #d500f9; --aura-glow: rgba(213, 0, 249, 0.85); --aura-core: #f3e5f5; }
+.board[data-piece-set="jade"] .piece-w, .drag-piece[data-piece-set="jade"].piece-w { --aura: #69f0ae; --aura-glow: rgba(105, 240, 174, 0.75); --aura-core: #e8f5e9; }
+.board[data-piece-set="jade"] .piece-b, .drag-piece[data-piece-set="jade"].piece-b { --aura: #00e676; --aura-glow: rgba(0, 230, 118, 0.85); --aura-core: #b9f6ca; }
+.board[data-piece-set="mecha"] .piece-w, .drag-piece[data-piece-set="mecha"].piece-w { --aura: #00e5ff; --aura-glow: rgba(0, 229, 255, 0.75); --aura-core: #84ffff; }
+.board[data-piece-set="mecha"] .piece-b, .drag-piece[data-piece-set="mecha"].piece-b { --aura: #ff1744; --aura-glow: rgba(255, 23, 68, 0.85); --aura-core: #ff8a80; }
+
+/* Sovereign animations */
+@keyframes royal-breathe { 0% { transform: scale(0.92); opacity: 0.58; } 100% { transform: scale(1.08); opacity: 0.92; } }
+@keyframes royal-array-pulse { 0% { transform: scaleX(0.95); opacity: 0.68; } 100% { transform: scaleX(1.05); opacity: 1; } }
+@keyframes royal-runes-rotate { to { transform: rotate(360deg); } }
+@keyframes royal-cyclone-spin { to { transform: rotate(360deg); } }
+@keyframes royal-cyclone-spin-reverse { to { transform: rotate(-360deg); } }
+@keyframes royal-ribbon-spin { 0% { transform: rotate(0deg); stroke-dashoffset: 0; } 100% { transform: rotate(360deg); stroke-dashoffset: -215; } }
+@keyframes royal-ribbon-spin-reverse { 0% { transform: rotate(360deg); stroke-dashoffset: 0; } 100% { transform: rotate(0deg); stroke-dashoffset: 215; } }
+@keyframes royal-wisp-flow { 0% { transform: translateY(8px) scaleY(0.4); opacity: 0; } 40% { opacity: 0.9; transform: translateY(-4px) scaleY(1.1); } 100% { transform: translateY(-20px) scaleY(0.7); opacity: 0; } }
+@keyframes royal-crown-pulse { 0% { transform: rotate(45deg) scale(0.85); box-shadow: 0 0 6px 2px var(--aura, #ffcf72); } 100% { transform: rotate(135deg) scale(1.3); box-shadow: 0 0 16px 5px var(--aura, #ffcf72), 0 0 26px 8px var(--aura-glow, rgba(255, 207, 114, 0.9)); } }
+@keyframes royal-crown-rotate { to { transform: rotate(360deg); } }
+@keyframes royal-ember-orbit { 0% { transform: translateY(8px) scale(0.4); opacity: 0; } 35% { opacity: 1; transform: translateY(0) scale(1.2); } 100% { transform: translateY(-16px) scale(0.2); opacity: 0; } }
 .theme-sakura .square::after { background: radial-gradient(ellipse at 10% 5%, #fff9, transparent 70%), repeating-linear-gradient(40deg, transparent 0 15px, #c490aa33 16px, transparent 17px 31px); opacity: .12; }
 .theme-lava .square::after { background: linear-gradient(135deg, #ffc47844, transparent 65%), repeating-linear-gradient(25deg, transparent 0 23px, #ff9d6538 24px, transparent 25px 48px); opacity: .22; }
 .theme-royal .square::after { background: repeating-linear-gradient(2deg, transparent 0 5px, #674b3625 6px, transparent 7px 14px); opacity: .18; }

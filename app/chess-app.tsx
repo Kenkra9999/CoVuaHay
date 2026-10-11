@@ -78,12 +78,64 @@ type BoardActions = {
   up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
   cancel: () => void;
 };
-function RoyalAura({ type }: { type: string }) {
+function RoyalAura({ type, color }: { type: string; color: Color }) {
   if (type !== "k" && type !== "q") return null;
-  return <span className={"royal-aura aura-" + (type === "k" ? "king" : "queen")} aria-hidden="true">
-    <span className="aura-halo" /><span className="aura-orbit" /><span className="aura-seal" /><span className="aura-crown" />
-    {Array.from({ length: 6 }, (_, i) => <i key={i} className="aura-mote" style={{ "--mote-angle": i * 60 + "deg", "--mote-delay": -i * .45 + "s" } as CSSProperties} />)}
-  </span>;
+  const isKing = type === "k";
+  return (
+    <span className={"royal-aura aura-" + (isKing ? "king" : "queen") + " aura-" + color} aria-hidden="true">
+      <span className="aura-layer-back">
+        <span className="aura-core-glow" />
+        <span className="aura-base-array" />
+        <span className="aura-base-runes" />
+        <span className="aura-cyclone cyclone-cw" />
+        <span className="aura-cyclone cyclone-ccw" />
+        <svg className="aura-streams-svg" viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id={"stream-g1-" + type + color} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+              <stop offset="30%" stopColor="currentColor" stopOpacity="0.35" />
+              <stop offset="70%" stopColor="currentColor" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+            </linearGradient>
+            <linearGradient id={"stream-g2-" + type + color} x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+              <stop offset="35%" stopColor="currentColor" stopOpacity="0.3" />
+              <stop offset="75%" stopColor="currentColor" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.95" />
+            </linearGradient>
+          </defs>
+          <path
+            className="aura-stream-ribbon ribbon-1"
+            d="M 60 12 C 86 12, 108 34, 108 60 C 108 86, 86 108, 60 108 C 34 108, 12 86, 12 60 C 12 38, 30 20, 52 16"
+            stroke={"url(#stream-g1-" + type + color + ")"}
+          />
+          <path
+            className="aura-stream-ribbon ribbon-2"
+            d="M 60 18 C 38 18, 20 36, 20 60 C 20 84, 38 102, 60 102 C 82 102, 100 84, 100 60 C 100 40, 84 24, 64 22"
+            stroke={"url(#stream-g2-" + type + color + ")"}
+          />
+          <path
+            className={"aura-stream-ribbon ribbon-3" + (isKing ? "" : " ribbon-queen")}
+            d={isKing
+              ? "M 60 8 C 88 8, 112 32, 112 60 C 112 88, 88 112, 60 112 C 32 112, 8 88, 8 60 C 8 32, 32 8, 60 8"
+              : "M 60 22 C 80 22, 98 40, 98 60 C 98 80, 80 98, 60 98 C 40 98, 22 80, 22 60 C 22 40, 40 22, 60 22"}
+            stroke={"url(#stream-g1-" + type + color + ")"}
+          />
+        </svg>
+      </span>
+      <span className="aura-layer-front">
+        <span className="aura-wisp wisp-left" />
+        <span className="aura-wisp wisp-right" />
+        <span className="aura-crown-flare">
+          <span className="flare-core" />
+          <span className="flare-rays" />
+        </span>
+        {Array.from({ length: 6 }, (_, i) => (
+          <i key={i} className="aura-ember" style={{ "--ember-idx": i } as CSSProperties} />
+        ))}
+      </span>
+    </span>
+  );
 }
 function VipFrameEffects() {
   return <span className="vip-frame-effects" aria-hidden="true"><span className="vip-rim" />
@@ -121,7 +173,7 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
       return <div key={piece.id} data-piece-type={piece.type} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
         style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" }}
         onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
-        <RoyalAura type={piece.type} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
+        <RoyalAura type={piece.type} color={piece.color} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
     })}
     {showHint && hintMove && (() => {
       const from = coordinates(hintMove.from), to = coordinates(hintMove.to);
@@ -729,7 +781,7 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
+    {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} color={draggedPiece.color} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
     <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : modal === "effects" ? "Chọn hiệu ứng" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" || modal === "effects" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
       <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : modal === "effects" ? "HIỆU ỨNG CHO CUỘC CHƠI" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">
