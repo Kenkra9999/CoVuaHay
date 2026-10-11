@@ -585,8 +585,8 @@ export default function ChessApp() {
       <nav className="header-nav" aria-label="Chế độ chơi"><span className="nav-current"><span className="live-dot" /> {online ? "Đấu trường online" : aiMode ? "Không gian luyện tập" : "Cùng một bàn cờ"}</span><button onClick={() => setModal("help")}>Cách chơi</button></nav>
       <div className="header-actions"><button className="header-join" onClick={() => { setModal("join"); setMessage(""); }}><Hash size={16} /><span>Nhập mã mời</span></button><button className="primary-button header-create" onClick={() => setModal("create")}><Plus size={17} /><span>Tạo phòng</span></button></div>
     </header>
-    <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
     <main className="arena-layout">
+      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
 
       <section className={"board-column theme-" + appearance.boardTheme} aria-label="Bàn cờ vua">
         <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">

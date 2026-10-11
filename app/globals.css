@@ -861,3 +861,44 @@ button, input { -webkit-tap-highlight-color: transparent; }
   .inspiration-art figcaption { right: auto; left: 50%; transform: translateX(-50%); bottom: 17px; white-space: nowrap; font-size: 7px; }
   .game-menu-content h2 { font-size: 36px; }
 }
+
+/* Keep inspiration in the original left-hand column beside the chessboard. */
+.arena-layout { max-width: 1640px; grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) 300px; }
+.arena-layout > .inspiration-hero { width: 100%; min-width: 0; max-width: none; margin: 0; grid-template-columns: 1fr; border-radius: 16px; }
+.arena-layout > .inspiration-hero .inspiration-top { padding: 18px 16px 0; gap: 8px; }
+.arena-layout > .inspiration-hero .inspiration-collection { gap: 7px; }
+.arena-layout > .inspiration-hero .inspiration-collection img { width: 32px; height: 40px; }
+.arena-layout > .inspiration-hero .inspiration-collection > span { font-size: 9px; letter-spacing: .7px; }
+.arena-layout > .inspiration-hero .inspiration-collection small { font-size: 7px; letter-spacing: .5px; }
+.arena-layout > .inspiration-hero .game-menu-toggle { width: 42px; min-height: 42px; padding: 8px; flex-shrink: 0; }
+.arena-layout > .inspiration-hero .game-menu-toggle span { display: none; }
+.arena-layout > .inspiration-hero .inspiration-copy { padding: 25px 22px 12px; }
+.arena-layout > .inspiration-hero .inspiration-kicker { font-size: 7px; letter-spacing: 1.1px; }
+.arena-layout > .inspiration-hero .inspiration-quote-space { min-height: 330px; align-items: flex-start; }
+.arena-layout > .inspiration-hero .inspiration-open-quote { left: -13px; top: -7px; font-size: 40px; }
+.arena-layout > .inspiration-hero .inspiration-quote em { font-size: 32px; line-height: 1.15; }
+.arena-layout > .inspiration-hero .inspiration-quote p > span { font-size: 27px; line-height: 1.23; }
+.arena-layout > .inspiration-hero .inspiration-controls { justify-content: center; gap: 12px; }
+.arena-layout > .inspiration-hero .inspiration-art { margin: 0; min-height: 310px; aspect-ratio: 1; }
+.arena-layout > .inspiration-hero .inspiration-art > img { object-position: center 36%; }
+.arena-layout > .inspiration-hero .inspiration-art::after { background: linear-gradient(0deg, #101719 0%, transparent 26%, transparent 77%, #101719 100%), linear-gradient(90deg, #10171925, transparent 20%, transparent 80%, #10171925); }
+.arena-layout > .inspiration-hero .inspiration-art figcaption { left: 50%; right: auto; transform: translateX(-50%); bottom: 18px; white-space: nowrap; font-size: 6px; letter-spacing: 1px; }
+@media (min-width: 851px) and (max-width: 1249px) {
+  .arena-layout { grid-template-columns: 270px minmax(0, 1fr); }
+  .arena-layout > .inspiration-hero { grid-column: 1; grid-row: 1 / span 2; }
+  .arena-layout > .board-column, .arena-layout > .right-rail { grid-column: 2; }
+  .arena-layout > .right-rail { order: initial; }
+  .arena-layout > .inspiration-hero .inspiration-quote em { font-size: 29px; }
+  .arena-layout > .inspiration-hero .inspiration-quote p > span { font-size: 25px; }
+  .arena-layout > .inspiration-hero .inspiration-quote-space { min-height: 355px; }
+  .arena-layout > .inspiration-hero .inspiration-art { min-height: 280px; }
+}
+@media (max-width: 850px) {
+  .arena-layout > .inspiration-hero { max-width: 650px; align-self: center; }
+  .arena-layout > .inspiration-hero .inspiration-collection > span { font-size: 10px; }
+  .arena-layout > .inspiration-hero .inspiration-collection small { font-size: 8px; }
+  .arena-layout > .inspiration-hero .inspiration-quote-space { min-height: 235px; align-items: center; }
+  .arena-layout > .inspiration-hero .inspiration-quote em { font-size: clamp(29px, 6vw, 38px); }
+  .arena-layout > .inspiration-hero .inspiration-quote p > span { font-size: clamp(25px, 5vw, 32px); }
+  .arena-layout > .inspiration-hero .inspiration-art { min-height: 280px; max-height: 390px; aspect-ratio: 1.22; }
+}
