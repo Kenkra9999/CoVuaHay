@@ -23,7 +23,7 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .site-shell::after { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background: linear-gradient(180deg, #11191ee6 12%, #11191efa 85%), url("/chess-duel.png") center / cover; }
 .piece-style-royal { --gold: #d8b681; --gold-light: #f4e2bd; --teal: #bfccb9; }
 .piece-style-royal .board-frame { background: linear-gradient(145deg, #d3b683, #615144 12%, #29292b 48%, #655244 84%, #c6a675); }
-.duel-hero { position: relative; isolation: isolate; overflow: hidden; width: calc(100% - 64px); max-width: 1576px; min-height: 276px; margin: 24px auto 0; border: 1px solid #d7b78538; border-radius: 16px; background: #161a1e; box-shadow: 0 20px 55px -30px #000b; }
+.duel-hero { position: relative; isolation: isolate; overflow: clip; width: calc(100% - 64px); max-width: 1576px; min-height: 276px; margin: 24px auto 0; border: 1px solid #d7b78538; border-radius: 16px; background: #161a1e; box-shadow: 0 20px 55px -30px #000b; }
 .duel-art { position: absolute; z-index: -2; right: 0; top: 0; width: 83%; height: 100%; object-fit: cover; object-position: 50% 28%; }
 .duel-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #13191e 0%, #13191ef5 19%, #13191ea6 36%, #13191e0d 66%), linear-gradient(0deg, #14191ee6, transparent 38%); }
 .duel-copy { position: relative; max-width: 480px; padding: 29px 38px 27px; }
