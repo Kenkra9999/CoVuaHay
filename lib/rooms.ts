@@ -14,6 +14,7 @@ export type RoomRow = {
   white_remaining_ms: number; black_remaining_ms: number; turn_started_at: number | null;
   end_reason: EndReason; draw_offer: "w" | "b" | null;
   white_seen_at: number | null; black_seen_at: number | null;
+  white_rematch_ready: number; black_rematch_ready: number;
 };
 export type RoomView = {
   code: string; fen: string; moves: MoveRecord[]; status: RoomStatus; version: number;
@@ -21,6 +22,7 @@ export type RoomView = {
   players: { white: { name: string; seenAt: number | null }; black: { name: string; seenAt: number | null } };
   clock: { totalSeconds: number; moveLimitSeconds: number; whiteMs: number; blackMs: number; turnStartedAt: number | null };
   endReason: EndReason; drawOffer: "w" | "b" | null;
+  rematchReady: { white: boolean; black: boolean };
 };
 
 const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -98,7 +100,8 @@ export async function roomView(room: RoomRow, token?: string | null): Promise<Ro
     hasBlack: Boolean(room.black_token), color: await playerColor(room, token), updatedAt: room.updated_at, serverNow: Date.now(),
     players: { white: { name: room.white_name, seenAt: room.white_seen_at }, black: { name: room.black_name, seenAt: room.black_seen_at } },
     clock: { totalSeconds: room.total_seconds, moveLimitSeconds: room.move_limit_seconds, whiteMs: room.white_remaining_ms,
-      blackMs: room.black_remaining_ms, turnStartedAt: room.turn_started_at }, endReason: room.end_reason, drawOffer: room.draw_offer };
+      blackMs: room.black_remaining_ms, turnStartedAt: room.turn_started_at }, endReason: room.end_reason, drawOffer: room.draw_offer,
+    rematchReady: { white: Boolean(room.white_rematch_ready), black: Boolean(room.black_rematch_ready) } };
 }
 export function reply(data: unknown, status = 200) {
   return Response.json(data, { status, headers: { "Cache-Control": "no-store" } });

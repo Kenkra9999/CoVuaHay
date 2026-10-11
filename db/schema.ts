@@ -21,4 +21,6 @@ export const rooms = sqliteTable("rooms", {
   drawOffer: text("draw_offer"),
   whiteSeenAt: integer("white_seen_at"),
   blackSeenAt: integer("black_seen_at"),
+  whiteRematchReady: integer("white_rematch_ready").notNull().default(0),
+  blackRematchReady: integer("black_rematch_ready").notNull().default(0),
 });

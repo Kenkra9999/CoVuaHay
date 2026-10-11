@@ -222,7 +222,7 @@ export default function ChessApp() {
     setConnection("live");
     setSelected(null); setPromotion(null); setFlipped(false); setReviewPly(null); setModal(null); setAnalysisState(null);
     setJoinCode(room.code); setNameDraft(room.color ? room.players[room.color === "w" ? "white" : "black"].name : "Kỳ thủ");
-    setActiveTab("room");
+    setActiveTab("ai");
     remember("nuocco:lastRoom", room.code);
     if (token) remember("nuocco:" + room.code, token);
     window.history.replaceState({}, "", "?room=" + room.code);
@@ -539,6 +539,21 @@ export default function ChessApp() {
     } catch (error) { setMessage(errorText(error)); }
     finally { setBusy(false); }
   }
+  async function requestRematch() {
+    if (!online) { newLocal(localMode, humanColor); return; }
+    if (!online.color || busy || online.status === "playing") return;
+    const session = { ...sessionRef.current }; setBusy(true);
+    try {
+      const response = await fetch("/api/rooms/" + session.code + "/rematch", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-player-token": session.token }, body: "{}",
+      });
+      const data: ApiData = await response.json();
+      if (session.epoch !== sessionRef.current.epoch) return;
+      if (data.room) applyRoom(data.room);
+      if (!response.ok) throw new Error(data.error || "Chưa thể sẵn sàng đấu lại.");
+    } catch (error) { setMessage(errorText(error)); }
+    finally { setBusy(false); }
+  }
   async function copyText(text: string) {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800); }
     catch { setMessage("Sao chép: " + text); }
@@ -576,6 +591,11 @@ export default function ChessApp() {
   const draggedPiece = drag ? pieces.find(piece => piece.square === drag.from) : null;
   const ended = current.status !== "waiting" && current.status !== "playing";
   const timeout = online?.endReason === "timeout" || online?.endReason === "move_timeout";
+  const resultTitle = current.status === "draw" ? "Hòa cờ" : online
+    ? winner === online.color ? "Bạn đã chiến thắng!" : online.color ? timeout ? "Bạn đã thua do quá giờ" : "Bạn đã thua" : playerLabel(winner!) + " chiến thắng"
+    : aiMode ? winner === humanColor ? "Bạn đã chiến thắng!" : "Bạn đã thua" : playerLabel(winner!) + " chiến thắng";
+  const resultDetail = current.status === "draw" ? "Một thế cờ cân bằng. Cùng bắt đầu ván mới nhé."
+    : current.status === "playing" ? "" : online?.endReason === "checkmate" || (!online && liveGame.isCheckmate()) ? "Chiếu bí. Ván đấu đã khép lại." : timeout ? "Thời gian của kỳ thủ đã hết." : online?.endReason === "resign" ? "Một kỳ thủ đã xin thua." : "Ván đấu đã kết thúc.";
   const statusLabel = restoring ? "Đang khôi phục trận…" : reviewPly !== null ? "Đang xem lại nước " + reviewPly
     : current.status === "waiting" ? "Chờ người bạn cùng chơi"
     : ended ? current.status === "draw" ? "Một ván cờ hòa đẹp" : timeout && online?.color && winner !== online.color ? "Bạn đã thua do quá giờ" : playerLabel(winner!) + " chiến thắng"
@@ -639,11 +659,13 @@ export default function ChessApp() {
           <button className={!online && !aiMode ? "quick-control-active" : ""} aria-label="Chơi hai người cùng máy" onClick={() => newLocal("local")}><Crown size={18} /> Cùng máy</button>
           <button className={online ? "quick-control-active" : ""} aria-label="Tạo trận online" onClick={() => setModal("create")}><Users size={18} /> Online</button>
         </div>
+        <div className="board-options">
         <div className="style-toolbar"><button onClick={() => setModal("appearance")} aria-label="Chọn bàn cờ và hiệu ứng">{vipBoard ? <Crown size={16} /> : <Palette size={16} />}<span>{currentBoardStyle.name}<small>{vipBoard ? "Bàn VIP · Hiệu ứng động" : "Bàn thường · Đổi phong cách"}</small></span><ChevronRight size={15} /></button><button onClick={() => setModal("appearance")} aria-label="Đổi hiệu ứng nền"><Sparkles size={16} /><span>{currentEffect.name}<small>Chọn hiệu ứng khác</small></span><ChevronRight size={15} /></button></div>
         <button className="collection-strip" onClick={() => setModal("pieces")} aria-label="Chọn bộ quân cờ">
           <span className="collection-mini"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><img src={pieceImage({ color: "b", type: "n" }, appearance.pieceSet)} alt="" /></span>
           <span><small>BỘ QUÂN ĐANG DÙNG</small><strong>{currentPieceSet.name}</strong></span><span className="collection-change">Đổi bộ quân <ChevronRight size={18} /></span>
         </button>
+        </div>
         <div className="board-stage">
           <div className="players-row">{playerBar(topColor)}{playerBar(orientation)}</div>
           <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": vipBoard.inset } as CSSProperties : undefined}>
@@ -651,6 +673,10 @@ export default function ChessApp() {
             <ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
             checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} dragFrom={drag?.from} boardRef={boardRef}
             showHint={showHint} hintMove={hintMove} actions={stableBoardActions} /></div>
+          {ended && <div className="result-overlay" role="dialog" aria-labelledby="result-title" aria-describedby="result-detail"><div className="result-panel"><span className="result-crown"><Crown size={22} /></span><span className="eyebrow">KẾT THÚC VÁN ĐẤU</span><h2 id="result-title">{resultTitle}</h2><p id="result-detail">{resultDetail}</p>
+            {online?.color && <div className="rematch-status"><span className={online.rematchReady.white ? "ready-dot" : ""}>{online.rematchReady.white ? "✓ " : "○ "}Trắng {online.rematchReady.white ? "đã sẵn sàng" : "đang chờ"}</span><span className={online.rematchReady.black ? "ready-dot" : ""}>{online.rematchReady.black ? "✓ " : "○ "}Đen {online.rematchReady.black ? "đã sẵn sàng" : "đang chờ"}</span></div>}
+            {online && !online.color ? <p>Chỉ hai kỳ thủ trong phòng mới có thể bắt đầu đấu lại.</p> : <button className="primary-button rematch-button" disabled={busy || Boolean(online?.color && online.rematchReady[online.color === "w" ? "white" : "black"])} onClick={() => void requestRematch()}>{busy ? <LoaderCircle size={16} className="spin" /> : online?.color && online.rematchReady[online.color === "w" ? "white" : "black"] ? <Clock3 size={16} /> : <RotateCcw size={16} />}{online?.color && online.rematchReady[online.color === "w" ? "white" : "black"] ? "Đang chờ đối thủ sẵn sàng" : "Đấu lại"}</button>}
+          </div></div>}
           <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
           <div className="board-toolbar"><div><button onClick={() => setFlipped(value => !value)} title="Xoay bàn cờ" aria-label="Xoay bàn cờ"><ArrowUpDown size={17} /></button><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => setModal("audio")} title="Âm nhạc và âm thanh" aria-label="Âm nhạc và âm thanh"><Music2 size={17} /></button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
@@ -679,7 +705,6 @@ export default function ChessApp() {
             <div className="room-time-summary"><div><Clock3 size={17} /><strong>{online.clock.totalSeconds / 60}<small>PHÚT / BÊN</small></strong></div><div><Play size={16} /><strong>{online.clock.moveLimitSeconds}<small>GIÂY / LƯỢT</small></strong></div></div>
             <div className="room-save-note"><ShieldCheck size={18} /><p>{online.status === "waiting" ? "Đồng hồ chỉ bắt đầu khi người thứ hai vào phòng." : "Trận được lưu tự động. Đồng hồ vẫn chạy khi bạn rời trang."}<small>Nhập lại mã trên trình duyệt này để trở về đúng ghế.</small></p></div>
             {online.color && online.status === "playing" && <div className="room-actions"><button disabled={busy || Boolean(online.drawOffer)} onClick={() => void roomAction("offer")}><Users size={15} /> Đề nghị hòa</button><button disabled={busy} className="danger-action" onClick={() => void roomAction("resign")}><Flag size={15} /> Xin thua</button></div>}
-            {ended && <div className="result-card"><Crown size={26} /><h3>{current.status === "draw" ? "Hòa cờ" : winner === online.color ? "Bạn đã chiến thắng!" : online.color ? timeout ? "Bạn đã thua do quá giờ" : "Một ván đấu đáng nhớ" : playerLabel(winner!) + " chiến thắng"}</h3><p>{timeout ? online.endReason === "move_timeout" ? "Thời gian dành cho một lượt đã hết." : "Tổng thời gian của kỳ thủ đã hết." : online.endReason === "resign" ? "Một kỳ thủ đã xin thua." : online.endReason === "agreement" ? "Hai kỳ thủ đồng ý hòa." : "Biên bản trận đấu vẫn được lưu."}</p><button className="primary-button full-width" onClick={() => setModal("create")}>Tạo một trận mới <ArrowRight size={15} /></button></div>}
           </> : <><div className="room-welcome"><Users size={36} /><h2>Khoảng cách không<br />ngăn một ván cờ.</h2><p>Tạo phòng, gửi mã 6 ký tự. Người bạn nhận quân Đen và bắt đầu chơi ngay.</p></div><button className="primary-button full-width" onClick={() => setModal("create")}><Plus size={17} /> Tạo phòng cùng bạn</button><button className="secondary-button full-width" onClick={() => setModal("join")}><Hash size={17} /> Nhập mã hoặc trở lại trận</button><div className="room-save-note"><ShieldCheck size={20} /><p>Tên, biên bản và đồng hồ được lưu trên server.<small>Cả hai kỳ thủ đều có đầy đủ công cụ bàn cờ và trợ lý AI.</small></p></div></>}
           </section>}
         </div>

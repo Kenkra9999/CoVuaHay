@@ -15,6 +15,13 @@
       "when": 1791689890958,
       "tag": "0001_majestic_hellfire_club",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791710000000,
+      "tag": "0002_ready_rematch",
+      "breakpoints": true
     }
   ]
 }
