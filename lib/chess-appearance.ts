@@ -7,6 +7,8 @@ export const STANDARD_BOARDS = [
 ] as const;
 // Insets match the playable grid inside each supplied artwork, independent of screen size.
 export const VIP_BOARDS = [
+  { id: "vip-icefire", name: "Băng & Dung nham", subtitle: "Bạch băng · hắc dung nham giao tranh", mark: "❄", world: "frost", art: "/boards/vip/icefire.png", inset: "6% 6.1% 6.7% 6%", splitRealms: true },
+  { id: "vip-celestial", name: "Thiên thần & Ác quỷ", subtitle: "Thiên giới pha lê · địa ngục dung nham", mark: "✧", world: "royal", art: "/boards/vip/celestial-wingless.png", inset: "10.2% 9.8% 10% 9.8%", splitRealms: true },
   { id: "vip-sovereign", name: "Hoàng kim", subtitle: "Vân ngà · ánh vàng vương giả", mark: "♛", world: "royal", art: "/boards/vip/sovereign.png", inset: "7.7% 7.5% 8.4% 7.7%" },
   { id: "vip-cosmos", name: "Thiên hà", subtitle: "Tinh vân trôi · sao bừng sáng", mark: "✧", world: "citadel", art: "/boards/vip/cosmos.png", inset: "5.1% 5.3% 5.9% 5.2%" },
   { id: "vip-neon", name: "Neon", subtitle: "Mạch điện tím · xung sáng xanh", mark: "ϟ", world: "citadel", art: "/boards/vip/neon.png", inset: "6.4% 6.8% 7.3% 6.7%" },
@@ -31,6 +33,12 @@ export const COVER_SCENES = [
   { id: "nebula", name: "Cổng tinh vân", subtitle: "64 ô. Vô hạn vì sao.", image: "/covers/nebula.svg" },
 ] as const;
 export type BoardStyle = typeof BOARD_STYLES[number]["id"];
+// The supplied split artwork has the white realm at the top; mirror it for White's view.
+export function realmBoardInset(inset: string, orientation: "w" | "b") {
+  if (orientation === "b") return inset;
+  const [top, right, bottom, left] = inset.split(" ");
+  return [bottom, right, top, left].join(" ");
+}
 export type Atmosphere = typeof ATMOSPHERES[number]["id"];
 export type CoverScene = typeof COVER_SCENES[number]["id"];
 export type VisualAppearance = { boardTheme: BoardStyle; effect: Atmosphere; cover: CoverScene; particlesOn: true; motionOn: boolean };

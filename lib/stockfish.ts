@@ -1,5 +1,6 @@
 import { Chess, type Square } from "chess.js";
 import type { AiMove, Difficulty } from "./chess-ai";
+import { assetUrl } from "./asset-url.ts";
 
 export type EngineLine = { rank: number; depth: number; nodes: number; score: number; mate: number | null; pv: string[] };
 export type EngineAnalysis = { move: AiMove; lines: EngineLine[] };
@@ -56,8 +57,7 @@ export function searchStockfish(moves: AiMove[], options: EngineOptions = {}): P
   return new Promise((resolve, reject) => {
     if (options.signal?.aborted) { reject(new DOMException("Cancelled", "AbortError")); return; }
     let worker: Worker;
-    const basePath = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_PATH ? process.env.NEXT_PUBLIC_BASE_PATH : "";
-    try { worker = new Worker(`${basePath}/engine/stockfish-19-lite-single.js`); }
+    try { worker = new Worker(assetUrl("/engine/stockfish-19-lite-single.js")); }
     catch (error) { reject(error); return; }
     const game = new Chess();
     try { for (const move of moves) game.move(move); }
@@ -67,7 +67,7 @@ export function searchStockfish(moves: AiMove[], options: EngineOptions = {}): P
     const cleanup = () => { window.clearTimeout(timeout); options.signal?.removeEventListener("abort", abort); worker.terminate(); };
     const fail = (error: unknown) => { if (settled) return; settled = true; cleanup(); reject(error); };
     const abort = () => fail(new DOMException("Cancelled", "AbortError"));
-    const timeout = window.setTimeout(() => fail(new Error("Stockfish mất quá lâu để phản hồi. Hãy thử lại.")), 25000);
+    const timeout = window.setTimeout(() => fail(new Error("Stockfish mất quá lâu để phản hồi. Hãy thử lại.")), 30000);
     options.signal?.addEventListener("abort", abort, { once: true });
     worker.onerror = () => fail(new Error("Không thể tải Stockfish. Hãy tải lại trang và thử lại."));
     worker.onmessageerror = () => fail(new Error("Không thể đọc kết quả từ Stockfish."));
@@ -75,7 +75,7 @@ export function searchStockfish(moves: AiMove[], options: EngineOptions = {}): P
       for (const text of String(event.data).split(/\r?\n/)) {
         if (settled) return;
         if (text === "uciok") {
-          const skillLevelMap: Record<string, number> = { easy: 3, medium: 10, hard: 18, master: 20 };
+          const skillLevelMap: Record<string, number> = { easy: 5, medium: 12, hard: 20, master: 20 };
           const skill = options.analysis ? 20 : (skillLevelMap[options.difficulty || "hard"] ?? 18);
           const multiPvCount = options.analysis ? (options.multiPv || 3) : 1;
           worker.postMessage("setoption name Hash value 32");
@@ -85,8 +85,8 @@ export function searchStockfish(moves: AiMove[], options: EngineOptions = {}): P
         } else if (text === "readyok") {
           const uci = moves.map((move) => `${move.from}${move.to}${move.promotion || ""}`).join(" ");
           worker.postMessage(`position startpos${uci ? ` moves ${uci}` : ""}`);
-          const moveTimeMap: Record<string, number> = { easy: 400, medium: 1000, hard: 2200, master: 3200 };
-          const ms = options.analysis ? (options.deep ? 4500 : 2000) : (moveTimeMap[options.difficulty || "hard"] ?? 2000);
+          const moveTimeMap: Record<string, number> = { easy: 800, medium: 2200, hard: 5000, master: 5000 };
+          const ms = options.analysis ? (options.deep ? 10000 : 6000) : (moveTimeMap[options.difficulty || "hard"] ?? 5000);
           worker.postMessage(`go movetime ${ms}`);
         } else if (text.startsWith("info ")) {
           const info = parseEngineLine(text, game.turn());

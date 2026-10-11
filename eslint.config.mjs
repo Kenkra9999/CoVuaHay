@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "public/engine/**",
     ".wrangler/**",
+    ".gitnexus/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

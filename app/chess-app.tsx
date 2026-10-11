@@ -2,19 +2,18 @@
 /* eslint-disable @next/next/no-img-element -- Local vector pieces stay crisp at every board size. */
 
 import { Chess, type Square } from "chess.js";
-import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Maximize2, Minimize2, Music2, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Undo2, Users, Volume2, VolumeX, Wifi, WifiOff, X } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from "react";
+import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Music2, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Users, Volume2, VolumeX, X } from "lucide-react";
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from "react";
 import type { MoveRecord, RoomStatus, RoomView } from "@/lib/rooms";
 import { chessClock } from "@/lib/chess-clock";
 import { ChessAudio, DEFAULT_AUDIO, restoreAudio, type AudioChannel, type AudioSettings } from "@/lib/chess-audio";
 import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
-import { ATMOSPHERES, BOARD_STYLES, STANDARD_BOARDS, VIP_BOARDS, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
+import { ATMOSPHERES, BOARD_STYLES, STANDARD_BOARDS, VIP_BOARDS, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, realmBoardInset, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
 import { ChessAtmosphere } from "./chess-atmosphere";
 import { ChessInspiration } from "./chess-inspiration";
 import type { Difficulty } from "@/lib/chess-ai";
 import { describeMove, parseUciMove, principalVariation, searchStockfish, type EngineAnalysis, type EngineLine } from "@/lib/stockfish";
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const assetUrl = (src: string) => src.startsWith("/") ? BASE_PATH + src : src;
+import { assetUrl } from "../lib/asset-url";
 
 type Color = "w" | "b";
 type Mode = "ai" | "local";
@@ -78,26 +77,36 @@ type BoardActions = {
   up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
   cancel: () => void;
 };
-function RoyalAura({ type, color }: { type: string; color: Color }) {
-  if (type !== "k" && type !== "q") return null;
+function RoyalAura({ type, color, pieceSet }: { type: string; color: Color; pieceSet: PieceSetId }) {
+  const gradientId = useId().replace(/:/g, "");
+  if (type !== "k" && type !== "q" && type !== "r") return null;
   const isKing = type === "k";
+  const isRook = type === "r";
   return (
-    <span className={"royal-aura aura-" + (isKing ? "king" : "queen") + " aura-" + color} aria-hidden="true">
+    <span className={"royal-aura aura-" + (isKing ? "king" : isRook ? "rook" : "queen") + " aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
+      {(pieceSet === "dragon-abyss" || pieceSet === "celestial") && <span className="mythic-aura">
+        <span className="mythic-seal" /><span className="mythic-orbit" />
+        <svg className="mythic-wings" viewBox="0 0 120 120"><path d={pieceSet === "dragon-abyss"
+          ? "M53 67Q20 60 13 29L30 37L26 18L44 36L45 22L56 47M67 67Q100 60 107 29L90 37L94 18L76 36L75 22L64 47"
+          : color === "w" ? "M52 70Q18 62 8 30Q28 48 45 42M48 61Q21 55 14 43M68 70Q102 62 112 30Q92 48 75 42M72 61Q99 55 106 43"
+          : "M52 70L14 51L9 24L30 35L37 20L52 47M68 70L106 51L111 24L90 35L83 20L68 47"} /></svg>
+        <i className="mythic-satellite satellite-one" /><i className="mythic-satellite satellite-two" />
+      </span>}
       <span className="aura-layer-back">
         <span className="aura-core-glow" />
         <span className="aura-base-array" />
-        <span className="aura-base-runes" />
+        {!isRook && <span className="aura-base-runes" />}
         <span className="aura-cyclone cyclone-cw" />
-        <span className="aura-cyclone cyclone-ccw" />
+        {!isRook && <span className="aura-cyclone cyclone-ccw" />}
         <svg className="aura-streams-svg" viewBox="0 0 120 120">
           <defs>
-            <linearGradient id={"stream-g1-" + type + color} x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={gradientId + "-g1"} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
               <stop offset="30%" stopColor="currentColor" stopOpacity="0.35" />
               <stop offset="70%" stopColor="currentColor" stopOpacity="0.95" />
               <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
             </linearGradient>
-            <linearGradient id={"stream-g2-" + type + color} x1="100%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id={gradientId + "-g2"} x1="100%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
               <stop offset="35%" stopColor="currentColor" stopOpacity="0.3" />
               <stop offset="75%" stopColor="currentColor" stopOpacity="0.9" />
@@ -107,30 +116,34 @@ function RoyalAura({ type, color }: { type: string; color: Color }) {
           <path
             className="aura-stream-ribbon ribbon-1"
             d="M 60 12 C 86 12, 108 34, 108 60 C 108 86, 86 108, 60 108 C 34 108, 12 86, 12 60 C 12 38, 30 20, 52 16"
-            stroke={"url(#stream-g1-" + type + color + ")"}
+            stroke={"url(#" + gradientId + "-g1)"}
           />
-          <path
+          {!isRook && <path
             className="aura-stream-ribbon ribbon-2"
             d="M 60 18 C 38 18, 20 36, 20 60 C 20 84, 38 102, 60 102 C 82 102, 100 84, 100 60 C 100 40, 84 24, 64 22"
-            stroke={"url(#stream-g2-" + type + color + ")"}
-          />
-          <path
+            stroke={"url(#" + gradientId + "-g2)"}
+          />}
+          {!isRook && <path
             className={"aura-stream-ribbon ribbon-3" + (isKing ? "" : " ribbon-queen")}
             d={isKing
               ? "M 60 8 C 88 8, 112 32, 112 60 C 112 88, 88 112, 60 112 C 32 112, 8 88, 8 60 C 8 32, 32 8, 60 8"
               : "M 60 22 C 80 22, 98 40, 98 60 C 98 80, 80 98, 60 98 C 40 98, 22 80, 22 60 C 22 40, 40 22, 60 22"}
-            stroke={"url(#stream-g1-" + type + color + ")"}
-          />
+            stroke={"url(#" + gradientId + "-g1)"}
+          />}
+          {!isRook && <path className="aura-stream-ribbon ribbon-4"
+            d="M 22 84 C 7 61, 20 32, 48 20 C 70 10, 102 27, 105 51 C 114 76, 89 108, 61 105 C 42 104, 26 91, 22 84"
+            stroke={"url(#" + gradientId + "-g2)"} />}
         </svg>
       </span>
       <span className="aura-layer-front">
+        <span className="aura-front-current" />
         <span className="aura-wisp wisp-left" />
-        <span className="aura-wisp wisp-right" />
-        <span className="aura-crown-flare">
+        {!isRook && <span className="aura-wisp wisp-right" />}
+        {!isRook && <span className="aura-crown-flare">
           <span className="flare-core" />
           <span className="flare-rays" />
-        </span>
-        {Array.from({ length: 6 }, (_, i) => (
+        </span>}
+        {Array.from({ length: isRook ? 2 : 6 }, (_, i) => (
           <i key={i} className="aura-ember" style={{ "--ember-idx": i } as CSSProperties} />
         ))}
       </span>
@@ -145,9 +158,76 @@ function VipFrameEffects() {
     })}
   </span>;
 }
-const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, dragFrom, boardRef, showHint, hintMove, actions }: {
+function CelestialFrameWings() {
+  return <span className="celestial-frame-wings" aria-hidden="true">
+    {/* Each raster wing pivots at its original attachment to the central crest. */}
+    {["left", "right"].map(side => <img key={side} className={"celestial-original-wing original-wing-" + side} src={assetUrl("/boards/vip/celestial-wings.png")} width={1254} height={1254} alt="" draggable={false} />)}
+    <span className="celestial-crest-light" />
+    {Array.from({ length: 14 }, (_, i) => <i className="celestial-wing-dust" key={i} style={{ left: (28 + i * 17 % 45) + "%", top: (2 + i % 4 * 1.8) + "%", "--wing-delay": -i * .37 + "s" } as CSSProperties} />)}
+  </span>;
+}
+function IceWindEffects() {
+  return <span className="ice-weather" aria-hidden="true">
+    <svg className="ice-wind-trails" viewBox="0 0 800 400" preserveAspectRatio="none">
+      <path d="M-100 100C100 0 185 180 390 100S650 15 900 90M-80 240C120 310 190 160 400 240S670 335 900 235" />
+      <path className="ice-wind-curl" d="M-80 340C90 260 290 390 485 295C620 230 580 145 520 155C470 165 490 220 545 203C675 162 700 240 900 160" />
+    </svg>
+    <span className="ice-bloom bloom-one" /><span className="ice-bloom bloom-two" />
+    {Array.from({ length: 18 }, (_, i) => <span className="ice-snowflake" key={"snow" + i} style={{ left: (i * 31 % 96) + "%", "--snow-size": (14 + i % 4 * 4) + "px", "--snow-delay": -i * .59 + "s", "--snow-speed": (4.8 + i % 5 * .7) + "s", "--snow-drift": (i % 2 ? 12 : -9) + "cqw" } as CSSProperties}>
+      <svg viewBox="0 0 32 32"><g>{Array.from({ length: 6 }, (_, ray) => <path key={ray} transform={"rotate(" + ray * 60 + " 16 16)"} d="M16 16V2M16 8L11 4M16 8L21 4M16 12L12 9M16 12L20 9" />)}</g></svg>
+    </span>)}
+    {Array.from({ length: 7 }, (_, i) => <span key={"prism" + i} className="ice-prism" style={{ left: (8 + i * 13) + "%", top: (14 + i * 19 % 72) + "%", "--ice-delay": -i * .83 + "s", "--ice-speed": (5 + i % 3) + "s" } as CSSProperties} />)}
+    {Array.from({ length: 9 }, (_, i) => <span key={"glint" + i} className="ice-glint" style={{ left: (12 + i * 37 % 78) + "%", top: (8 + i * 23 % 78) + "%", "--ice-delay": -i * .71 + "s", "--ice-speed": (4.5 + i % 4 * .7) + "s" } as CSSProperties} />)}
+  </span>;
+}
+function CelestialHeavenEffects() {
+  return <span className="celestial-heaven-effects" aria-hidden="true">
+    {["left", "right"].map(side => <span key={side} className={"heaven-gold-rail rail-" + side}><span className="heaven-gold-current" />{Array.from({ length: 5 }, (_, i) => <i key={i} style={{ top: (8 + i * 19) + "%", "--gold-delay": -i * .67 + "s" } as CSSProperties} />)}</span>)}
+    {Array.from({ length: 12 }, (_, i) => <span className="heaven-feather" key={i} style={{ left: (5 + i * 29 % 88) + "%", "--feather-delay": -i * .71 + "s", "--feather-speed": (5.4 + i % 4 * .75) + "s" } as CSSProperties}><svg viewBox="0 0 24 48"><path d="M12 44C-2 32 3 11 20 2C23 20 20 35 12 44Z" /><path className="feather-quill" d="M12 46L18 8M14 35L5 29M15 27L7 21M16 19L11 13" /></svg></span>)}
+    <span className="heaven-gold-sweep sweep-left" /><span className="heaven-gold-sweep sweep-right" />
+  </span>;
+}
+function CelestialInfernoEffects() {
+  return <span className="celestial-inferno-effects" aria-hidden="true">
+    <svg className="inferno-hot-current" viewBox="0 0 800 400" preserveAspectRatio="none"><path d="M-40 350C100 270 170 400 340 310S540 195 690 285S780 370 850 220M-50 160C100 220 170 90 340 160S570 260 690 150S780 55 850 130" /><path className="inferno-hot-core" d="M-40 350C100 270 170 400 340 310S540 195 690 285S780 370 850 220M-50 160C100 220 170 90 340 160S570 260 690 150S780 55 850 130" /></svg>
+    {Array.from({ length: 5 }, (_, i) => <span key={i} className="inferno-molten-pool" style={{ left: (8 + i * 19) + "%", top: (30 + i * 23 % 49) + "%", "--inferno-delay": -i * .83 + "s" } as CSSProperties}><i /><i /></span>)}
+    <span className="inferno-heat-wave" /><span className="inferno-heat-wave heat-wave-two" />
+  </span>;
+}
+function SplitRealmEffects({ icefire }: { icefire: boolean }) {
+  return <span className="split-realm-effects" aria-hidden="true">
+    <span className="realm-atmosphere realm-light"><span className="realm-mist" /><span className="realm-radiance" /><span className="realm-halo" />
+      {icefire && <IceWindEffects />}
+      {!icefire && <CelestialHeavenEffects />}
+      <span className="realm-icicles">{Array.from({ length: 12 }, (_, i) => <i key={i} style={{ left: (i * 8.5) + "%", "--crystal-delay": -i * .48 + "s", height: (9 + i % 4 * 4) + "%" } as CSSProperties} />)}</span>
+      {Array.from({ length: 36 }, (_, i) => <i key={i} style={{ "--mote-x": (i * 37 % 97) + "%", "--mote-delay": -i * .71 + "s", "--mote-speed": (3.5 + i % 5 * .6) + "s", "--mote-size": (3 + i % 4 * 1.4) + "px" } as CSSProperties} />)}</span>
+    <span className="realm-atmosphere realm-dark"><span className="realm-mist" /><span className="realm-radiance" />
+      {!icefire && <CelestialInfernoEffects />}
+      <svg className="realm-lava-rivers" viewBox="0 0 800 400" preserveAspectRatio="none"><path d="M-40 280Q70 220 170 255T370 245T570 260T840 190M-30 85Q90 150 190 100T430 125T660 90T850 130" /><path className="lava-river-core" d="M-40 280Q70 220 170 255T370 245T570 260T840 190M-30 85Q90 150 190 100T430 125T660 90T850 130" /></svg>
+      <span className="realm-flames">{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: (i * 7.4 - 2) + "%", "--flame-delay": -i * .37 + "s", "--flame-height": (18 + i % 5 * 5) + "%", "--flame-speed": (1.4 + i % 4 * .35) + "s" } as CSSProperties} />)}</span>
+      {Array.from({ length: 36 }, (_, i) => <i key={i} style={{ "--mote-x": (i * 43 % 97) + "%", "--mote-delay": -i * .63 + "s", "--mote-speed": (2.5 + i % 5 * .55) + "s", "--mote-size": (2 + i % 4) + "px" } as CSSProperties} />)}</span>
+    <span className="realm-collision" /><span className="realm-collision collision-echo" />
+  </span>;
+}
+function RealmTileEffects({ light, celestial, variant }: { light: boolean; celestial: boolean; variant: number }) {
+  return <span className={"realm-tile-effects " + (light ? celestial ? "tile-heaven" : "tile-freeze" : "tile-magma")} aria-hidden="true">
+    <span className="realm-tile-surface" />
+    {light && !celestial && <span className="ice-tile-flash" />}
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ transform: "rotate(" + variant * 90 + "deg)" }}>
+      {light ? <>
+        <path className="crystal-branch" d="M0 95L24 70L42 54L59 36L78 15L94 0M24 70L10 49M24 70L47 78M42 54L25 32M42 54L67 62M59 36L46 16M59 36L84 41M78 15L66 0" />
+        <path className="crystal-tip" d="M25 32L12 26M25 32L23 16M67 62L78 72M67 62L82 59M46 16L34 10M84 41L94 33M10 49L0 42M47 78L56 91" />
+        {celestial && <path className="heaven-star" d="M70 16L74 27L86 31L74 35L70 47L66 35L54 31L66 27ZM25 64L28 72L36 75L28 78L25 86L22 78L14 75L22 72Z" />}
+      </> : <>
+        <path className="magma-crack" d="M-5 12L24 25L20 42L48 52L58 72L81 79L102 100M20 42L2 61M48 52L67 33L89 38L101 22M58 72L42 91L45 104" />
+        <path className="magma-core" d="M-5 12L24 25L20 42L48 52L58 72L81 79L102 100M48 52L67 33L89 38L101 22" />
+      </>}
+    </svg>
+  </span>;
+}
+const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, splitTheme, dragFrom, boardRef, showHint, hintMove, actions }: {
   pieces: Piece[]; moves: MoveRecord[]; orientation: Color; selected: Square | null; legal: Square[];
-  checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; dragFrom?: Square;
+  checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; splitTheme: "icefire" | "celestial" | null; dragFrom?: Square;
   boardRef: RefObject<HTMLDivElement | null>; showHint: boolean; hintMove?: { from: Square; to: Square } | null; actions: BoardActions;
 }) {
   const last = moves.at(-1);
@@ -159,21 +239,23 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
     {Array.from({ length: 8 }, (_, rank) => Array.from({ length: 8 }, (_, file) => {
       const square = (files[orientation === "w" ? file : 7 - file] + (orientation === "w" ? 8 - rank : rank + 1)) as Square;
       const piece = pieces.find(item => item.square === square);
-      return <button type="button" key={square} data-square={square}
+      return <button type="button" key={square} data-square={square} data-realm={Number(square[1]) <= 4 ? "light" : "dark"}
         className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (square === checkKing ? " square-check" : "")}
         style={{ "--tile-delay": -((rank * 8 + file) % 13) * .47 + "s" } as CSSProperties}
         aria-label={square + (piece ? ", " + names[piece.type] + " " + (piece.color === "w" ? "trắng" : "đen") : "")} onClick={() => actions.click(square)}>
+        {splitTheme && <RealmTileEffects light={Number(square[1]) <= 4} celestial={splitTheme === "celestial"} variant={(file + rank * 3) % 4} />}
         {file === 0 && <span className="rank-label">{square[1]}</span>}{rank === 7 && <span className="file-label">{square[0]}</span>}
         {legal.includes(square) && <span className={piece ? "legal-capture" : "legal-dot"} />}
       </button>;
     }))}
+    {splitTheme && <SplitRealmEffects icefire={splitTheme === "icefire"} />}
     {pieces.map(piece => {
       const file = files.indexOf(piece.square[0]), rank = 8 - Number(piece.square[1]);
       const x = orientation === "w" ? file : 7 - file, y = orientation === "w" ? rank : 7 - rank;
       return <div key={piece.id} data-piece-type={piece.type} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
         style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" }}
         onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
-        <RoyalAura type={piece.type} color={piece.color} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
+        <RoyalAura type={piece.type} color={piece.color} pieceSet={pieceSet} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
     })}
     {showHint && hintMove && (() => {
       const from = coordinates(hintMove.from), to = coordinates(hintMove.to);
@@ -209,7 +291,6 @@ export default function ChessApp() {
   const [flipped, setFlipped] = useState(false);
   const [audioSettings, setAudioSettings] = useState<AudioSettings>(DEFAULT_AUDIO);
   const [audioStarted, setAudioStarted] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<"ai" | "moves" | "room">("ai");
   const [reviewPly, setReviewPly] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
@@ -218,6 +299,7 @@ export default function ChessApp() {
   const [showHint, setShowHint] = useState(true);
   const [activeLine, setActiveLine] = useState(1);
   const [analysisState, setAnalysisState] = useState<{ key: string; lines: EngineLine[]; result?: EngineAnalysis; loading: boolean; error?: string } | null>(null);
+  const [pendingAnalysis, setPendingAnalysis] = useState<boolean | null>(null);
   const [drag, setDrag] = useState<{ from: Square; x: number; y: number; size: number } | null>(null);
   const sessionRef = useRef({ code: "", token: "", epoch: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
@@ -247,9 +329,10 @@ export default function ChessApp() {
   const analysis = analysisState?.key === positionKey ? analysisState : null;
   const bestLine = analysis?.lines.find(line => line.rank === activeLine) || analysis?.lines[0];
   const hintMove = useMemo(() => bestLine ? parseUciMove(bestLine.pv[0]) : analysis?.result?.move, [bestLine, analysis?.result?.move]);
-  const canAnalyze = !aiThinking && !busy && ready && !restoring;
+  const canAnalyze = !busy && ready && !restoring && !game.isGameOver();
   const currentBoardStyle = BOARD_STYLES.find(item => item.id === appearance.boardTheme)!;
   const vipBoard = VIP_BOARDS.find(item => item.id === appearance.boardTheme);
+  const splitRealms = Boolean(vipBoard && "splitRealms" in vipBoard && vipBoard.splitRealms);
   const currentCover = COVER_SCENES.find(item => item.id === appearance.cover)!;
   const currentEffect = ATMOSPHERES.find(item => item.id === appearance.effect)!;
   const currentPieceSet = PIECE_SETS.find(item => item.id === appearance.pieceSet)!;
@@ -274,7 +357,7 @@ export default function ChessApp() {
     sessionRef.current = { code: room.code, token, epoch: sessionRef.current.epoch + 1 };
     setOnline({ ...room, receivedAt: Date.now() });
     setConnection("live");
-    setSelected(null); setPromotion(null); setFlipped(false); setReviewPly(null); setModal(null); setAnalysisState(null);
+    setSelected(null); setPromotion(null); setFlipped(false); setReviewPly(null); setModal(null); setAnalysisState(null); setPendingAnalysis(null);
     setJoinCode(room.code); setNameDraft(room.color ? room.players[room.color === "w" ? "white" : "black"].name : "Kỳ thủ");
     setActiveTab("ai");
     remember("nuocco:lastRoom", room.code);
@@ -302,7 +385,8 @@ export default function ChessApp() {
         const restored = buildGame(saved.game.moves);
         setLocal({ fen: restored.fen(), moves: saved.game.moves, status: resultStatus(restored), version: Number(saved.game.version) || 0 });
         setLocalMode(saved.mode === "local" ? "local" : "ai");
-        if (["easy", "medium", "hard", "master"].includes(saved.difficulty)) setDifficulty(saved.difficulty);
+        if (["easy", "medium", "hard"].includes(saved.difficulty)) setDifficulty(saved.difficulty);
+        else if (saved.difficulty === "master") setDifficulty("hard");
         setHumanColor(saved.humanColor === "b" ? "b" : "w");
         if (saved.localNames && typeof saved.localNames.w === "string" && typeof saved.localNames.b === "string") setLocalNames(saved.localNames);
       } else setLocalNames({ w: savedName, b: "Bạn cùng bàn" });
@@ -327,12 +411,6 @@ export default function ChessApp() {
     if (!ready || online || restoring) return;
     remember("nuocco:local:v2", JSON.stringify({ game: local, mode: localMode, difficulty, humanColor, localNames }));
   }, [ready, online, restoring, local, localMode, difficulty, humanColor, localNames]);
-
-  useEffect(() => {
-    const onFullscreen = () => setFullscreen(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", onFullscreen);
-    return () => document.removeEventListener("fullscreenchange", onFullscreen);
-  }, []);
 
   const onlineCode = online?.code;
   useEffect(() => {
@@ -454,8 +532,13 @@ export default function ChessApp() {
     return () => { clearTimeout(timer); controller.abort(); };
   }, [ready, restoring, aiMode, aiFailed, local, turn, humanColor, difficulty, aiRetry, playSound]);
 
-  async function requestAnalysis(deep = false) {
+  const requestAnalysis = useCallback(async (deep = false) => {
     if (!canAnalyze) return;
+    if (aiThinking) {
+      setPendingAnalysis(deep);
+      setAnalysisState({ key: positionKey, lines: [], loading: true });
+      return;
+    }
     analysisAbort.current?.abort();
     const controller = new AbortController(); analysisAbort.current = controller;
     const key = positionKey;
@@ -465,7 +548,15 @@ export default function ChessApp() {
         onInfo: lines => { if (!controller.signal.aborted) setAnalysisState({ key, lines, loading: true }); } });
       if (!controller.signal.aborted) setAnalysisState({ key, lines: result.lines, result, loading: false });
     } catch (error) { if (!controller.signal.aborted) setAnalysisState({ key, lines: [], loading: false, error: errorText(error) }); }
-  }
+  }, [canAnalyze, aiThinking, positionKey, displayMoves]);
+
+  useEffect(() => {
+    if (pendingAnalysis === null || aiThinking || !canAnalyze) return;
+    // Run the queued request on the human's new position after the AI finishes.
+    /* eslint-disable react-hooks/set-state-in-effect -- Resolving an explicit queued user action. */
+    setPendingAnalysis(null);
+    void requestAnalysis(pendingAnalysis);
+  }, [pendingAnalysis, aiThinking, canAnalyze, requestAnalysis]);
 
   async function createRoom() {
     if (busy) return;
@@ -513,7 +604,7 @@ export default function ChessApp() {
         return { w: previous.b, b: previous.w };
       });
     }
-    setSelected(null); setPromotion(null); setReviewPly(null); setFlipped(false); setAiFailed(false); setAnalysisState(null);
+    setSelected(null); setPromotion(null); setReviewPly(null); setFlipped(false); setAiFailed(false); setAnalysisState(null); setPendingAnalysis(null);
     if (mode === "ai") {
       setMessage("Ván mới: Bạn cầm quân " + (nextColor === "w" ? "Trắng (đi trước)." : "Đen. Stockfish cầm quân Trắng và đi trước."));
     } else if (mode === "local") {
@@ -522,14 +613,6 @@ export default function ChessApp() {
       setMessage("");
     }
     forget("nuocco:lastRoom"); window.history.replaceState({}, "", window.location.pathname); setActiveTab("ai");
-  }
-  function undoMove() {
-    if (online || !current.moves.length || busy) return;
-    analysisAbort.current?.abort();
-    const count = aiMode && turn === humanColor ? Math.min(2, local.moves.length) : 1;
-    const moves = local.moves.slice(0, -count), restored = buildGame(moves);
-    setLocal({ fen: restored.fen(), moves, status: resultStatus(restored), version: local.version + 1 });
-    setSelected(null); setReviewPly(null); setAiFailed(false); setAnalysisState(null);
   }
   async function commitMove(from: Square, to: Square, choice?: string) {
     if (!canMove) return;
@@ -651,11 +734,6 @@ export default function ChessApp() {
   function changeEffect(effect: Atmosphere) { setAppearance(previous => ({ ...previous, effect, particlesOn: true })); remember("nuocco:effect", effect);  }
   function changeCover(cover: CoverScene) { setAppearance(previous => ({ ...previous, cover })); remember("nuocco:cover", cover); }
   function changeMotion(motionOn: boolean) { setAppearance(previous => ({ ...previous, motionOn })); remember("nuocco:coverMotion", String(motionOn)); }
-  async function toggleFullscreen() {
-    try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
-    catch { setMessage("Trình duyệt chưa hỗ trợ toàn màn hình."); }
-  }
-
   const winner: Color | null = current.status === "white_won" ? "w" : current.status === "black_won" ? "b" : null;
   const draggedPiece = drag ? pieces.find(piece => piece.square === drag.from) : null;
   const ended = current.status !== "waiting" && current.status !== "playing";
@@ -701,7 +779,8 @@ export default function ChessApp() {
           {own && <span className="you-tag">BẠN</span>}
         </div>
         <div className="player-detail"><span className={"presence-dot " + (online && !connected ? "presence-away" : "")} />
-          {online ? (color === "b" && !online.hasBlack ? "Ghế Đen đang trống" : connected ? "Đang kết nối" : "Tạm ngoại tuyến") : aiMode && color !== humanColor ? difficulty === "master" ? "Đại kiện tướng · Engine WASM" : "Engine WASM · " + ({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Tối đa" }[difficulty]) : "Nhấn vào tên để chỉnh sửa"}
+          {online ? (color === "b" && !online.hasBlack ? "Ghế Đen đang trống" : connected ? "Đang kết nối" : "Tạm ngoại tuyến") : aiMode && color !== humanColor ? "Engine WASM · " + ({ easy: "Thấp", medium: "Khá", hard: "Giỏi", master: "Giỏi" }[difficulty]) : "Nhấn vào tên để chỉnh sửa"}
+          {!online && aiMode && color !== humanColor && aiThinking && <span className={"thinking-indicator difficulty-" + difficulty} role="status"><span className="thinking-dots" aria-hidden="true"><i /><i /><i /></span>AI đang tính nước đi</span>}
           <span className="captured-pieces">{captures.filter(move => move.color === color).map((move, index) => <img key={index} src={pieceImage({ color: color === "w" ? "b" : "w", type: move.captured! }, appearance.pieceSet)} alt={names[move.captured!]} />)}
             {(color === "w" ? material : -material) > 0 && <b>+{color === "w" ? material : -material}</b>}</span>
         </div>
@@ -725,23 +804,22 @@ export default function ChessApp() {
     </header>
     <main className="arena-layout">
       <div className="side-player side-player-left">{playerBar(topColor)}</div>
-      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={assetUrl(currentCover.image)} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
+      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
 
-      <section className={"board-column theme-" + appearance.boardTheme + (vipBoard ? " board-vip" : "")} aria-label="Bàn cờ vua">
+      <section className={"board-column theme-" + appearance.boardTheme + (vipBoard ? " board-vip" : "") + (splitRealms ? " board-split-realms realm-" + (orientation === "w" ? "white-bottom" : "white-top") : "")} aria-label="Bàn cờ vua">
         <div className="board-stage">
-          <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": vipBoard.inset } as CSSProperties : undefined}>
-            {vipBoard && <><img className="vip-board-art" src={assetUrl(vipBoard.art)} width={1254} height={1254} alt="" draggable={false} /><VipFrameEffects /></>}
+          <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": splitRealms ? realmBoardInset(vipBoard.inset, orientation) : vipBoard.inset } as CSSProperties : undefined}>
+            {vipBoard && <><img className="vip-board-art" src={assetUrl(vipBoard.art)} width={1254} height={1254} alt="" draggable={false} /><VipFrameEffects />{appearance.boardTheme === "vip-celestial" && <CelestialFrameWings />}</>}
             <ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
-            checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} dragFrom={drag?.from} boardRef={boardRef}
+            checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} splitTheme={appearance.boardTheme === "vip-icefire" ? "icefire" : appearance.boardTheme === "vip-celestial" ? "celestial" : null} dragFrom={drag?.from} boardRef={boardRef}
             showHint={showHint} hintMove={hintMove} actions={stableBoardActions} />
           {ended && <div className="result-overlay" role="dialog" aria-labelledby="result-title" aria-describedby="result-detail"><div className="result-panel"><span className="result-crown"><Crown size={22} /></span><span className="eyebrow">KẾT THÚC VÁN ĐẤU</span><h2 id="result-title">{resultTitle}</h2><p id="result-detail">{resultDetail}</p>
             {online?.color && <div className="rematch-status"><span className={online.rematchReady.white ? "ready-dot" : ""}>{online.rematchReady.white ? "✓ " : "○ "}Trắng {online.rematchReady.white ? "đã sẵn sàng" : "đang chờ"}</span><span className={online.rematchReady.black ? "ready-dot" : ""}>{online.rematchReady.black ? "✓ " : "○ "}Đen {online.rematchReady.black ? "đã sẵn sàng" : "đang chờ"}</span></div>}
             {online && !online.color ? <p>Chỉ hai kỳ thủ trong phòng mới có thể bắt đầu đấu lại.</p> : <button className="primary-button rematch-button" disabled={busy || Boolean(online?.color && online.rematchReady[online.color === "w" ? "white" : "black"])} onClick={() => void requestRematch()}>{busy ? <LoaderCircle size={16} className="spin" /> : online?.color && online.rematchReady[online.color === "w" ? "white" : "black"] ? <Clock3 size={16} /> : <RotateCcw size={16} />}{online?.color && online.rematchReady[online.color === "w" ? "white" : "black"] ? "Đang chờ đối thủ sẵn sàng" : "Đấu lại"}</button>}
           </div></div>}
           </div>
-          <div className={"game-status " + (ended ? "game-ended" : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}</div>
+          <div className={"game-status " + (ended ? "game-ended" : "") + (aiThinking ? " thinking-status difficulty-" + difficulty : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}{aiThinking && <span className="thinking-dots" aria-hidden="true"><i /><i /><i /></span>}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}<button className="status-new-game" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
-          <div className="board-toolbar"><div><button onClick={undoMove} disabled={Boolean(online) || !current.moves.length || busy} title="Đi lại nước cờ" aria-label="Đi lại nước cờ"><Undo2 size={17} /></button><button onClick={() => setModal("audio")} title="Âm nhạc và âm thanh" aria-label="Âm nhạc và âm thanh"><Music2 size={17} /></button><button onClick={() => void toggleFullscreen()} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>{fullscreen ? <Minimize2 size={17} /> : <Maximize2 size={17} />}</button></div><button className="new-game-button" onClick={() => online ? setModal("create") : newLocal()}><RotateCcw size={14} /> Ván mới</button></div>
           {reviewPly !== null && <div className="replay-controls"><button onClick={() => setReviewPly(0)} aria-label="Về đầu ván"><ChevronFirst size={16} /></button><button onClick={() => setReviewPly(Math.max(0, reviewPly - 1))} aria-label="Nước trước"><ChevronLeft size={16} /></button><span>{reviewPly} / {current.moves.length}</span><button onClick={() => setReviewPly(Math.min(current.moves.length, reviewPly + 1))} aria-label="Nước tiếp"><ChevronRight size={16} /></button><button onClick={() => { setReviewPly(null); setSelected(null); }}><ChevronLast size={16} /> Trở lại trận</button></div>}
         </div>
         <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
@@ -749,7 +827,7 @@ export default function ChessApp() {
           <button className={!online && !aiMode ? "quick-control-active" : ""} aria-label="Chơi hai người cùng máy" onClick={() => newLocal("local")}><Crown size={18} /> Cùng máy</button>
           <button className={online ? "quick-control-active" : ""} aria-label="Tạo trận online" onClick={() => setModal("create")}><Users size={18} /> Online</button>
         </div>
-        <div className="board-caption"><span>ATELIER No. {currentPieceSet.number}</span><span>SÁU BỘ QUÂN · MỘT DẤU ẤN RIÊNG</span><span>64 Ô. VÔ VÀN CÂU CHUYỆN.</span></div>
+        <div className="board-caption"><span>ATELIER No. {currentPieceSet.number}</span><span>TÁM BỘ QUÂN · MỘT DẤU ẤN RIÊNG</span><span>64 Ô. VÔ VÀN CÂU CHUYỆN.</span></div>
       </section>
       <div className="side-player side-player-right">{playerBar(orientation)}</div>
       <aside className="right-rail">
@@ -781,7 +859,7 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} color={draggedPiece.color} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
+    {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
     <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : modal === "effects" ? "Chọn hiệu ứng" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" || modal === "effects" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
       <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : modal === "effects" ? "HIỆU ỨNG CHO CUỘC CHƠI" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">
@@ -802,7 +880,7 @@ export default function ChessApp() {
 <h2 id="game-menu-title">Nước đi của bạn.<small>Chọn cuộc chơi của bạn.</small></h2>
         <section className="rail-card"><div className="section-label">CHỌN CUỘC CHƠI <Swords size={14} /></div>
           <div className="mode-list"><button className={!online && aiMode ? "mode-active" : ""} onClick={() => { newLocal("ai"); setModal(null); }}><Bot size={20} /><span>Đấu với AI<small>Thử sức cùng Stockfish 19</small></span><ChevronRight size={15} /></button><button className={online ? "mode-active" : ""} onClick={() => setModal("create")}><Users size={20} /><span>Đấu cùng bạn<small>Hai thiết bị, một trận cờ</small></span><ChevronRight size={15} /></button><button className={!online && !aiMode ? "mode-active" : ""} onClick={() => { newLocal("local"); setModal(null); }}><Crown size={20} /><span>Cùng thiết bị<small>Luân phiên Trắng và Đen</small></span><ChevronRight size={15} /></button></div>
-          {!online && aiMode && <div className="ai-options"><span className="small-label">ĐỘ KHÓ</span><div className="difficulty-options">{(["easy", "medium", "hard", "master"] as const).map(level => <button key={level} onClick={() => setDifficulty(level)} className={difficulty === level ? "selected-option" : ""}>{({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Kỳ thủ" })[level]}</button>)}</div><div className="color-options"><span>Cầm quân</span><button className={humanColor === "w" ? "selected-color" : ""} onClick={() => newLocal("ai", "w")}><i className="color-chip chip-white" /> Trắng</button><button className={humanColor === "b" ? "selected-color" : ""} onClick={() => newLocal("ai", "b")}><i className="color-chip chip-black" /> Đen</button></div></div>}
+          {!online && aiMode && <div className="ai-options"><span className="small-label">ĐỘ KHÓ</span><div className="difficulty-options">{(["easy", "medium", "hard"] as const).map(level => <button key={level} onClick={() => setDifficulty(level)} aria-pressed={difficulty === level} className={"difficulty-" + level + (difficulty === level ? " selected-option" : "")}>{({ easy: "Thấp", medium: "Khá", hard: "Giỏi" })[level]}</button>)}</div><div className="color-options"><span>Cầm quân</span><button className={humanColor === "w" ? "selected-color" : ""} onClick={() => newLocal("ai", "w")}><i className="color-chip chip-white" /> Trắng</button><button className={humanColor === "b" ? "selected-color" : ""} onClick={() => newLocal("ai", "b")}><i className="color-chip chip-black" /> Đen</button></div></div>}
         </section>
         <button className="appearance-button battlefield-badge-btn" onClick={() => setModal("appearance")}><span className={"theme-mini mini-" + appearance.boardTheme} /><span>{currentBoardStyle.name}<small>Bàn cờ · hiệu ứng · bìa</small></span><Palette size={16} /></button>
         {recentRooms.length > 0 && <section className="recent-card"><div className="section-label">TRẬN GẦN ĐÂY <History size={14} /></div>{recentRooms.slice(0, 3).map(room => <button key={room.code} onClick={() => void joinRoom(room.code)} disabled={busy}><span><b>{room.code}</b><small>{room.color === "w" ? "Ghế Trắng" : room.color === "b" ? "Ghế Đen" : "Khán giả"}</small></span><ArrowRight size={14} /></button>)}</section>}
@@ -813,7 +891,7 @@ export default function ChessApp() {
         <div className="slider-setting"><label htmlFor="move-time"><span>Giới hạn mỗi lượt<small>Phải đi trước khi đồng hồ lượt hết</small></span><b>{moveSeconds}<em>giây</em></b></label><input id="move-time" type="range" min="60" max="300" step="15" value={moveSeconds} onChange={event => setMoveSeconds(Number(event.target.value))} /><div className="range-labels"><span>60 giây</span><span>300 giây</span></div></div>
         <div className="preset-buttons">{[[5,60,"Nhanh"],[15,120,"Cân bằng"],[30,180,"Thư thái"]].map(([minutes, seconds, label]) => <button key={label} className={totalMinutes === minutes && moveSeconds === seconds ? "preset-active" : ""} onClick={() => { setTotalMinutes(Number(minutes)); setMoveSeconds(Number(seconds)); }}>{label}</button>)}</div><div className="modal-note"><ShieldCheck size={16} /><span>Bạn cầm Trắng. Đồng hồ bắt đầu khi đối thủ vào phòng. Đóng trang không dừng thời gian.</span></div><button className="primary-button full-width modal-submit" disabled={busy} onClick={() => void createRoom()}>{busy ? <LoaderCircle size={17} className="spin" /> : <Plus size={17} />} Tạo phòng & nhận mã mời</button></>}
       {modal === "join" && <><h2>Một mã mời.<br />Một người bạn cùng chơi.</h2><p className="modal-description">Nhập mã để nhận quân Đen, hoặc trở lại ghế của bạn trong trận đã lưu.</p><label className="form-label" htmlFor="guest-name">Tên của bạn</label><input id="guest-name" className="text-input" value={profileName} maxLength={24} onChange={event => { setProfileName(event.target.value); remember("nuocco:playerName", event.target.value); }} /><label className="form-label" htmlFor="invite-code">Mã mời 6 ký tự</label><input id="invite-code" className="code-input" placeholder="ABC234" autoComplete="off" value={joinCode} onChange={event => setJoinCode(normalizeCode(event.target.value))} onKeyDown={event => { if (event.key === "Enter") void joinRoom(); }} /><button className="primary-button full-width modal-submit" disabled={busy || joinCode.length !== 6} onClick={() => void joinRoom()}>{busy ? <LoaderCircle size={17} className="spin" /> : <ArrowRight size={17} />} Vào bàn cờ</button><p className="modal-footnote">Ghế đã đầy? Bạn vẫn có thể xem trận. Mã mời không thay thế quyền của người đang chơi.</p></>}
-      {modal === "pieces" && <><h2>Sáu cá tính.<br />Vô vàn nước đi.</h2><p className="modal-description">Sáu dáng quân riêng trong mỗi bộ, từ vương miện của Vua đến đầu ngựa của Mã. Chọn để đổi ngay trên bàn và lưu trên thiết bị.</p>
+      {modal === "pieces" && <><h2>Tám cá tính.<br />Vô vàn nước đi.</h2><p className="modal-description">Sáu dáng quân riêng trong mỗi bộ, từ vương miện của Vua đến đầu ngựa của Mã. Khám phá long hồn Hắc Long và đôi cánh Thiên thần & Ác quỷ. Chọn để đổi ngay trên bàn và lưu trên thiết bị.</p>
         <div className="piece-collection-grid">{PIECE_SETS.map(set => <button key={set.id} className={"piece-set-card set-" + set.id + (appearance.pieceSet === set.id ? " set-selected" : "")} aria-pressed={appearance.pieceSet === set.id} onClick={() => changePieceSet(set.id)}>
           <span className="set-card-top"><span>COLLECTION {set.number}</span>{appearance.pieceSet === set.id ? <span className="set-active-label"><Check size={14} /> Đang dùng</span> : <span>Chọn bộ này <ArrowRight size={14} /></span>}</span>
           <span className="set-showcase">{(["w", "b"] as const).map(color => <span key={color} className="set-lineup">{["k", "q", "r", "b", "n", "p"].map(type => <span key={type} className="set-piece"><img src={pieceImage({ color, type }, set.id)} width={100} height={100} loading="lazy" alt={names[type] + (color === "w" ? " trắng" : " đen")} />{color === "w" && <small>{names[type]}</small>}</span>)}</span>)}</span>
@@ -822,9 +900,9 @@ export default function ChessApp() {
         </button>)}</div><p className="collection-note"><ShieldCheck size={16} /> Hình vector sắc nét · Đổi bộ quân không làm mất ván đang chơi.</p></>}
       {(modal === "appearance" || modal === "effects") && <><h2>{modal === "effects" ? <>Chuyển động theo<br /><em>nhịp cờ của bạn.</em></> : <>Thế giới trên<br /><em>64 ô cờ.</em></>}</h2><p className="modal-description">{modal === "effects" ? "Chọn bầu không khí bạn thích. Hiệu ứng đổi ngay trong ván cờ." : "Phối bàn cờ, bìa và chuyển động theo phong cách của bạn. Đổi ngay trong ván; nước đi và đồng hồ vẫn tiếp tục."}</p>
         {modal === "appearance" && <>
-        <section className="style-section vip-style-section"><div className="style-section-heading"><span><Crown size={16} /> BÀN VIP</span><small>5 phong cách · Viền & ô chuyển động</small></div>
+        <section className="style-section vip-style-section"><div className="style-section-heading"><span><Crown size={16} /> BÀN VIP</span><small>{VIP_BOARDS.length} phong cách · Viền & ô chuyển động</small></div>
           <div className="board-style-grid vip-style-grid">{VIP_BOARDS.map(item => <button key={item.id} className={"board-style-card vip-style-card theme-" + item.id} aria-label={"Bàn VIP " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}>
-            <span className="board-sample vip-sample"><img src={assetUrl(item.art)} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
+            <span className="board-sample vip-sample"><img src={assetUrl(item.id === "vip-celestial" ? "/boards/vip/celestial.png" : item.art)} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
             <strong>{item.name}</strong><small>{item.subtitle}</small><span className="vip-motion-label"><Sparkles size={11} /> Chuyển động riêng</span>
           </button>)}</div>
         </section>

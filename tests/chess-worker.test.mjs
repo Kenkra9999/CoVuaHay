@@ -18,8 +18,8 @@ test("deployment includes every selectable cover and the battlefield background"
   }
 });
 
-test("deployment includes all 72 pieces in the six selectable collections", () => {
-  for (const set of ["sakura", "elemental", "royal", "nebula", "jade", "mecha"]) {
+test("deployment includes all 96 pieces in the eight selectable collections", () => {
+  for (const set of ["sakura", "elemental", "royal", "nebula", "jade", "mecha", "dragon-abyss", "celestial"]) {
     for (const color of ["w", "b"]) {
       for (const kind of ["P", "N", "B", "R", "Q", "K"]) {
         const asset = `pieces/${set}/${color}${kind}.svg`;
@@ -27,4 +27,12 @@ test("deployment includes all 72 pieces in the six selectable collections", () =
       }
     }
   }
+});
+
+test("deployment preserves split board artwork and the transparent original wing layer", () => {
+  for (const asset of ["icefire.png", "celestial.png", "celestial-wingless.png", "celestial-wings.png"]) {
+    assert.deepEqual(readFileSync(new URL(`../dist/client/boards/vip/${asset}`, import.meta.url)), readFileSync(new URL(`../public/boards/vip/${asset}`, import.meta.url)), asset);
+  }
+  // PNG IHDR color type 6 is RGBA, required so the wing layer has no solid background.
+  assert.equal(readFileSync(new URL("../public/boards/vip/celestial-wings.png", import.meta.url))[25], 6);
 });

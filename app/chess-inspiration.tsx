@@ -3,8 +3,7 @@
 
 import { Menu, Pause, Play } from "lucide-react";
 import { memo, useEffect, useState } from "react";
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const assetUrl = (src: string) => src.startsWith("/") ? BASE_PATH + src : src;
+import { assetUrl } from "../lib/asset-url";
 
 const quotes = [
   { lead: "Đừng để xuất phát điểm quyết định bạn là ai,", rest: "bởi giá trị của một con người nằm ở những gì họ có thể trở thành" },
