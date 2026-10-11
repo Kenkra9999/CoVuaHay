@@ -284,7 +284,7 @@ export default function ChessApp() {
   useEffect(() => {
     if (!onlineCode) return;
     const pulse = () => { if (!document.hidden) setTick(Date.now()); };
-    const timer = window.setInterval(pulse, 250);
+    const timer = window.setInterval(pulse, 1000);
     document.addEventListener("visibilitychange", pulse);
     return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", pulse); };
   }, [onlineCode]);

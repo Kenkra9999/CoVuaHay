@@ -1,6 +1,6 @@
 export type AudioChannel = "music" | "pickup" | "placement";
 export type AudioSettings = { music: number; pickup: number; placement: number; musicEnabled: boolean };
-export const DEFAULT_AUDIO: AudioSettings = { music: 35, pickup: 65, placement: 70, musicEnabled: true };
+export const DEFAULT_AUDIO: AudioSettings = { music: 68, pickup: 88, placement: 90, musicEnabled: true };
 
 export function restoreAudio(raw: string | null): AudioSettings {
   const settings = { ...DEFAULT_AUDIO };
@@ -31,6 +31,7 @@ const bars = [
 export class ChessAudio {
   private context: AudioContext | null = null;
   private gains: Record<AudioChannel, GainNode> | null = null;
+  private master: DynamicsCompressorNode | null = null;
   private settings: AudioSettings = { ...DEFAULT_AUDIO };
   private timer: ReturnType<typeof setInterval> | null = null;
   private nextBeat = 0;
@@ -44,7 +45,7 @@ export class ChessAudio {
     if (this.context && this.gains) {
       for (const channel of ["music", "pickup", "placement"] as const) {
         const value = channel === "music" && !settings.musicEnabled ? 0 : settings[channel] / 100;
-        this.gains[channel].gain.setTargetAtTime(value * (channel === "music" ? .38 : 1), this.context.currentTime, .035);
+        this.gains[channel].gain.setTargetAtTime(value * (channel === "music" ? .76 : 1.45), this.context.currentTime, .035);
       }
     }
     this.syncMusic();
@@ -56,12 +57,16 @@ export class ChessAudio {
       if (!this.context) {
         this.context = new AudioContext();
         this.gains = { music: this.context.createGain(), pickup: this.context.createGain(), placement: this.context.createGain() };
-        for (const gain of Object.values(this.gains)) gain.connect(this.context.destination);
+        this.master = this.context.createDynamicsCompressor();
+        this.master.threshold.value = -9; this.master.knee.value = 12; this.master.ratio.value = 3;
+        this.master.attack.value = .003; this.master.release.value = .18;
+        this.master.connect(this.context.destination);
+        for (const gain of Object.values(this.gains)) gain.connect(this.master);
         const delay = this.context.createDelay(.5), feedback = this.context.createGain(), warmth = this.context.createBiquadFilter();
         delay.delayTime.value = .21; feedback.gain.value = .13;
         warmth.type = "lowpass"; warmth.frequency.value = 2400;
         this.gains.music.connect(delay); delay.connect(warmth).connect(feedback);
-        feedback.connect(delay); feedback.connect(this.context.destination);
+        feedback.connect(delay); feedback.connect(this.master);
         this.configure(this.settings);
       }
       if (this.context.state === "suspended") await this.context.resume();
@@ -83,14 +88,14 @@ export class ChessAudio {
     const time = this.context.currentTime + .005;
     const output = this.gains[channel];
     if (channel === "pickup") {
-      this.tone(640, time, .14, .065, output, "sine", 1020);
-      this.tone(1280, time + .016, .15, .018, output);
-      this.brush(time, .07, .023, 1700, output);
+      this.tone(640, time, .14, .09, output, "sine", 1020);
+      this.tone(1280, time + .016, .15, .025, output);
+      this.brush(time, .07, .035, 1700, output);
     } else {
-      this.tone(capture ? 220 : 300, time, .16, .15, output, "sine", 105);
-      this.tone(570, time + .008, .12, .037, output);
-      this.brush(time, .065, .06, 900, output);
-      if (capture) this.tone(880, time + .035, .2, .025, output);
+      this.tone(capture ? 220 : 300, time, .16, .2, output, "sine", 105);
+      this.tone(570, time + .008, .12, .052, output);
+      this.brush(time, .065, .09, 900, output);
+      if (capture) this.tone(880, time + .035, .2, .04, output);
     }
   }
 
@@ -119,18 +124,18 @@ export class ChessAudio {
     const bar = bars[Math.floor(beat / 4) % bars.length], position = beat % 4;
     const length = 60 / 76;
     if (position === 0 || position === 2) bar.chord.forEach((note, i) => {
-      this.tone(hz(note), time + i * .018 + (position === 2 ? .045 : 0), 1.6, .036, output);
-      this.tone(hz(note) * 2, time + i * .018, .65, .007, output);
+      this.tone(hz(note), time + i * .018 + (position === 2 ? .045 : 0), 1.6, .048, output);
+      this.tone(hz(note) * 2, time + i * .018, .65, .009, output);
     });
-    this.tone(hz(bar.bass[position]), time, .65, .13, output);
-    this.tone(hz(bar.bass[position]) * 2, time, .32, .02, output);
+    this.tone(hz(bar.bass[position]), time, .65, .17, output);
+    this.tone(hz(bar.bass[position]) * 2, time, .32, .025, output);
     if (position !== 1 || Math.floor(beat / 32) % 2 === 0) {
-      this.tone(hz(bar.melody[position]), time + length * .12, .7, .037, output);
-      if (position === 3) this.tone(hz(bar.melody[position] - 2), time + length * .68, .4, .018, output);
+      this.tone(hz(bar.melody[position]), time + length * .12, .7, .05, output);
+      if (position === 3) this.tone(hz(bar.melody[position] - 2), time + length * .68, .4, .024, output);
     }
-    this.brush(time + .01, .14, .013, 4600, output);
-    this.brush(time + length * .66, .08, .009, 5600, output);
-    if (position === 1 || position === 3) this.brush(time, .25, .028, 1600, output);
+    this.brush(time + .01, .14, .018, 4600, output);
+    this.brush(time + length * .66, .08, .012, 5600, output);
+    if (position === 1 || position === 3) this.brush(time, .25, .036, 1600, output);
   }
 
   private tone(frequency: number, time: number, duration: number, level: number, output: GainNode, type: OscillatorType = "sine", endFrequency?: number) {
@@ -169,6 +174,6 @@ export class ChessAudio {
     this.disposed = true;
     this.stopMusic();
     if (this.context) void this.context.close().catch(() => {});
-    this.context = null; this.gains = null; this.noise = null;
+    this.context = null; this.gains = null; this.master = null; this.noise = null;
   }
 }

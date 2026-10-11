@@ -17,7 +17,7 @@ export const ChessAtmosphere = memo(function ChessAtmosphere({ effect }: { effec
     let points: Particle[] = [];
     const resize = () => {
       width = window.innerWidth; height = window.innerHeight;
-      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
       canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       const count = width < 600 ? 110 : Math.min(280, Math.max(220, Math.round(width * height / 6000)));
