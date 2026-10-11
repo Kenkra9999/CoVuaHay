@@ -779,3 +779,85 @@ button, input { -webkit-tap-highlight-color: transparent; }
   .style-hint { font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } .battlefield-canvas, .hero-motes { display: none; } .duel-art { will-change: auto; } }
+
+/* A pawn's potential: editorial typography, original artwork, and a compact game menu. */
+.inspiration-hero { position: relative; isolation: isolate; overflow: hidden; max-width: 1576px; width: calc(100% - 64px); margin: 24px auto 0; border: 1px solid #d7b78540; border-radius: 20px; background: #101719; display: grid; grid-template-columns: 1.25fr 1fr; box-shadow: 0 22px 70px -35px #000c; }
+.inspiration-scene { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .1; z-index: -1; pointer-events: none; }
+.inspiration-top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 32px 0; z-index: 2; }
+.inspiration-collection { display: flex; align-items: center; gap: 12px; background: transparent; text-align: left; padding: 0; }
+.inspiration-collection img { object-fit: contain; filter: drop-shadow(0 4px 8px #0008); }
+.inspiration-collection > span { font-size: 12px; letter-spacing: 1.6px; color: #ead6b3; }
+.inspiration-collection small { display: block; font-size: 10px; letter-spacing: 1.2px; margin-top: 6px; color: var(--muted); }
+.game-menu-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; background: #0c1518a8; border: 1px solid #d7b78566; border-radius: 50px; color: #edcf9c; min-height: 48px; padding: 10px 17px; }
+.game-menu-toggle span { font-size: 12px; }
+.game-menu-toggle:hover { background: #d7b78520; border-color: #e6c58d; }
+.inspiration-copy { position: relative; z-index: 1; padding: 30px 20px 30px 42px; }
+.inspiration-kicker { display: block; color: #c7a975; letter-spacing: 1.9px; font-size: 9px; line-height: 1.8; }
+.inspiration-quote-space { min-height: 226px; display: flex; align-items: center; }
+.inspiration-quote { margin: 16px 0 18px; position: relative; animation: quote-reveal .65s ease-out both; }
+.inspiration-open-quote { position: absolute; left: -22px; top: -12px; font-family: var(--serif); font-size: 54px; color: #d5b070; opacity: .7; }
+.inspiration-quote p { font-family: var(--serif); font-weight: 500; line-height: 1.14; letter-spacing: -.5px; margin: 0; text-wrap: pretty; }
+.inspiration-quote em { display: block; font-size: clamp(32px, 3.1vw, 48px); font-style: normal; color: #efd1a0; margin-bottom: 12px; }
+.inspiration-quote p > span { display: block; max-width: 570px; font-size: clamp(26px, 2.25vw, 35px); color: #e3ded4; line-height: 1.22; }
+.inspiration-controls { display: flex; align-items: center; gap: 16px; }
+.quote-dots { display: flex; gap: 2px; }
+.quote-dots button { display: grid; place-items: center; width: 32px; height: 32px; background: transparent; border-radius: 50%; }
+.quote-dots button span { width: 7px; height: 7px; background: #a4afb14d; border-radius: 10px; transition: width .25s, background .25s; }
+.quote-dots button[aria-pressed="true"] span { width: 20px; background: #dfba7e; }
+.quote-count { color: #dfc296; font-size: 10px; letter-spacing: 2px; }
+.quote-count i { color: #7d898b; font-style: normal; padding: 0 5px; }
+.quote-pause { background: #ffffff05; border: 1px solid #d7b78530; border-radius: 50%; width: 32px; height: 32px; display: grid; place-items: center; color: #c7ac83; }
+.inspiration-art { position: relative; margin: -74px 0 0; min-height: 410px; align-self: stretch; overflow: hidden; z-index: 0; }
+.inspiration-art > img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; object-position: center 40%; filter: sepia(.12) saturate(.88); }
+.inspiration-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #101719, #10171900 28%), linear-gradient(0deg, #101719 0%, #10171900 28%, #10171900 80%, #10171988); }
+.inspiration-art figcaption { position: absolute; bottom: 22px; right: 28px; z-index: 1; display: flex; align-items: center; gap: 10px; font-size: 8px; letter-spacing: 1.6px; color: #c5ad87; }
+.inspiration-art figcaption > span { height: 1px; width: 24px; background: #c5ad8770; }
+.arena-layout { grid-template-columns: minmax(0, 1fr) 350px; max-width: 1450px; }
+.game-menu-modal { width: 490px; border-color: #d7b78550; }
+.game-menu-content h2 { font-family: var(--serif); font-size: 42px; font-weight: 500; margin: 24px 0; color: #ead6b3; }
+.game-menu-content h2 small { display: block; font-family: var(--sans); font-size: 13px; font-weight: 400; color: var(--muted); margin-top: 7px; }
+.game-menu-content .mode-list { display: flex; flex-direction: column; }
+.game-menu-content .mode-list > button { min-height: 72px; padding: 12px; flex-direction: row; align-items: center; text-align: left; }
+.game-menu-content .mode-list > button > svg:last-child { display: block; }
+.game-menu-content .ai-options { display: block; }
+.game-menu-content .difficulty-options { margin-top: 10px; min-width: 0; }
+.game-menu-content .color-options { padding-top: 14px; }
+.game-menu-content .color-options > span { margin-right: auto; }
+.game-menu-content .rail-foot { display: flex; margin-top: 22px; font-size: 11px; }
+@keyframes quote-reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 1100px) {
+  .inspiration-hero { width: calc(100% - 44px); grid-template-columns: 1.2fr 1fr; }
+  .inspiration-copy { padding: 24px 18px 26px 32px; }
+  .inspiration-quote-space { min-height: 250px; }
+  .inspiration-kicker { font-size: 8px; letter-spacing: 1.3px; }
+  .arena-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+}
+@media (max-width: 850px) {
+  .inspiration-hero { width: calc(100% - 40px); }
+  .inspiration-top { padding: 18px 22px 0; }
+  .inspiration-quote em { font-size: 34px; }
+  .inspiration-quote p > span { font-size: 27px; }
+  .inspiration-art figcaption { right: 14px; font-size: 7px; letter-spacing: 1px; }
+}
+@media (max-width: 600px) {
+  .inspiration-hero { width: calc(100% - 24px); margin-top: 12px; grid-template-columns: 1fr; border-radius: 16px; }
+  .inspiration-top { padding: 18px 18px 0; }
+  .inspiration-collection { gap: 8px; }
+  .inspiration-collection img { width: 35px; height: 42px; }
+  .inspiration-collection > span { font-size: 10px; letter-spacing: 1px; }
+  .inspiration-collection small { font-size: 8px; letter-spacing: .8px; }
+  .game-menu-toggle { width: 46px; min-height: 46px; padding: 10px; }
+  .game-menu-toggle span { display: none; }
+  .inspiration-copy { padding: 26px 24px 0; }
+  .inspiration-kicker { font-size: 7px; letter-spacing: 1.3px; }
+  .inspiration-quote-space { min-height: 235px; }
+  .inspiration-open-quote { left: -14px; top: -8px; font-size: 40px; }
+  .inspiration-quote em { font-size: clamp(29px, 7.9vw, 40px); line-height: 1.12; }
+  .inspiration-quote p > span { font-size: clamp(25px, 6.5vw, 33px); line-height: 1.18; }
+  .inspiration-controls { justify-content: center; margin: 4px 0 0; }
+  .inspiration-art { margin: -18px 0 0; min-height: 300px; aspect-ratio: 1.22; }
+  .inspiration-art > img { object-position: center 36%; }
+  .inspiration-art::after { background: linear-gradient(0deg, #101719 0%, transparent 30%, transparent 75%, #101719 100%), linear-gradient(90deg, #10171935, transparent 20%, transparent 80%, #10171935); }
+  .inspiration-art figcaption { right: auto; left: 50%; transform: translateX(-50%); bottom: 17px; white-space: nowrap; font-size: 7px; }
+  .game-menu-content h2 { font-size: 36px; }
+}

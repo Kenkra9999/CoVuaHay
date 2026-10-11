@@ -9,6 +9,7 @@ import { chessClock } from "@/lib/chess-clock";
 import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
 import { ATMOSPHERES, BOARD_STYLES, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
 import { ChessAtmosphere } from "./chess-atmosphere";
+import { ChessInspiration } from "./chess-inspiration";
 import type { Difficulty } from "@/lib/chess-ai";
 import { describeMove, parseUciMove, principalVariation, searchStockfish, type EngineAnalysis, type EngineLine } from "@/lib/stockfish";
 
@@ -17,7 +18,7 @@ type Mode = "ai" | "local";
 type LocalGame = { fen: string; moves: MoveRecord[]; status: RoomStatus; version: number };
 type Piece = { id: string; square: Square; color: Color; type: string };
 type OnlineGame = RoomView & { receivedAt: number };
-type Modal = "create" | "join" | "appearance" | "pieces" | "help" | null;
+type Modal = "menu" | "create" | "join" | "appearance" | "pieces" | "help" | null;
 type Appearance = VisualAppearance & { pieceSet: PieceSetId };
 type RecentRoom = { code: string; color: Color | null; name: string; savedAt: number };
 type ApiData = { room?: RoomView; token?: string; error?: string };
@@ -584,27 +585,9 @@ export default function ChessApp() {
       <nav className="header-nav" aria-label="Chế độ chơi"><span className="nav-current"><span className="live-dot" /> {online ? "Đấu trường online" : aiMode ? "Không gian luyện tập" : "Cùng một bàn cờ"}</span><button onClick={() => setModal("help")}>Cách chơi</button></nav>
       <div className="header-actions"><button className="header-join" onClick={() => { setModal("join"); setMessage(""); }}><Hash size={16} /><span>Nhập mã mời</span></button><button className="primary-button header-create" onClick={() => setModal("create")}><Plus size={17} /><span>Tạo phòng</span></button></div>
     </header>
-    <section className={"duel-hero cover-" + appearance.cover} aria-labelledby="duel-title">
-      <img className="duel-art" src={currentCover.image} width={1672} height={941} fetchPriority="high" alt={currentCover.name} />
-      <div className="cover-glow" aria-hidden="true" />
-      {appearance.particlesOn && <div className={"hero-motes motes-" + appearance.effect} aria-hidden="true">{Array.from({ length: 12 }, (_, i) => <i key={i} style={{ left: (34 + i * 5.8) + "%", animationDelay: (-i * 1.7) + "s", animationDuration: (12 + i % 4 * 3) + "s" }} />)}</div>}
-      <div className="duel-copy"><span className="eyebrow"><Swords size={14} /> HAI SẮC QUÂN. MỘT THẾ GIỚI.</span><h1 id="duel-title">Bản lĩnh trong<br /><em>từng nước đi.</em></h1><p>Bước vào bàn cờ. Viết nên cuộc đấu của bạn.</p>
-        <button className="duel-collection" onClick={() => setModal("pieces")}><span>Khám phá 6 bộ quân</span><ArrowRight size={16} /></button>
-      </div>
-      <div className="cover-picker" aria-label="Chọn bìa">{COVER_SCENES.map(scene => <button key={scene.id} onClick={() => changeCover(scene.id)} aria-label={"Bìa " + scene.name} aria-pressed={appearance.cover === scene.id}><img src={scene.image} width={56} height={32} alt="" />{appearance.cover === scene.id && <Check size={12} />}</button>)}<button className="cover-motion" onClick={() => changeMotion(!appearance.motionOn)} aria-label="Chuyển động bìa" aria-pressed={appearance.motionOn}>{appearance.motionOn ? <Sparkles size={16} /> : <Play size={16} />}</button></div>
-      <span className="duel-signature"><span /> {currentCover.name}</span>
-    </section>
+    <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
     <main className="arena-layout">
-      <aside className="left-rail">
-        <div className="atelier-intro"><span className="eyebrow">MỖI NƯỚC ĐI, MỘT DẤU ẤN</span><h2>Làm chủ<br />thế cờ.</h2><p>Một bàn cờ. Vô vàn khả năng.</p><div className="intro-knight"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="Quân mã trong bộ sưu tập đang dùng" /><span>ATELIER COLLECTION<small>BỘ QUÂN CỜ ĐỘC BẢN</small></span></div></div>
-        <section className="rail-card"><div className="section-label">CHỌN CUỘC CHƠI <Swords size={14} /></div>
-          <div className="mode-list"><button className={!online && aiMode ? "mode-active" : ""} onClick={() => newLocal("ai")}><Bot size={20} /><span>Đấu với AI<small>Thử sức cùng Stockfish 19</small></span><ChevronRight size={15} /></button><button className={online ? "mode-active" : ""} onClick={() => setModal("create")}><Users size={20} /><span>Đấu cùng bạn<small>Hai thiết bị, một trận cờ</small></span><ChevronRight size={15} /></button><button className={!online && !aiMode ? "mode-active" : ""} onClick={() => newLocal("local")}><Crown size={20} /><span>Cùng thiết bị<small>Luân phiên Trắng và Đen</small></span><ChevronRight size={15} /></button></div>
-          {!online && aiMode && <div className="ai-options"><span className="small-label">ĐỘ KHÓ</span><div className="difficulty-options">{(["easy", "medium", "hard", "master"] as const).map(level => <button key={level} onClick={() => setDifficulty(level)} className={difficulty === level ? "selected-option" : ""}>{({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Kỳ thủ" })[level]}</button>)}</div><div className="color-options"><span>Cầm quân</span><button className={humanColor === "w" ? "selected-color" : ""} onClick={() => newLocal("ai", "w")}><i className="color-chip chip-white" /> Trắng</button><button className={humanColor === "b" ? "selected-color" : ""} onClick={() => newLocal("ai", "b")}><i className="color-chip chip-black" /> Đen</button></div></div>}
-        </section>
-        <button className="appearance-button battlefield-badge-btn" onClick={() => setModal("appearance")}><span className={"theme-mini mini-" + appearance.boardTheme} /><span>{currentBoardStyle.name}<small>Bàn cờ · hiệu ứng · bìa</small></span><Palette size={16} /></button>
-        {recentRooms.length > 0 && <section className="recent-card"><div className="section-label">TRẬN GẦN ĐÂY <History size={14} /></div>{recentRooms.slice(0, 3).map(room => <button key={room.code} onClick={() => void joinRoom(room.code)} disabled={busy}><span><b>{room.code}</b><small>{room.color === "w" ? "Ghế Trắng" : room.color === "b" ? "Ghế Đen" : "Khán giả"}</small></span><ArrowRight size={14} /></button>)}</section>}
-        <div className="rail-foot"><ShieldCheck size={15} /><span>Luật chuẩn. Nước đi được kiểm tra.<br />Ván online luôn được lưu.</span></div>
-      </aside>
+
       <section className={"board-column theme-" + appearance.boardTheme} aria-label="Bàn cờ vua">
         <div className="board-quick-controls" aria-label="Đổi chế độ chơi nhanh">
           <button className={!online && aiMode ? "quick-control-active" : ""} aria-label="Chơi với AI" onClick={() => newLocal("ai")}><Bot size={18} /> Đấu AI</button>
@@ -660,8 +643,18 @@ export default function ChessApp() {
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
     {drag && draggedPiece && <div className="drag-piece" style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
-    <dialog className={"atelier-modal " + (modal === "pieces" ? "collection-modal" : modal === "appearance" ? "appearance-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
-      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
+    <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" ? "appearance-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
+      <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
+      {modal === "menu" && <div className="game-menu-content">
+<h2 id="game-menu-title">Nước đi của bạn.<small>Chọn cuộc chơi của bạn.</small></h2>
+        <section className="rail-card"><div className="section-label">CHỌN CUỘC CHƠI <Swords size={14} /></div>
+          <div className="mode-list"><button className={!online && aiMode ? "mode-active" : ""} onClick={() => { newLocal("ai"); setModal(null); }}><Bot size={20} /><span>Đấu với AI<small>Thử sức cùng Stockfish 19</small></span><ChevronRight size={15} /></button><button className={online ? "mode-active" : ""} onClick={() => setModal("create")}><Users size={20} /><span>Đấu cùng bạn<small>Hai thiết bị, một trận cờ</small></span><ChevronRight size={15} /></button><button className={!online && !aiMode ? "mode-active" : ""} onClick={() => { newLocal("local"); setModal(null); }}><Crown size={20} /><span>Cùng thiết bị<small>Luân phiên Trắng và Đen</small></span><ChevronRight size={15} /></button></div>
+          {!online && aiMode && <div className="ai-options"><span className="small-label">ĐỘ KHÓ</span><div className="difficulty-options">{(["easy", "medium", "hard", "master"] as const).map(level => <button key={level} onClick={() => setDifficulty(level)} className={difficulty === level ? "selected-option" : ""}>{({ easy: "Dễ", medium: "Vừa", hard: "Khó", master: "Kỳ thủ" })[level]}</button>)}</div><div className="color-options"><span>Cầm quân</span><button className={humanColor === "w" ? "selected-color" : ""} onClick={() => newLocal("ai", "w")}><i className="color-chip chip-white" /> Trắng</button><button className={humanColor === "b" ? "selected-color" : ""} onClick={() => newLocal("ai", "b")}><i className="color-chip chip-black" /> Đen</button></div></div>}
+        </section>
+        <button className="appearance-button battlefield-badge-btn" onClick={() => setModal("appearance")}><span className={"theme-mini mini-" + appearance.boardTheme} /><span>{currentBoardStyle.name}<small>Bàn cờ · hiệu ứng · bìa</small></span><Palette size={16} /></button>
+        {recentRooms.length > 0 && <section className="recent-card"><div className="section-label">TRẬN GẦN ĐÂY <History size={14} /></div>{recentRooms.slice(0, 3).map(room => <button key={room.code} onClick={() => void joinRoom(room.code)} disabled={busy}><span><b>{room.code}</b><small>{room.color === "w" ? "Ghế Trắng" : room.color === "b" ? "Ghế Đen" : "Khán giả"}</small></span><ArrowRight size={14} /></button>)}</section>}
+        <div className="rail-foot"><ShieldCheck size={15} /><span>Luật chuẩn. Nước đi được kiểm tra.<br />Ván online luôn được lưu.</span></div>
+      </div>}
       {modal === "create" && <><h2>Thiết lập một cuộc đấu.</h2><p className="modal-description">Chọn nhịp chơi. Gửi lời mời. Phần còn lại là những nước cờ.</p><label className="form-label" htmlFor="creator-name">Tên của bạn</label><input id="creator-name" className="text-input" maxLength={24} value={profileName} onChange={event => { setProfileName(event.target.value); remember("nuocco:playerName", event.target.value); }} placeholder="Tên hiển thị trên bàn cờ" />
         <div className="slider-setting"><label htmlFor="total-time"><span>Thời gian mỗi bên<small>Tổng ngân sách cho toàn ván</small></span><b>{totalMinutes}<em>phút</em></b></label><input id="total-time" type="range" min="5" max="100" step="1" value={totalMinutes} onChange={event => setTotalMinutes(Number(event.target.value))} /><div className="range-labels"><span>5 phút</span><span>100 phút</span></div></div>
         <div className="slider-setting"><label htmlFor="move-time"><span>Giới hạn mỗi lượt<small>Phải đi trước khi đồng hồ lượt hết</small></span><b>{moveSeconds}<em>giây</em></b></label><input id="move-time" type="range" min="60" max="300" step="15" value={moveSeconds} onChange={event => setMoveSeconds(Number(event.target.value))} /><div className="range-labels"><span>60 giây</span><span>300 giây</span></div></div>
