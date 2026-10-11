@@ -7,7 +7,7 @@ export const PIECE_SETS = [
 ] as const;
 
 export type PieceSetId = typeof PIECE_SETS[number]["id"];
-export const DEFAULT_PIECE_SET: PieceSetId = "elemental";
+export const DEFAULT_PIECE_SET: PieceSetId = "royal";
 export function validPieceSet(value: unknown): value is PieceSetId {
   return PIECE_SETS.some(set => set.id === value);
 }

@@ -1,5 +1,13 @@
 # Ảnh cho giao diện Nước Cờ
 
+## Ảnh đối đầu — `public/chess-duel.png`
+
+Ảnh người dùng cung cấp, 1672 × 941, giữ nguyên bản gốc. Banner phía trên bàn cờ sử dụng ảnh với lớp phủ tối và vị trí cắt riêng cho máy tính, điện thoại. Ảnh cũng làm nền rất nhẹ sau các bảng để giữ bàn cờ và điều khiển dễ đọc.
+
+## Năm bộ quân — `public/pieces/{set}/*.svg`
+
+60 SVG được vẽ bằng đường vector trong `scripts/generate-chess-pieces.mjs`, tương ứng 30 thiết kế riêng của sáu loại quân trong năm bộ. Hai màu của cùng một quân giữ chung hình dáng. Hoàng gia dùng đường cong Staunton và ngà–hắc kim; Nguyên tố dùng các mảnh pha lê; Tinh vân dùng đường cong và vòng quỹ đạo; Ngọc phong dùng tháp, bệ sen và đầu mã chạm; Cơ giáp dùng giáp góc cạnh và lõi sáng. Chạy `node scripts/generate-chess-pieces.mjs` để tạo lại các tài nguyên.
+
 ## Nền chiến trường — `public/chess-battlefield.png`
 
 Tạo riêng bằng ImageGen tích hợp, 1536 × 1024. Nền phủ toàn viewport bằng CSS `background-size: cover`, thêm lớp tối để giữ bàn cờ và chữ rõ nét.
