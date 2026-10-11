@@ -432,8 +432,29 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .board-quick-controls .quick-control-active { color: var(--gold-light); border-color: #c6ac8155; background: #c6ac8112; }
 
 @media (min-width: 1551px) {
-  .arena-layout { padding-top: 30px; }
-  .board-column { --board-size: min(100%, 760px, max(580px, calc(100svh - 310px))); }
+  .arena-layout { padding-top: 14px; }
+  .board-column { --board-size: min(calc(100% - 264px), 760px, max(420px, calc(100svh - 360px))); }
+  .board-stage { display: grid; width: 100%; grid-template-columns: 124px minmax(0, var(--board-size)) 124px; justify-content: center; align-items: center; column-gap: 8px; row-gap: 0; }
+  .players-row { display: contents; }
+  .players-row > .player-card:first-child { grid-column: 1; grid-row: 1; }
+  .players-row > .player-card:last-child { grid-column: 3; grid-row: 1; }
+  .players-row .player-card { display: grid; grid-template-columns: 36px minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: 9px 7px; min-height: 0; padding: 11px 9px; }
+  .players-row .player-avatar { grid-column: 1; grid-row: 1; width: 36px; height: 39px; }
+  .players-row .player-info { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .players-row .player-name-line { width: 100%; }
+  .players-row .player-name, .players-row .player-name-static { width: 100%; min-width: 0; font-size: 13px; }
+  .players-row .player-name-static { white-space: normal; overflow-wrap: anywhere; }
+  .players-row .player-detail { white-space: normal; overflow-wrap: anywhere; align-items: flex-start; font-size: 10px; line-height: 1.45; }
+  .players-row .player-clock { grid-column: 2; grid-row: 1; min-width: 0; padding: 0; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+  .players-row .player-clock > span { font-size: 23px; }
+  .players-row .player-clock > small { margin-top: 0; font-size: 8px; letter-spacing: .3px; }
+  .players-row .player-clock > span:only-child { font-size: 23px; }
+  .board-stage > .board-frame { grid-column: 2; grid-row: 1; width: 100%; margin: 0; }
+  .board-stage > .game-status, .board-stage > .draw-notice, .board-stage > .board-toolbar, .board-stage > .replay-controls { grid-column: 2; }
+  .board-stage > .game-status { grid-row: 2; }
+  .board-stage > .draw-notice { grid-row: 3; }
+  .board-stage > .board-toolbar { grid-row: 4; }
+  .board-stage > .replay-controls { grid-row: 5; }
   .atelier-intro h1 { font-size: 64px; }
 }
 @media (max-width: 1550px) {
