@@ -1,6 +1,9 @@
 # Nước Cờ — The Chess Atelier
 
+> 🌐 **Chơi trực tuyến ngay tại:** [https://kenkra9999.github.io/CoVuaHay/](https://kenkra9999.github.io/CoVuaHay/)
+
 Ứng dụng cờ vua với bàn cờ rộng tự co giãn, chữ và nút dễ đọc, sáu bộ quân SVG riêng, năm chất liệu bàn, tám hiệu ứng nền và bốn bìa chuyển động. Hoa anh đào đỏ cùng tàn lửa là mặc định, với mật độ và độ sáng được tăng cường cho cả tám hiệu ứng. Hiệu ứng luôn hiển thị và chỉ đổi sang loại khác; lựa chọn tự lưu trên thiết bị. Chế độ giảm chuyển động của hệ điều hành hiển thị các hạt tĩnh. Chơi với Stockfish, hai người trên cùng thiết bị hoặc online bằng mã phòng. Hỗ trợ chuột, bàn phím, chạm và kéo quân trên điện thoại.
+
 
 ## Chạy trên máy
 
