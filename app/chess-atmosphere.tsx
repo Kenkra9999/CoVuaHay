@@ -13,14 +13,50 @@ export const ChessAtmosphere = memo(function ChessAtmosphere({ effect }: { effec
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const risingEffect = ["embers", "gold", "fireflies"].includes(effect);
     let frame = 0, last = 0, width = 0, height = 0, elapsed = 0;
+    let sampled = 0, slowFrames = 0, previousFrame = 0;
     let points: Particle[] = [];
+    // Bake paths and soft shadows once. Animation frames only blit cached sprites.
+    const sprite = (ember: boolean) => {
+      const tile = document.createElement("canvas"); tile.width = 160; tile.height = 160;
+      const paint = tile.getContext("2d")!;
+      paint.translate(80, 80);
+      paint.fillStyle = paint.strokeStyle = ember ? "#ffa85e" : colors[effect];
+      paint.shadowColor = paint.fillStyle;
+      paint.shadowBlur = effect === "rain" ? 3 : effect === "sakura" && !ember ? 4 : 10;
+      const size = 8;
+      if (effect === "sakura" && !ember) {
+        paint.beginPath(); paint.moveTo(0, -size);
+        paint.bezierCurveTo(size * 1.5, -size * .2, size, size, 0, size * 1.25);
+        paint.bezierCurveTo(-size, size * .4, -size, -size * .8, 0, -size); paint.fill();
+      } else if (effect === "rain" || effect === "stars") {
+        paint.lineWidth = effect === "rain" ? 2 : 3;
+        paint.beginPath(); paint.moveTo(0, 0); paint.lineTo(effect === "rain" ? 10 : -56, effect === "rain" ? -72 : -56); paint.stroke();
+      } else {
+        paint.beginPath(); paint.arc(0, 0, size, 0, Math.PI * 2); paint.fill();
+        if (effect === "snow") {
+          paint.lineWidth = 2;
+          for (let i = 0; i < 3; i++) { paint.rotate(Math.PI / 3); paint.beginPath(); paint.moveTo(-16, 0); paint.lineTo(16, 0); paint.stroke(); }
+        }
+      }
+      return tile;
+    };
+    const particleSprite = sprite(false), emberSprite = effect === "sakura" ? sprite(true) : particleSprite;
+    const auroraSprites = ["#56e6bc40", "#ab87ef48"].map(color => {
+      const tile = document.createElement("canvas"); tile.width = tile.height = 256;
+      const paint = tile.getContext("2d")!;
+      const glow = paint.createRadialGradient(128, 128, 0, 128, 128, 128);
+      glow.addColorStop(0, color); glow.addColorStop(1, "transparent");
+      paint.fillStyle = glow; paint.fillRect(0, 0, 256, 256); return tile;
+    });
     const resize = () => {
       width = window.innerWidth; height = window.innerHeight;
       const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
       canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      const count = width < 600 ? 110 : Math.min(280, Math.max(220, Math.round(width * height / 6000)));
+      const balanced = document.documentElement.dataset.visualQuality === "balanced";
+      const count = width < 600 ? 48 : balanced ? 72 : Math.min(120, Math.max(80, Math.round(width * height / 12000)));
       points = Array.from({ length: count }, (_, index) => ({ x: Math.random() * width, y: Math.random() * height,
         size: effect === "sakura" ? (width < 600 ? 3.5 : 4.5) + Math.random() * 4.5 : 1.2 + Math.random() * 2.7,
         speed: 26 + Math.random() * 44, phase: Math.random() * Math.PI * 2, drift: 20 + Math.random() * 32,
@@ -28,20 +64,27 @@ export const ChessAtmosphere = memo(function ChessAtmosphere({ effect }: { effec
     };
     const draw = (time: number, animate = true) => {
       if (animate) frame = requestAnimationFrame(time => draw(time));
-      if (animate && time - last < 1000 / 30) return;
+      const balanced = document.documentElement.dataset.visualQuality === "balanced";
+      if (animate && previousFrame) {
+        sampled++; if (time - previousFrame > 34) slowFrames++;
+        if (!balanced && sampled >= 120 && slowFrames > 24) {
+          document.documentElement.dataset.visualQuality = "balanced";
+          resize(); sampled = slowFrames = 0;
+        }
+      }
+      previousFrame = time;
+      if (animate && time - last < 1000 / (balanced ? 30 : 60) - 1) return;
       const dt = Math.min((time - (last || time)) / 1000, .05);
       last = time; elapsed += dt;
       ctx.clearRect(0, 0, width, height);
       if (effect === "aurora") {
         for (let i = 0; i < 4; i++) {
           const x = width * (.15 + i * .23) + Math.sin(elapsed * .2 + i) * 95;
-          const glow = ctx.createRadialGradient(x, height * .22, 0, x, height * .22, width * .48);
-          glow.addColorStop(0, i % 2 ? "#ab87ef48" : "#56e6bc40"); glow.addColorStop(.45, i % 2 ? "#ab87ef18" : "#56e6bc14"); glow.addColorStop(1, "transparent");
-          ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(auroraSprites[i % 2], x - width * .48, height * .22 - width * .48, width * .96, width * .96);
         }
       }
       for (const point of points) {
-        const rising = point.ember || ["embers", "gold", "fireflies"].includes(effect);
+        const rising = point.ember || risingEffect;
         point.y += (rising ? -1 : 1) * point.speed * dt * (effect === "rain" ? 4 : 1);
         point.x += Math.sin(elapsed * .7 + point.phase) * point.drift * dt + (effect === "rain" ? -45 * dt : effect === "stars" ? 46 * dt : 10 * dt);
         if (point.y > height + 16) point.y = -16;
@@ -50,35 +93,18 @@ export const ChessAtmosphere = memo(function ChessAtmosphere({ effect }: { effec
         if (point.x < -16) point.x = width + 16;
         ctx.save(); ctx.translate(point.x, point.y);
         ctx.globalAlpha = .5 + .4 * Math.sin(elapsed * .9 + point.phase) ** 2;
-        ctx.fillStyle = point.ember ? "#ffa85e" : colors[effect];
         if (effect === "sakura" && !point.ember) {
           ctx.rotate(point.phase + elapsed * .65);
           ctx.scale(.6 + .4 * Math.abs(Math.sin(elapsed * .6 + point.phase)), 1);
-          ctx.shadowColor = colors.sakura; ctx.shadowBlur = 4;
-          ctx.beginPath(); ctx.moveTo(0, -point.size);
-          ctx.bezierCurveTo(point.size * 1.5, -point.size * .2, point.size, point.size, 0, point.size * 1.25);
-          ctx.bezierCurveTo(-point.size, point.size * .4, -point.size, -point.size * .8, 0, -point.size);
-          ctx.fill();
-        } else if (effect === "rain" || effect === "stars") {
-          ctx.strokeStyle = colors[effect]; ctx.lineWidth = effect === "rain" ? 1.1 : 1.5;
-          ctx.shadowColor = colors[effect]; ctx.shadowBlur = effect === "stars" ? 8 : 3;
-          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(effect === "rain" ? 5 : -point.size * 7, -point.size * (effect === "rain" ? 10 : 7)); ctx.stroke();
-        } else {
-          const size = point.ember ? 1.8 : point.size;
-          if (["embers", "fireflies", "gold", "aurora"].includes(effect) || point.ember) { ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10; }
-          ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill();
-          if (effect === "snow" && point.size > 2.5) {
-            ctx.strokeStyle = colors.snow; ctx.lineWidth = 1;
-            for (let i = 0; i < 3; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(-point.size * 2, 0); ctx.lineTo(point.size * 2, 0); ctx.stroke(); }
-          }
         }
+        const size = point.ember ? 1.8 : point.size;
+        ctx.drawImage(point.ember ? emberSprite : particleSprite, -size * 10, -size * 10, size * 20, size * 20);
         ctx.restore();
       }
     };
     const sync = () => {
-      cancelAnimationFrame(frame); last = 0;
-      ctx.clearRect(0, 0, width, height);
-      if (!document.hidden) {
+      cancelAnimationFrame(frame); last = previousFrame = sampled = slowFrames = 0;
+      if (!document.hidden && document.documentElement.dataset.visualPaused !== "true") {
         if (reducedMotion.matches) draw(0, false);
         else frame = requestAnimationFrame(time => draw(time));
       }
@@ -88,7 +114,8 @@ export const ChessAtmosphere = memo(function ChessAtmosphere({ effect }: { effec
     window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", sync);
     reducedMotion.addEventListener("change", sync);
-    return () => { cancelAnimationFrame(frame); ctx.clearRect(0, 0, width, height); window.removeEventListener("resize", onResize); document.removeEventListener("visibilitychange", sync); reducedMotion.removeEventListener("change", sync); };
+    window.addEventListener("nuocco:visual-state", sync);
+    return () => { cancelAnimationFrame(frame); ctx.clearRect(0, 0, width, height); window.removeEventListener("resize", onResize); window.removeEventListener("nuocco:visual-state", sync); document.removeEventListener("visibilitychange", sync); reducedMotion.removeEventListener("change", sync); };
   }, [effect]);
   return <canvas ref={ref} className="battlefield-canvas" data-effect={effect} aria-hidden="true" />;
 });

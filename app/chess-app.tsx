@@ -10,6 +10,11 @@ import { ChessAudio, DEFAULT_AUDIO, restoreAudio, type AudioChannel, type AudioS
 import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
 import { ATMOSPHERES, BOARD_STYLES, STANDARD_BOARDS, VIP_BOARDS, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, realmBoardInset, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
 import { ChessAtmosphere } from "./chess-atmosphere";
+import { BoardEnchantments, SovereignAura } from "./board-enchantments";
+import { DragonFrame } from "./dragon-frame";
+import { PieceMotion } from "./piece-motion";
+import { pieceTravelMs } from "@/lib/chess-motion";
+import { VisualPerformance } from "./visual-performance";
 import { ChessInspiration } from "./chess-inspiration";
 import type { Difficulty } from "@/lib/chess-ai";
 import { describeMove, parseUciMove, principalVariation, searchStockfish, type EngineAnalysis, type EngineLine } from "@/lib/stockfish";
@@ -77,11 +82,12 @@ type BoardActions = {
   up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
   cancel: () => void;
 };
-function RoyalAura({ type, color, pieceSet }: { type: string; color: Color; pieceSet: PieceSetId }) {
+const RoyalAura = memo(function RoyalAura({ type, color, pieceSet }: { type: string; color: Color; pieceSet: PieceSetId }) {
   const gradientId = useId().replace(/:/g, "");
   if (type !== "k" && type !== "q" && type !== "r") return null;
   const isKing = type === "k";
   const isRook = type === "r";
+  if (isKing) return <SovereignAura color={color} pieceSet={pieceSet} />;
   return (
     <span className={"royal-aura aura-" + (isKing ? "king" : isRook ? "rook" : "queen") + " aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
       {(pieceSet === "dragon-abyss" || pieceSet === "celestial") && <span className="mythic-aura">
@@ -149,7 +155,7 @@ function RoyalAura({ type, color, pieceSet }: { type: string; color: Color; piec
       </span>
     </span>
   );
-}
+});
 function VipFrameEffects() {
   return <span className="vip-frame-effects" aria-hidden="true"><span className="vip-rim" />
     {Array.from({ length: 16 }, (_, i) => {
@@ -225,9 +231,9 @@ function RealmTileEffects({ light, celestial, variant }: { light: boolean; celes
     </svg>
   </span>;
 }
-const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, splitTheme, dragFrom, boardRef, showHint, hintMove, actions }: {
+const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, boardTheme, splitTheme, dragFrom, boardRef, showHint, hintMove, actions }: {
   pieces: Piece[]; moves: MoveRecord[]; orientation: Color; selected: Square | null; legal: Square[];
-  checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; splitTheme: "icefire" | "celestial" | null; dragFrom?: Square;
+  checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; boardTheme: BoardStyle; splitTheme: "icefire" | "celestial" | null; dragFrom?: Square;
   boardRef: RefObject<HTMLDivElement | null>; showHint: boolean; hintMove?: { from: Square; to: Square } | null; actions: BoardActions;
 }) {
   const last = moves.at(-1);
@@ -249,14 +255,16 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
       </button>;
     }))}
     {splitTheme && <SplitRealmEffects icefire={splitTheme === "icefire"} />}
+    <BoardEnchantments theme={boardTheme} />
     {pieces.map(piece => {
       const file = files.indexOf(piece.square[0]), rank = 8 - Number(piece.square[1]);
       const x = orientation === "w" ? file : 7 - file, y = orientation === "w" ? rank : 7 - rank;
       return <div key={piece.id} data-piece-type={piece.type} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
-        style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" }}
+        style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", "--piece-travel-time": pieceTravelMs(piece.type) + "ms", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" } as CSSProperties}
         onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
         <RoyalAura type={piece.type} color={piece.color} pieceSet={pieceSet} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
     })}
+    <PieceMotion pieces={pieces} orientation={orientation} />
     {showHint && hintMove && (() => {
       const from = coordinates(hintMove.from), to = coordinates(hintMove.to);
       return <svg className="hint-overlay" viewBox="0 0 800 800" aria-hidden="true"><defs><marker id="hint-arrow" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="currentColor" /></marker></defs><circle cx={from.x} cy={from.y} r="30" /><line x1={from.x} y1={from.y} x2={to.x} y2={to.y} markerEnd="url(#hint-arrow)" /></svg>;
@@ -285,6 +293,8 @@ export default function ChessApp() {
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
+  const openMenu = useCallback(() => setModal("menu"), []);
+  const openCollection = useCallback(() => setModal("pieces"), []);
   const [joinCode, setJoinCode] = useState("");
   const [selected, setSelected] = useState<Square | null>(null);
   const [promotion, setPromotion] = useState<{ from: Square; to: Square } | null>(null);
@@ -303,6 +313,7 @@ export default function ChessApp() {
   const [drag, setDrag] = useState<{ from: Square; x: number; y: number; size: number } | null>(null);
   const sessionRef = useRef({ code: "", token: "", epoch: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
+  const dragPieceRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDialogElement>(null);
   const promotionRef = useRef<HTMLDialogElement>(null);
   const audioRef = useRef<ChessAudio | null>(null);
@@ -666,7 +677,13 @@ export default function ChessApp() {
     const pointer = pointerRef.current;
     if (!pointer || pointer.from !== piece.square) return;
     if (Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 5) pointer.moved = true;
-    if (pointer.moved) setDrag({ from: piece.square, x: event.clientX, y: event.clientY, size: (boardRef.current?.getBoundingClientRect().width || 480) / 8 });
+    if (pointer.moved) {
+      if (dragPieceRef.current) {
+        dragPieceRef.current.style.transform = "translate3d(" + event.clientX + "px," + event.clientY + "px,0) translate(-50%,-50%)";
+      } else {
+        setDrag({ from: piece.square, x: event.clientX, y: event.clientY, size: (boardRef.current?.getBoundingClientRect().width || 480) / 8 });
+      }
+    }
   }
   function onPieceUp(event: PointerEvent<HTMLDivElement>, piece: Piece) {
     const pointer = pointerRef.current; pointerRef.current = null; setDrag(null);
@@ -792,7 +809,7 @@ export default function ChessApp() {
   }
 
   return <div className={"site-shell battlefield-" + currentBoardStyle.world + " piece-style-" + appearance.pieceSet + (appearance.motionOn ? "" : " motion-off")}>
-    <ChessAtmosphere effect={appearance.effect} />
+    <VisualPerformance /><ChessAtmosphere effect={appearance.effect} />
     <header className="topbar">
       <button className="brand" onClick={() => newLocal()} aria-label="Nước Cờ - Ván mới"><span className="brand-mark"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /></span><span>Nước Cờ<small>THE CHESS ATELIER</small></span></button>
       <nav className="header-style-controls" aria-label="Tùy chỉnh bàn cờ">
@@ -804,14 +821,14 @@ export default function ChessApp() {
     </header>
     <main className="arena-layout">
       <div className="side-player side-player-left">{playerBar(topColor)}</div>
-      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={() => setModal("menu")} onCollection={() => setModal("pieces")} />
+      <ChessInspiration knight={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} scene={currentCover.image} motion={appearance.motionOn} menuOpen={modal === "menu"} onMenu={openMenu} onCollection={openCollection} />
 
       <section className={"board-column theme-" + appearance.boardTheme + (vipBoard ? " board-vip" : "") + (splitRealms ? " board-split-realms realm-" + (orientation === "w" ? "white-bottom" : "white-top") : "")} aria-label="Bàn cờ vua">
         <div className="board-stage">
           <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": splitRealms ? realmBoardInset(vipBoard.inset, orientation) : vipBoard.inset } as CSSProperties : undefined}>
-            {vipBoard && <><img className="vip-board-art" src={assetUrl(vipBoard.art)} width={1254} height={1254} alt="" draggable={false} /><VipFrameEffects />{appearance.boardTheme === "vip-celestial" && <CelestialFrameWings />}</>}
+            {vipBoard && <>{appearance.boardTheme === "vip-dragon" ? <DragonFrame /> : <img className="vip-board-art" src={assetUrl(vipBoard.art)} width={1254} height={1254} alt="" draggable={false} />}<VipFrameEffects />{appearance.boardTheme === "vip-celestial" && <CelestialFrameWings />}</>}
             <ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
-            checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} splitTheme={appearance.boardTheme === "vip-icefire" ? "icefire" : appearance.boardTheme === "vip-celestial" ? "celestial" : null} dragFrom={drag?.from} boardRef={boardRef}
+            checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} boardTheme={appearance.boardTheme} splitTheme={appearance.boardTheme === "vip-icefire" ? "icefire" : appearance.boardTheme === "vip-celestial" ? "celestial" : null} dragFrom={drag?.from} boardRef={boardRef}
             showHint={showHint} hintMove={hintMove} actions={stableBoardActions} />
           {ended && <div className="result-overlay" role="dialog" aria-labelledby="result-title" aria-describedby="result-detail"><div className="result-panel"><span className="result-crown"><Crown size={22} /></span><span className="eyebrow">KẾT THÚC VÁN ĐẤU</span><h2 id="result-title">{resultTitle}</h2><p id="result-detail">{resultDetail}</p>
             {online?.color && <div className="rematch-status"><span className={online.rematchReady.white ? "ready-dot" : ""}>{online.rematchReady.white ? "✓ " : "○ "}Trắng {online.rematchReady.white ? "đã sẵn sàng" : "đang chờ"}</span><span className={online.rematchReady.black ? "ready-dot" : ""}>{online.rematchReady.black ? "✓ " : "○ "}Đen {online.rematchReady.black ? "đã sẵn sàng" : "đang chờ"}</span></div>}
@@ -859,7 +876,7 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div className={"drag-piece piece-" + draggedPiece.color} data-piece-set={appearance.pieceSet} style={{ left: drag.x, top: drag.y, width: drag.size, height: drag.size }}><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
+    {drag && draggedPiece && <div ref={dragPieceRef} className={"drag-piece piece-" + draggedPiece.color} data-piece-type={draggedPiece.type} data-piece-set={appearance.pieceSet} style={{ left: 0, top: 0, transform: "translate3d(" + drag.x + "px," + drag.y + "px,0) translate(-50%,-50%)", width: drag.size, height: drag.size }}><span className="drag-flight-light" /><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
     <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : modal === "effects" ? "Chọn hiệu ứng" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" || modal === "effects" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
       <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : modal === "effects" ? "HIỆU ỨNG CHO CUỘC CHƠI" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">
@@ -906,7 +923,7 @@ export default function ChessApp() {
             <strong>{item.name}</strong><small>{item.subtitle}</small><span className="vip-motion-label"><Sparkles size={11} /> Chuyển động riêng</span>
           </button>)}</div>
         </section>
-        <section className="style-section"><div className="style-section-heading"><span>BÀN THƯỜNG</span><small>Chất liệu tĩnh · 5 phong cách</small></div><div className="board-style-grid">{STANDARD_BOARDS.map(item => <button key={item.id} className={"board-style-card theme-" + item.id} aria-label={"Bàn cờ " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}><span className="board-sample"><span className="sample-tiles">{Array.from({ length: 16 }, (_, i) => <i key={i} className={(Math.floor(i / 4) + i) % 2 === 0 ? "sample-light" : "sample-dark"} />)}</span><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><span className="sample-mark">{item.mark}</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
+        <section className="style-section"><div className="style-section-heading"><span>BÀN THƯỜNG</span><small>Chuyển động riêng · 5 phong cách</small></div><div className="board-style-grid">{STANDARD_BOARDS.map(item => <button key={item.id} className={"board-style-card theme-" + item.id} aria-label={"Bàn cờ " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}><span className="board-sample"><span className="sample-tiles">{Array.from({ length: 16 }, (_, i) => <i key={i} className={(Math.floor(i / 4) + i) % 2 === 0 ? "sample-light" : "sample-dark"} />)}</span><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet)} alt="" /><span className="sample-mark">{item.mark}</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span><strong>{item.name}</strong><small>{item.subtitle}</small></button>)}</div></section>
         </>}
         <section className="style-section"><div className="style-section-heading"><span><b>02</b> CHUYỂN ĐỘNG TRONG KHÔNG GIAN</span><small>Chọn hiệu ứng cho cuộc chơi</small></div><div className="effect-grid">{ATMOSPHERES.map(item => <button key={item.id} className={"effect-card effect-" + item.id} aria-label={"Hiệu ứng " + item.name} aria-pressed={appearance.effect === item.id} onClick={() => changeEffect(item.id)}><span className="effect-mark">{item.mark}</span><span><strong>{item.name}</strong><small>{item.subtitle}</small></span>{appearance.effect === item.id && <Check size={14} />}</button>)}</div><p className="style-hint"><Flame size={13} /> Anh đào đỏ & tàn lửa là mặc định. Chọn một hiệu ứng khác để đổi không khí.</p></section>
         {modal === "appearance" &&
