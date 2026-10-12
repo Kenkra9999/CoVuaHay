@@ -263,10 +263,11 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
       const square = (files[orientation === "w" ? file : 7 - file] + (orientation === "w" ? 8 - rank : rank + 1)) as Square;
       const piece = pieces.find(item => item.square === square);
       return <button type="button" key={square} data-square={square} data-realm={Number(square[1]) <= 4 ? "light" : "dark"}
-        className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (square === checkKing ? " square-check" : "")}
+        className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (last?.from === square ? " square-last-from" : "") + (last?.to === square ? " square-last-to" : "") + (square === checkKing ? " square-check" : "")}
         style={{ "--tile-delay": -((rank * 8 + file) % 13) * .47 + "s" } as CSSProperties}
         aria-label={square + (piece ? ", " + names[piece.type] + " " + (piece.color === "w" ? "trắng" : "đen") : "")} onClick={() => actions.click(square)}>
         {splitTheme && <RealmTileEffects light={Number(square[1]) <= 4} celestial={splitTheme === "celestial"} variant={(file + rank * 3) % 4} />}
+        {last?.from === square && <span className="last-move-frame last-move-origin" aria-hidden="true" />}{last?.to === square && <span className="last-move-frame last-move-destination" aria-hidden="true" />}
         {file === 0 && <span className="rank-label">{square[1]}</span>}{rank === 7 && <span className="file-label">{square[0]}</span>}
         {legal.includes(square) && <span className={piece ? "legal-capture" : "legal-dot"} />}
       </button>;
@@ -743,6 +744,20 @@ export default function ChessApp() {
     } catch (error) { setMessage(errorText(error)); }
     finally { setBusy(false); }
   }
+  async function requestRematch() {
+    if (!online?.color || busy || !ended) return;
+    const session = { ...sessionRef.current }; setBusy(true);
+    try {
+      const response = await roomFetch("/api/rooms/" + session.code + "/rematch", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-player-token": session.token }, body: "{}",
+      });
+      const data: ApiData = await response.json();
+      if (session.epoch !== sessionRef.current.epoch) return;
+      if (data.room) applyRoom(data.room);
+      if (!response.ok) throw new Error(data.error || "Chưa thể sẵn sàng đấu lại.");
+    } catch (error) { setMessage(errorText(error)); }
+    finally { setBusy(false); }
+  }
   async function copyText(text: string) {
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800); }
     catch { setMessage("Sao chép: " + text); }
@@ -772,6 +787,9 @@ export default function ChessApp() {
   function changeCover(cover: CoverScene) { setAppearance(previous => ({ ...previous, cover })); remember("nuocco:cover", cover); }
   function changeMotion(motionOn: boolean) { setAppearance(previous => ({ ...previous, motionOn })); remember("nuocco:coverMotion", String(motionOn)); }
   const winner: Color | null = current.status === "white_won" ? "w" : current.status === "black_won" ? "b" : null;
+  const rematchReady = online?.rematchReady;
+  const myRematchReady = online?.color === "w" ? rematchReady?.white : online?.color === "b" ? rematchReady?.black : false;
+  const opponentRematchReady = online?.color === "w" ? rematchReady?.black : online?.color === "b" ? rematchReady?.white : false;
   const draggedPiece = drag ? pieces.find(piece => piece.square === drag.from) : null;
   const ended = current.status !== "waiting" && current.status !== "playing";
   const timeout = online?.endReason === "timeout" || online?.endReason === "move_timeout";
@@ -851,6 +869,8 @@ export default function ChessApp() {
             checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} boardTheme={appearance.boardTheme} splitTheme={appearance.boardTheme === "vip-icefire" ? "icefire" : appearance.boardTheme === "vip-celestial" ? "celestial" : null} dragFrom={drag?.from} boardRef={boardRef}
             showHint={showHint} hintMove={hintMove} actions={stableBoardActions} />
           {ended && <div className="result-overlay" role="dialog" aria-labelledby="result-title" aria-describedby="result-detail"><div className="result-panel"><span className="result-crown"><Crown size={22} /></span><span className="eyebrow">KẾT THÚC VÁN ĐẤU</span><h2 id="result-title">{resultTitle}</h2><p id="result-detail">{resultDetail}</p>
+            {online?.color && <><div className="rematch-status" aria-live="polite"><span className={myRematchReady ? "ready-dot" : ""}>{myRematchReady ? "✓" : "○"} Bạn {myRematchReady ? "đã sẵn sàng" : "chưa sẵn sàng"}</span><span className={opponentRematchReady ? "ready-dot" : ""}>{opponentRematchReady ? "✓" : "○"} Đối thủ {opponentRematchReady ? "đã sẵn sàng" : "chưa sẵn sàng"}</span></div><button className="primary-button rematch-button" disabled={busy || myRematchReady} onClick={() => void requestRematch()}><RotateCcw size={16} />{busy ? "Đang gửi…" : myRematchReady ? "Đã sẵn sàng · Chờ đối thủ" : "Chơi lại cùng mã phòng"}</button><small className="rematch-hint">Ván mới bắt đầu khi cả hai cùng sẵn sàng. Mã mời được giữ nguyên.</small></>}
+            {online && !online.color && <small className="rematch-hint">Chỉ hai người đang giữ ghế mới có thể chơi lại.</small>}
             {!online && <button className="primary-button" onClick={() => newLocal(localMode)}><RotateCcw size={16} /> Đấu lại</button>}
           </div></div>}
           </div>

@@ -16,6 +16,15 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
       if (!["white_won", "black_won", "draw"].includes(room.status)) return error("Chỉ có thể đấu lại sau khi ván đã kết thúc.", 409);
 
       const now = Date.now();
+      const bothPresent = room.white_seen_at !== null && room.black_seen_at !== null
+        && now - room.white_seen_at < 15_000 && now - room.black_seen_at < 15_000;
+      if (!bothPresent) {
+        const cleared = await database().prepare("UPDATE rooms SET white_rematch_ready = 0, black_rematch_ready = 0, version = version + 1, updated_at = ? WHERE code = ? AND version = ? AND status IN ('white_won','black_won','draw')")
+          .bind(now, code, room.version).run();
+        if (cleared.meta.changes !== 1) continue;
+        const latest = await getRoom(code);
+        return reply({ error: "Lời mời chơi lại đã được hủy vì một người đã rời phòng. Cả hai cần sẵn sàng lại.", room: latest ? await roomView(latest, token) : undefined }, 409);
+      }
       const mark = color === "w" ? "white_rematch_ready" : "black_rematch_ready";
       const saved = await database().prepare(`UPDATE rooms SET ${mark} = 1, version = version + 1, updated_at = ? WHERE code = ? AND version = ? AND status IN ('white_won','black_won','draw')`)
         .bind(now, code, room.version).run();
