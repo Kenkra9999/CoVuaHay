@@ -11,7 +11,7 @@
     "name": "rolldown-runtime"
   },
   "app/chess-app.tsx": {
-    "file": "CoVuaHay/_next/static/chunks/chess-app-3MNvlQ9m.js",
+    "file": "CoVuaHay/_next/static/chunks/chess-app-CI6p-LUq.js",
     "name": "chess-app",
     "src": "app/chess-app.tsx",
     "isDynamicEntry": true,
@@ -21,7 +21,7 @@
     ]
   },
   "node_modules/vinext/dist/shims/layout-segment-context.js": {
-    "file": "CoVuaHay/_next/static/chunks/layout-segment-context-D3oPc9Ct.js",
+    "file": "CoVuaHay/_next/static/chunks/layout-segment-context-CWLym9uP.js",
     "name": "layout-segment-context",
     "src": "node_modules/vinext/dist/shims/layout-segment-context.js",
     "isDynamicEntry": true,
@@ -32,7 +32,7 @@
     ]
   },
   "virtual:vinext-app-browser-entry": {
-    "file": "CoVuaHay/_next/static/chunks/index-ZuFZreZW.js",
+    "file": "CoVuaHay/_next/static/chunks/index-Cb9Y_fkU.js",
     "name": "index",
     "src": "virtual:vinext-app-browser-entry",
     "isEntry": true,
