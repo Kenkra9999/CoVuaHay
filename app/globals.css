@@ -1659,25 +1659,30 @@ html[data-visual-quality="balanced"] .piece-b img { filter: drop-shadow(0 2px 3p
 .dragon-living-art, .dragon-frame-spirit, .dragon-spirit-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .dragon-living-art { overflow: hidden; }
 .dragon-frame-spirit { z-index: 2; overflow: hidden; }
-.dragon-head-motion { transform-box: view-box; transform-origin: 9% 12%; animation: dragon-head-breathe 6.5s ease-in-out infinite; }
-.dragon-neck-aura { position: absolute; left: -3%; top: 2%; width: 16%; height: 40%; background: radial-gradient(ellipse, #48ffbd42, #00dd8617 45%, transparent 70%); mix-blend-mode: screen; animation: dragon-neck-breathe 6.5s ease-in-out infinite; }
-.dragon-corner-aura { position: absolute; left: 6%; top: -5%; width: 24%; height: 24%; background: radial-gradient(ellipse at 48% 62%, #8affc830, #00bda816 38%, transparent 70%); mix-blend-mode: screen; animation: dragon-corner-pulse 6.5s ease-in-out infinite; }
+.dragon-head-motion { transform-box: view-box; transform-origin: 9% 12%; animation: dragon-head-breathe 4.2s ease-in-out infinite; }
+.dragon-neck-aura { position: absolute; left: -3%; top: 2%; width: 18%; height: 45%; background: radial-gradient(ellipse, #48ffbd85, #00dd8645 45%, transparent 70%); mix-blend-mode: screen; animation: dragon-neck-breathe 4.2s ease-in-out infinite; }
+.dragon-corner-aura { position: absolute; left: 6%; top: -5%; width: 28%; height: 28%; background: radial-gradient(ellipse at 48% 62%, #8affc878, #00bda845 38%, transparent 70%); mix-blend-mode: screen; animation: dragon-corner-pulse 4.2s ease-in-out infinite; }
 .dragon-divine-eye { animation: dragon-eye-awaken 6.5s ease-in-out infinite; filter: drop-shadow(0 0 6px #96ff75) drop-shadow(0 0 12px #1affad); }
-.dragon-whiskers { fill: none; stroke: #b6ffe3; stroke-width: 1.8; opacity: .65; transform-box: view-box; transform-origin: 21% 9%; animation: dragon-whisker-sway 4.5s ease-in-out infinite alternate; filter: drop-shadow(0 0 3px #36ffc1); }
+.dragon-whiskers { fill: none; stroke: #cbffed; stroke-width: 2.4; opacity: .85; transform-box: view-box; transform-origin: 21% 9%; animation: dragon-whisker-sway 2.8s ease-in-out infinite alternate; filter: drop-shadow(0 0 3px #36ffc1); }
 .dragon-whiskers path:nth-child(2) { opacity: .45; stroke-width: 1; }
-.dragon-spirit-breath { stroke-width: 5; stroke-linecap: round; stroke-dasharray: 30 480; animation: dragon-exhale 6.5s ease-in-out infinite; filter: drop-shadow(0 0 5px #3cffbe); }
-.dragon-spirit-breath path:nth-child(2) { stroke-width: 2; opacity: .5; }
+.dragon-spirit-breath { stroke-width: 10; stroke-linecap: round; stroke-dasharray: 100 410; animation: dragon-exhale 4.2s ease-in-out infinite; filter: drop-shadow(0 0 5px #3cffbe); }
+.dragon-spirit-breath path:nth-child(2) { stroke-width: 4; opacity: .8; }
 .dragon-scale-light { fill: none; stroke: #8effd5; stroke-width: 1.8; opacity: .4; stroke-dasharray: 16 90; animation: dragon-scale-surge 6.5s linear infinite; filter: drop-shadow(0 0 4px #40ffb0); }
-.dragon-frame-current { fill: none; stroke: #acffe2; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 60 55 8 900; animation: dragon-frame-flow 12s linear infinite; filter: drop-shadow(0 0 4px #3cffb5); opacity: .55; }
-.dragon-frame-current path:nth-child(2) { stroke-width: 1; stroke: #4cffac; animation: dragon-frame-flow 16s linear infinite reverse; }
+.dragon-frame-current { fill: none; stroke: #caffed; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 130 40 18 600; animation: dragon-frame-flow 6s linear infinite; filter: drop-shadow(0 0 4px #3cffb5); opacity: .85; }
+.dragon-frame-current path:nth-child(2) { stroke-width: 2; stroke: #4cffac; animation: dragon-frame-flow 8s linear infinite reverse; }
+.dragon-rim-vortex { position: absolute; inset: 1.5%; padding: 4px; background: conic-gradient(from 0deg, transparent 0 12%, #baffdfaa 18%, #42ffbe66 25%, transparent 33% 59%, #5dffbdaa 68%, transparent 80%); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; opacity: .75; animation: dragon-vortex-sway 4.5s ease-in-out infinite alternate; }
+.dragon-rim-vortex.vortex-two { inset: 3%; padding: 2px; animation-direction: alternate-reverse; animation-duration: 3.2s; opacity: .5; }
+.dragon-rim-lightning { fill: none; stroke: #bcffdf; stroke-width: 2.5; stroke-linecap: round; opacity: .7; stroke-dasharray: 35 80; animation: dragon-lightning-flow 2.6s linear infinite; }
+@keyframes dragon-vortex-sway { from { transform: scale(.985); opacity: .45; } to { transform: scale(1.012); opacity: .95; } }
+@keyframes dragon-lightning-flow { to { stroke-dashoffset: -460; } }
 .dragon-spirit-mote { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #dbffe6; box-shadow: 0 0 5px #6cffbe, 0 0 10px #20ea9b; opacity: 0; animation: dragon-spirit-rise var(--dragon-duration) ease-out infinite; animation-delay: var(--dragon-delay); }
 .dragon-board-spirit { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.dragon-soul-wave { position: absolute; left: -25%; top: -25%; width: 150%; height: 150%; border-radius: 50%; background: radial-gradient(ellipse, transparent 47%, #48ffb312 49%, #bbffe822 50%, #36e4a40b 52%, transparent 56%); opacity: 0; animation: dragon-soul-wave 13s ease-out infinite; transform-origin: 20% 20%; }
-.dragon-soul-wave.wave-two { animation-delay: -6.5s; }
+.dragon-soul-wave { position: absolute; left: -25%; top: -25%; width: 150%; height: 150%; border-radius: 50%; background: radial-gradient(ellipse, transparent 47%, #48ffb32a 49%, #bbffe85c 50%, #36e4a422 52%, transparent 56%); opacity: 0; animation: dragon-soul-wave 7s ease-out infinite; transform-origin: 20% 20%; }
+.dragon-soul-wave.wave-two { animation-delay: -3.5s; }
 .dragon-jade-mist { position: absolute; inset: -20%; background: radial-gradient(ellipse at 25% 35%, #36efb418, transparent 38%), radial-gradient(ellipse at 72% 70%, #9cffb810, transparent 34%); animation: dragon-jade-mist 17s ease-in-out infinite alternate; }
 .dragon-jade-mist.mist-two { background: radial-gradient(ellipse at 60% 40%, #6bfff912, transparent 35%); animation-direction: alternate-reverse; animation-duration: 21s; }
-.dragon-ley-lines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #aeffe0; stroke-width: 1.3; stroke-dasharray: 4 26 80 550; opacity: .28; filter: drop-shadow(0 0 2px #39ffad); }
-.dragon-ley-lines path { animation: dragon-ley-flow 15s linear infinite; }
+.dragon-ley-lines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #aeffe0; stroke-width: 2; stroke-dasharray: 4 18 100 460; opacity: .5; filter: drop-shadow(0 0 2px #39ffad); }
+.dragon-ley-lines path { animation: dragon-ley-flow 8s linear infinite; }
 .dragon-ley-lines path:nth-child(2) { animation-direction: reverse; animation-delay: -5s; stroke: #71f7d8; }
 .dragon-ley-lines path:nth-child(3) { animation-delay: -10s; opacity: .6; }
 .dragon-soul-flame { position: absolute; width: 10px; height: 17px; border-radius: 50% 50% 30% 70%; background: radial-gradient(ellipse at 50% 70%, #d6ffeaa6, #70ffc44d 25%, #36ddb516 50%, transparent 70%); opacity: 0; animation: dragon-soul-float var(--dragon-duration) ease-in-out infinite; animation-delay: var(--dragon-delay); }
@@ -1686,12 +1691,12 @@ html[data-visual-quality="balanced"] .piece-b img { filter: drop-shadow(0 2px 3p
 .theme-vip-dragon .square::before { animation: dragon-tile-life 6.5s ease-in-out infinite; animation-delay: var(--tile-delay); }
 .theme-vip-dragon .board-frame { animation: none; }
 .dragon-frame-spirit::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 20px #56efa945; pointer-events: none; animation: dragon-corner-pulse 6.5s ease-in-out infinite; }
-@keyframes dragon-head-breathe { 0%, 100% { transform: translate(0, 0) rotate(0); } 45% { transform: translate(1px, -2px) rotate(-1.1deg); } 72% { transform: translate(0, 1px) rotate(.45deg); } }
-@keyframes dragon-whisker-sway { from { transform: rotate(-1.5deg) scaleY(.96); opacity: .4; } to { transform: rotate(2deg) scaleY(1.06); opacity: .75; } }
+@keyframes dragon-head-breathe { 0%, 100% { transform: translate(0, 0) rotate(0); } 40% { transform: translate(4px, -6px) rotate(-3.8deg); } 72% { transform: translate(-2px, 3px) rotate(1.6deg); } }
+@keyframes dragon-whisker-sway { from { transform: rotate(-4deg) scaleY(.9); opacity: .6; } to { transform: rotate(5deg) scaleY(1.16); opacity: 1; } }
 @keyframes dragon-eye-awaken { 0%, 100% { opacity: .3; } 40% { opacity: 1; } 60% { opacity: .8; } 78% { opacity: .4; } }
 @keyframes dragon-neck-breathe { 0%, 100% { transform: scaleX(.9); opacity: .45; } 45% { transform: scaleX(1.1); opacity: .9; } }
 @keyframes dragon-corner-pulse { 0%, 100% { opacity: .4; transform: scale(.95); } 45% { opacity: 1; transform: scale(1.12); } }
-@keyframes dragon-exhale { 0%, 20% { stroke-dashoffset: 50; opacity: 0; } 38% { opacity: .7; } 75%, 100% { stroke-dashoffset: -480; opacity: 0; } }
+@keyframes dragon-exhale { 0% { stroke-dashoffset: 60; opacity: .12; } 25%, 45% { opacity: 1; } 90%, 100% { stroke-dashoffset: -480; opacity: .08; } }
 @keyframes dragon-scale-surge { 0%, 100% { stroke-dashoffset: 0; opacity: .15; } 45% { opacity: .65; } 99% { stroke-dashoffset: -212; } }
 @keyframes dragon-frame-flow { to { stroke-dashoffset: -2046; } }
 @keyframes dragon-spirit-rise { 0% { opacity: 0; transform: translate(0, 15px) scale(.5); } 30% { opacity: .8; } 100% { opacity: 0; transform: translate(24px, -45px) scale(.2); } }
@@ -1715,21 +1720,31 @@ html[data-visual-quality="balanced"] .piece-b img { filter: drop-shadow(0 2px 3p
 }
 
 /* The king uses restrained, fine geometry and inward-moving metallic light. */
-.sovereign-aura { inset: 0; --sovereign-metal: #efd69b; --sovereign-light: #fff7dd; --gather-distance: clamp(14px, 2.5vw, 30px); }
+.sovereign-aura { inset: 0; --sovereign-metal: #ffd676; --sovereign-light: #fff9df; --gather-distance: clamp(24px, 3.7vw, 44px); }
 .sovereign-aura.aura-b { --sovereign-metal: #c2cce5; --sovereign-light: #edf3ff; }
-.sovereign-mantle { position: absolute; inset: 15% 8% 0; background: radial-gradient(ellipse at 50% 68%, color-mix(in srgb, var(--aura) 18%, transparent), transparent 68%); animation: sovereign-mantle-breathe 5s ease-in-out infinite; }
+.sovereign-mantle { position: absolute; inset: 10% 2% -3%; background: radial-gradient(ellipse at 50% 68%, color-mix(in srgb, var(--aura) 42%, transparent), transparent 72%); animation: sovereign-mantle-breathe 2.4s ease-in-out infinite; }
+.sovereign-qi-column { position: absolute; left: 29%; bottom: 4%; width: 42%; height: 90%; background: linear-gradient(0deg, transparent, color-mix(in srgb, var(--aura) 40%, transparent) 25%, var(--sovereign-metal) 60%, #fff5ccaa 82%, transparent); clip-path: polygon(22% 100%, 10% 76%, 32% 60%, 12% 38%, 45% 0, 61% 30%, 89% 53%, 65% 72%, 80% 100%); transform-origin: 50% 90%; opacity: .45; animation: sovereign-qi-surge 1.9s ease-in-out infinite; }
+.sovereign-pressure-ring { position: absolute; left: -8%; bottom: -3%; width: 116%; height: 30%; border: 2px solid var(--sovereign-metal); border-radius: 50%; box-shadow: 0 0 8px var(--aura); animation: sovereign-pressure-wave 2.3s ease-out infinite; }
 .sovereign-seal { position: absolute; left: 8%; bottom: 1%; width: 84%; height: 23%; border: 1px solid var(--sovereign-metal); border-radius: 50%; box-shadow: 0 0 5px color-mix(in srgb, var(--aura) 35%, transparent); opacity: .6; animation: sovereign-seal-breathe 5s ease-in-out infinite; }
 .sovereign-seal > span { position: absolute; inset: 17% 8%; border: 1px dashed var(--sovereign-metal); border-radius: 50%; animation: enchant-regal-orbit 20s linear infinite; }
 .sovereign-seal > i { position: absolute; inset: -14% 6%; border: 1px solid var(--sovereign-metal); border-radius: 50%; transform: rotate(18deg); opacity: .35; }
 .sovereign-seal > i:last-child { transform: rotate(-18deg); }
-.sovereign-meridians { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--sovereign-metal); stroke-width: .65; stroke-linecap: round; opacity: .4; }
-.sovereign-meridians path { stroke-dasharray: 14 9 2 70; animation: sovereign-meridian-flow 8s linear infinite; }
+.sovereign-meridians { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--sovereign-metal); stroke-width: 1.3; stroke-linecap: round; opacity: .8; }
+.sovereign-meridians path { stroke-dasharray: 20 8 4 42; animation: sovereign-meridian-flow 3s linear infinite; }
+.sovereign-meridians .sovereign-power-stream { stroke: var(--sovereign-light); stroke-width: 1.8; stroke-dasharray: 16 12 4 28; animation-duration: 1.65s; }
 .sovereign-meridians path:nth-child(2) { stroke: var(--aura); opacity: .6; animation-direction: reverse; }
 .sovereign-apex { position: absolute; left: 50%; top: 8.6%; width: 0; height: 0; z-index: 2; }
-.sovereign-halo { position: absolute; width: 22px; height: 22px; left: -11px; top: -11px; border-radius: 50%; border: 1px solid var(--sovereign-metal); border-top-color: transparent; border-bottom-color: transparent; opacity: .5; animation: royal-cyclone-spin-reverse 10s linear infinite; }
-.sovereign-star { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; background: var(--sovereign-light); clip-path: polygon(50% 0, 59% 40%, 100% 50%, 59% 60%, 50% 100%, 41% 60%, 0 50%, 41% 40%); filter: drop-shadow(0 0 3px var(--sovereign-metal)); animation: sovereign-star-pulse 3.1s ease-in-out infinite; }
+.sovereign-halo { position: absolute; width: 30px; height: 30px; left: -15px; top: -15px; border-radius: 50%; border: 1.5px solid var(--sovereign-metal); border-top-color: transparent; border-bottom-color: transparent; opacity: .85; animation: royal-cyclone-spin-reverse 3.6s linear infinite; }
+.sovereign-apex-glow { position: absolute; left: -24px; top: -20px; width: 48px; height: 40px; background: radial-gradient(ellipse, #fffbe7c0, #ffd67678 25%, #ffcf7020 52%, transparent 72%); animation: sovereign-apex-bloom 1.7s ease-in-out infinite; }
+.sovereign-apex-shock { position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border: 1px solid var(--sovereign-metal); border-radius: 50%; animation: sovereign-apex-wave 1.7s ease-out infinite; }
+.sovereign-cross-glint { position: absolute; left: -10px; top: -4px; width: 20px; height: 23px; background: var(--sovereign-light); clip-path: polygon(43% 0, 57% 0, 57% 30%, 95% 30%, 95% 43%, 57% 43%, 57% 100%, 43% 100%, 43% 43%, 5% 43%, 5% 30%, 43% 30%); opacity: .7; animation: sovereign-apex-bloom 1.7s ease-in-out infinite; }
+.sovereign-star { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; background: var(--sovereign-light); clip-path: polygon(50% 0, 59% 40%, 100% 50%, 59% 60%, 50% 100%, 41% 60%, 0 50%, 41% 40%); filter: drop-shadow(0 0 3px var(--sovereign-metal)); animation: sovereign-star-pulse 1.7s ease-in-out infinite; }
 .sovereign-gather-ray { position: absolute; left: 0; top: 0; width: clamp(14px, 2.5vw, 30px); height: 1px; transform-origin: left center; transform: rotate(var(--gather-angle)); }
-.sovereign-gather-ray > i { position: absolute; left: 0; top: -1px; width: 7px; height: 2px; border-radius: 50%; background: linear-gradient(90deg, var(--sovereign-light), var(--sovereign-metal), transparent); box-shadow: -1px 0 3px var(--sovereign-metal); animation: sovereign-gather 3.1s cubic-bezier(.4, 0, .75, 1) infinite; animation-delay: var(--gather-delay); }
+.sovereign-gather-ray > i { position: absolute; left: 0; top: -1.5px; width: 14px; height: 3px; border-radius: 50%; background: linear-gradient(90deg, #fffef3, var(--sovereign-metal) 50%, transparent); box-shadow: -1px 0 5px var(--sovereign-metal); animation: sovereign-gather 1.7s cubic-bezier(.4, 0, .75, 1) infinite; animation-delay: var(--gather-delay); }
+@keyframes sovereign-qi-surge { 0%, 100% { transform: translateY(4%) scaleX(.78); opacity: .28; } 50% { transform: translateY(-7%) scaleX(1.12); opacity: .65; } }
+@keyframes sovereign-pressure-wave { 0% { transform: scale(.72); opacity: .8; } 100% { transform: scale(1.18); opacity: 0; } }
+@keyframes sovereign-apex-bloom { 0%, 100% { transform: scale(.85); opacity: .6; } 55% { transform: scale(1.18); opacity: 1; } }
+@keyframes sovereign-apex-wave { 0% { transform: scale(.55); opacity: .85; } 100% { transform: scale(1.6); opacity: 0; } }
 @keyframes sovereign-mantle-breathe { 0%, 100% { opacity: .35; transform: scale(.95); } 50% { opacity: .65; transform: scale(1.04); } }
 @keyframes sovereign-seal-breathe { 0%, 100% { opacity: .4; transform: scaleX(.96); } 50% { opacity: .65; transform: scaleX(1.04); } }
 @keyframes sovereign-meridian-flow { to { stroke-dashoffset: -190; } }

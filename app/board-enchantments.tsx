@@ -49,14 +49,19 @@ export const BoardEnchantments = memo(function BoardEnchantments({ theme }: { th
 export function SovereignAura({ color, pieceSet }: { color: "w" | "b"; pieceSet: string }) {
   return <span className={"royal-aura aura-king sovereign-aura aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
     <span className="sovereign-mantle" />
+    <span className="sovereign-qi-column" />
+    <span className="sovereign-pressure-ring" />
     <span className="sovereign-seal"><span /><i /><i /></span>
     <svg className="sovereign-meridians" viewBox="0 0 100 100">
       <path d="M50 87C4 76 11 27 38 15M50 87C96 76 89 27 62 15" />
       <path d="M50 88C24 68 26 39 43 26M50 88C76 68 74 39 57 26" />
+      <path className="sovereign-power-stream" d="M12 86C6 54 24 30 50 9M88 86C94 54 76 30 50 9" />
     </svg>
     {/* All eight piece families place the top of the cross at y=4–6 in a 100-unit SVG. */}
     <span className="sovereign-apex">
+      <span className="sovereign-apex-glow" /><span className="sovereign-apex-shock" />
       <span className="sovereign-halo" /><span className="sovereign-star" />
+      <span className="sovereign-cross-glint" />
       {Array.from({ length: 10 }, (_, i) => <span className="sovereign-gather-ray" key={i}
         style={{ "--gather-angle": i * 36 + "deg", "--gather-delay": -i * .31 + "s" } as CSSProperties}><i /></span>)}
     </span>

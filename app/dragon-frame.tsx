@@ -24,6 +24,7 @@ export const DragonFrame = memo(function DragonFrame() {
     </svg>
     <span className="dragon-frame-spirit" aria-hidden="true">
       <span className="dragon-neck-aura" /><span className="dragon-corner-aura" />
+      <span className="dragon-rim-vortex vortex-one" /><span className="dragon-rim-vortex vortex-two" />
       <svg className="dragon-spirit-svg" viewBox="0 0 1254 1254" preserveAspectRatio="none">
         <defs>
           <radialGradient id={id + "-eye"}><stop stopColor="#f4ffe1" /><stop offset=".25" stopColor="#caff75" /><stop offset=".6" stopColor="#4dffb7" stopOpacity=".7" /><stop offset="1" stopColor="#23f59d" stopOpacity="0" /></radialGradient>
@@ -51,6 +52,9 @@ export const DragonFrame = memo(function DragonFrame() {
         <g className="dragon-frame-current">
           <path d="M282 94H1135V1008M94 207V1157H973" />
           <path d="M315 116H1137M116 241V1137H939" />
+        </g>
+        <g className="dragon-rim-lightning">
+          <path d="M303 101L366 94L394 110L459 92L492 102L555 97M1148 252L1159 309L1142 340L1155 403L1146 459M93 542L104 604L90 645L101 704L94 764M294 1145L356 1156L397 1142L457 1153L518 1147" />
         </g>
       </svg>
       {Array.from({ length: 18 }, (_, i) => <i className="dragon-spirit-mote" key={i} style={{
