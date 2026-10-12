@@ -158,22 +158,22 @@ const RoyalAura = memo(function RoyalAura({ type, color, pieceSet }: { type: str
     </span>
   );
 });
-function VipFrameEffects() {
+const VipFrameEffects = memo(function VipFrameEffects() {
   return <span className="vip-frame-effects" aria-hidden="true"><span className="vip-rim" />
     {Array.from({ length: 16 }, (_, i) => {
       const side = Math.floor(i / 4), offset = 15 + (i % 4) * 23;
       return <i key={i} style={{ left: (side === 0 || side === 2 ? offset : side === 1 ? 96 : 4) + "%", top: (side === 1 || side === 3 ? offset : side === 0 ? 4 : 96) + "%", "--spark-delay": -i * .43 + "s" } as CSSProperties} />;
     })}
   </span>;
-}
-function CelestialFrameWings() {
+});
+const CelestialFrameWings = memo(function CelestialFrameWings() {
   return <span className="celestial-frame-wings" aria-hidden="true">
     {/* Each raster wing pivots at its original attachment to the central crest. */}
-    {["left", "right"].map(side => <img key={side} className={"celestial-original-wing original-wing-" + side} src={assetUrl("/boards/vip/celestial-wings.png")} width={1254} height={1254} alt="" draggable={false} />)}
+    {["left", "right"].map(side => <img key={side} className={"celestial-original-wing original-wing-" + side} src={assetUrl("/boards/vip/celestial-wings.webp")} width={1254} height={1254} alt="" draggable={false} />)}
     <span className="celestial-crest-light" />
     {Array.from({ length: 14 }, (_, i) => <i className="celestial-wing-dust" key={i} style={{ left: (28 + i * 17 % 45) + "%", top: (2 + i % 4 * 1.8) + "%", "--wing-delay": -i * .37 + "s" } as CSSProperties} />)}
   </span>;
-}
+});
 function IceWindEffects() {
   return <span className="ice-weather" aria-hidden="true">
     <svg className="ice-wind-trails" viewBox="0 0 800 400" preserveAspectRatio="none">
@@ -202,7 +202,7 @@ function CelestialInfernoEffects() {
     <span className="inferno-heat-wave" /><span className="inferno-heat-wave heat-wave-two" />
   </span>;
 }
-function SplitRealmEffects({ icefire }: { icefire: boolean }) {
+const SplitRealmEffects = memo(function SplitRealmEffects({ icefire }: { icefire: boolean }) {
   return <span className="split-realm-effects" aria-hidden="true">
     <span className="realm-atmosphere realm-light"><span className="realm-mist" /><span className="realm-radiance" /><span className="realm-halo" />
       {icefire && <IceWindEffects />}
@@ -216,8 +216,8 @@ function SplitRealmEffects({ icefire }: { icefire: boolean }) {
       {Array.from({ length: 36 }, (_, i) => <i key={i} style={{ "--mote-x": (i * 43 % 97) + "%", "--mote-delay": -i * .63 + "s", "--mote-speed": (2.5 + i % 5 * .55) + "s", "--mote-size": (2 + i % 4) + "px" } as CSSProperties} />)}</span>
     <span className="realm-collision" /><span className="realm-collision collision-echo" />
   </span>;
-}
-function RealmTileEffects({ light, celestial, variant }: { light: boolean; celestial: boolean; variant: number }) {
+});
+const RealmTileEffects = memo(function RealmTileEffects({ light, celestial, variant }: { light: boolean; celestial: boolean; variant: number }) {
   return <span className={"realm-tile-effects " + (light ? celestial ? "tile-heaven" : "tile-freeze" : "tile-magma")} aria-hidden="true">
     <span className="realm-tile-surface" />
     {light && !celestial && <span className="ice-tile-flash" />}
@@ -232,7 +232,7 @@ function RealmTileEffects({ light, celestial, variant }: { light: boolean; celes
       </>}
     </svg>
   </span>;
-}
+});
 const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, boardTheme, splitTheme, dragFrom, boardRef, showHint, hintMove, actions }: {
   pieces: Piece[]; moves: MoveRecord[]; orientation: Color; selected: Square | null; legal: Square[];
   checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; boardTheme: BoardStyle; splitTheme: "icefire" | "celestial" | null; dragFrom?: Square;
@@ -324,7 +324,7 @@ export default function ChessApp() {
   const current = online || local;
   const liveGame = useMemo(() => buildGame(current.moves), [current.moves]);
   const displayMoves = useMemo(() => reviewPly === null ? current.moves : current.moves.slice(0, reviewPly), [current.moves, reviewPly]);
-  const game = useMemo(() => buildGame(displayMoves), [displayMoves]);
+  const game = useMemo(() => displayMoves === current.moves ? liveGame : buildGame(displayMoves), [displayMoves, current.moves, liveGame]);
   const pieces = useMemo(() => getPieces(displayMoves), [displayMoves]);
   const aiMode = !online && localMode === "ai";
   const ownColor = online?.color || (aiMode ? humanColor : "w");
@@ -923,7 +923,7 @@ export default function ChessApp() {
         {modal === "appearance" && <>
         <section className="style-section vip-style-section"><div className="style-section-heading"><span><Crown size={16} /> BÀN VIP</span><small>{VIP_BOARDS.length} phong cách · Viền & ô chuyển động</small></div>
           <div className="board-style-grid vip-style-grid">{VIP_BOARDS.map(item => <button key={item.id} className={"board-style-card vip-style-card theme-" + item.id} aria-label={"Bàn VIP " + item.name} aria-pressed={appearance.boardTheme === item.id} onClick={() => changeBoardTheme(item.id)}>
-            <span className="board-sample vip-sample"><img src={assetUrl(item.id === "vip-celestial" ? "/boards/vip/celestial.png" : item.art)} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
+            <span className="board-sample vip-sample"><img src={assetUrl(item.id === "vip-celestial" ? "/boards/vip/celestial.webp" : item.art)} width={1254} height={1254} loading="lazy" alt="" /><span className="vip-preview-shine" /><span className="vip-badge"><Crown size={10} /> VIP</span>{appearance.boardTheme === item.id && <span className="style-check"><Check size={14} /></span>}</span>
             <strong>{item.name}</strong><small>{item.subtitle}</small><span className="vip-motion-label"><Sparkles size={11} /> Chuyển động riêng</span>
           </button>)}</div>
         </section>

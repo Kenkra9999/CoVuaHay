@@ -7,7 +7,7 @@ const headContour = "M0 0H194L217 31L241 59L266 83L284 100L280 128L258 153L236 1
 
 export const DragonFrame = memo(function DragonFrame() {
   const id = useId().replace(/:/g, "");
-  const art = assetUrl("/boards/vip/dragon.png");
+  const art = assetUrl("/boards/vip/dragon.webp");
   return <>
     {/* Composite the original head separately so the dragon itself moves. The grid stays aligned. */}
     <svg className="dragon-living-art" viewBox="0 0 1254 1254" preserveAspectRatio="none" aria-hidden="true">

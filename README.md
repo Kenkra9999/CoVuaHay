@@ -65,3 +65,10 @@ Engine [Stockfish.js](https://github.com/nmrugg/stockfish.js/tree/v19.0.1) đư�
 Dự án dùng vinext và Cloudflare Workers. Khi cập nhật qua Sites, giữ nguyên project ID, binding `DB` và các migration. Bản GitHub Pages gọi máy chủ phòng công khai tại `https://nuoc-co-chess-arena.kenkraz234.chatgpt.site`; Worker cho phép CORS từ `https://kenkra9999.github.io`. Deploy cả Worker và Pages khi thay đổi API. Bản Sites và localhost gọi API cùng nguồn.
 
 Đổi bàn, hiệu ứng hoặc bộ quân chỉ thay đổi giao diện trên thiết bị hiện tại. Hai người giữ lựa chọn riêng; giao diện không được gửi lên máy chủ, không đặt lại ván, đồng hồ hay kết quả. Hậu dùng hào quang lụa và quỹ đạo mảnh với ít lớp chuyển động hơn. Đồng bộ phòng có giới hạn chờ và tự thử lại khi mạng mất kết nối; bàn cờ và biên bản dùng dữ liệu ổn định để tránh vẽ lại theo nhịp đồng hồ.
+
+
+## Tối ưu chọn quân và tải trang
+
+Chọn hoặc kéo quân không dừng hiệu ứng nền và không khởi động lại canvas. Các lớp trang trí bàn cờ được memo hóa; bộ lọc bóng quân không chuyển đổi khi chọn. Mặc định dùng mức hiệu ứng cân bằng, nền chạy 30 FPS; chỉ dừng khi tab ẩn, bàn ra khỏi màn hình hoặc hộp thoại che bàn.
+
+Bàn VIP, cánh trong suốt, ảnh đối đầu và ảnh quân tốt dùng WebP: 27,1 MB PNG được thay bằng 2,5 MB tải xuống trên toàn bộ nhóm ảnh. Giữ PNG gốc để tạo lại bằng `scripts/optimize-artwork.py` (Pillow). Phông chữ tải từ layout với kết nối sẵn, không chặn việc tải CSS chính bằng `@import` từ xa.

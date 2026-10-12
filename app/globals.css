@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -20,7 +19,7 @@ button svg { flex-shrink: 0; }
 button, input { -webkit-tap-highlight-color: transparent; }
 .site-shell { min-height: 100svh; position: relative; isolation: isolate; background: radial-gradient(ellipse at 43% 24%, rgba(63,94,89,.15), transparent 58%), var(--bg); }
 .site-shell::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .045; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.6' filter='url(%23noise)'/%3E%3C/svg%3E"); }
-.site-shell::after { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background: linear-gradient(180deg, #11191ee6 12%, #11191efa 85%), url("/chess-duel.png") center / cover; }
+.site-shell::after { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background: linear-gradient(180deg, #11191ee6 12%, #11191efa 85%), url("/chess-duel.webp") center / cover; }
 .piece-style-royal { --gold: #d8b681; --gold-light: #f4e2bd; --teal: #bfccb9; }
 .piece-style-royal .board-frame { background: linear-gradient(145deg, #d3b683, #615144 12%, #29292b 48%, #655244 84%, #c6a675); }
 .duel-hero { position: relative; isolation: isolate; overflow: clip; width: calc(100% - 64px); max-width: 1576px; min-height: 276px; margin: 24px auto 0; border: 1px solid #d7b78538; border-radius: 16px; background: #161a1e; box-shadow: 0 20px 55px -30px #000b; }
@@ -173,10 +172,10 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .legal-dot { width: 23%; height: 23%; border-radius: 50%; position: absolute; top: 38.5%; left: 38.5%; background: #173c3388; z-index: 3; pointer-events: none; }
 .legal-capture { position: absolute; inset: 3px; border: 4px solid #e8d0a0a6; border-radius: 50%; z-index: 3; pointer-events: none; }
 .piece { position: absolute; width: 12.5%; height: 12.5%; top: 0; left: 0; display: grid; place-items: center; z-index: 2; transition: transform var(--piece-travel-time, 380ms) cubic-bezier(.22,.8,.24,1), opacity .12s; touch-action: none; cursor: grab; }
-.piece img { width: 92%; height: 92%; object-fit: contain; pointer-events: none; user-select: none; transition: transform 180ms cubic-bezier(.2,.7,.25,1), filter 180ms cubic-bezier(.2,.7,.25,1); }
+.piece img { width: 92%; height: 92%; object-fit: contain; pointer-events: none; user-select: none; transition: transform 180ms cubic-bezier(.2,.7,.25,1); }
 .piece-w img { filter: drop-shadow(0 0 1.2px rgba(0, 0, 0, 0.95)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.85)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) contrast(1.22) saturate(1.22) brightness(1.02); }
 .piece-b img { filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 1)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) contrast(1.25) saturate(1.22); }
-.piece-selected img { filter: drop-shadow(0 0 10px var(--gold, #dfc487)) drop-shadow(0 0 3px #ffffff) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9)) contrast(1.28) saturate(1.28) !important; transform: scale(1.08) translateY(-2px); }
+.piece-selected img { transform: scale(1.06) translateY(-2px); }
 .piece-dragging { opacity: .25; }
 .piece-selected, .piece-dragging { will-change: transform; }
 .drag-piece { position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 100; }

@@ -7,13 +7,13 @@ export const STANDARD_BOARDS = [
 ] as const;
 // Insets match the playable grid inside each supplied artwork, independent of screen size.
 export const VIP_BOARDS = [
-  { id: "vip-icefire", name: "Băng & Dung nham", subtitle: "Bạch băng · hắc dung nham giao tranh", mark: "❄", world: "frost", art: "/boards/vip/icefire.png", inset: "6% 6.1% 6.7% 6%", splitRealms: true },
-  { id: "vip-celestial", name: "Thiên thần & Ác quỷ", subtitle: "Thiên giới pha lê · địa ngục dung nham", mark: "✧", world: "royal", art: "/boards/vip/celestial-wingless.png", inset: "10.2% 9.8% 10% 9.8%", splitRealms: true },
-  { id: "vip-sovereign", name: "Hoàng kim", subtitle: "Vân ngà · ánh vàng vương giả", mark: "♛", world: "royal", art: "/boards/vip/sovereign.png", inset: "7.7% 7.5% 8.4% 7.7%" },
-  { id: "vip-cosmos", name: "Thiên hà", subtitle: "Tinh vân trôi · sao bừng sáng", mark: "✧", world: "citadel", art: "/boards/vip/cosmos.png", inset: "5.1% 5.3% 5.9% 5.2%" },
-  { id: "vip-neon", name: "Neon", subtitle: "Mạch điện tím · xung sáng xanh", mark: "ϟ", world: "citadel", art: "/boards/vip/neon.png", inset: "6.4% 6.8% 7.3% 6.7%" },
-  { id: "vip-dragon", name: "Thanh long", subtitle: "Long khí · ngọc lục phát sáng", mark: "龍", world: "sakura", art: "/boards/vip/dragon.png", inset: "9.5% 9.6% 9.9% 9.9%" },
-  { id: "vip-imperial", name: "Đế chế đỏ", subtitle: "Hồng ngọc · tàn lửa hoàng kim", mark: "✦", world: "inferno", art: "/boards/vip/imperial.png", inset: "5.6% 5.6% 6.4% 5.6%" },
+  { id: "vip-icefire", name: "Băng & Dung nham", subtitle: "Bạch băng · hắc dung nham giao tranh", mark: "❄", world: "frost", art: "/boards/vip/icefire.webp", inset: "6% 6.1% 6.7% 6%", splitRealms: true },
+  { id: "vip-celestial", name: "Thiên thần & Ác quỷ", subtitle: "Thiên giới pha lê · địa ngục dung nham", mark: "✧", world: "royal", art: "/boards/vip/celestial-wingless.webp", inset: "10.2% 9.8% 10% 9.8%", splitRealms: true },
+  { id: "vip-sovereign", name: "Hoàng kim", subtitle: "Vân ngà · ánh vàng vương giả", mark: "♛", world: "royal", art: "/boards/vip/sovereign.webp", inset: "7.7% 7.5% 8.4% 7.7%" },
+  { id: "vip-cosmos", name: "Thiên hà", subtitle: "Tinh vân trôi · sao bừng sáng", mark: "✧", world: "citadel", art: "/boards/vip/cosmos.webp", inset: "5.1% 5.3% 5.9% 5.2%" },
+  { id: "vip-neon", name: "Neon", subtitle: "Mạch điện tím · xung sáng xanh", mark: "ϟ", world: "citadel", art: "/boards/vip/neon.webp", inset: "6.4% 6.8% 7.3% 6.7%" },
+  { id: "vip-dragon", name: "Thanh long", subtitle: "Long khí · ngọc lục phát sáng", mark: "龍", world: "sakura", art: "/boards/vip/dragon.webp", inset: "9.5% 9.6% 9.9% 9.9%" },
+  { id: "vip-imperial", name: "Đế chế đỏ", subtitle: "Hồng ngọc · tàn lửa hoàng kim", mark: "✦", world: "inferno", art: "/boards/vip/imperial.webp", inset: "5.6% 5.6% 6.4% 5.6%" },
 ] as const;
 export const BOARD_STYLES = [...STANDARD_BOARDS, ...VIP_BOARDS] as const;
 export const ATMOSPHERES = [
@@ -27,7 +27,7 @@ export const ATMOSPHERES = [
   { id: "rain", name: "Mưa đêm", subtitle: "Giọt bạc trong sương", mark: "☂" },
 ] as const;
 export const COVER_SCENES = [
-  { id: "duel", name: "Đối đầu vương giả", subtitle: "Hai sắc quân. Một chiến trường.", image: "/chess-duel.png" },
+  { id: "duel", name: "Đối đầu vương giả", subtitle: "Hai sắc quân. Một chiến trường.", image: "/chess-duel.webp" },
   { id: "sakura", name: "Dạ anh đào", subtitle: "Một cuộc đấu dưới trăng đỏ.", image: "/covers/sakura.svg" },
   { id: "frost", name: "Thành băng nguyệt", subtitle: "Tĩnh lặng giữa trời tuyết.", image: "/covers/frost.svg" },
   { id: "nebula", name: "Cổng tinh vân", subtitle: "64 ô. Vô hạn vì sao.", image: "/covers/nebula.svg" },

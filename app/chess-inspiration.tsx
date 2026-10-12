@@ -43,6 +43,6 @@ export const ChessInspiration = memo(function ChessInspiration({ knight, scene, 
       </div>
       <div className="inspiration-controls"><div className="quote-dots" aria-label="Chọn câu nói">{quotes.map((_, index) => <button key={index} aria-label={"Câu nói " + (index + 1)} aria-pressed={index === active} onClick={() => setActive(index)}><span /></button>)}</div><span className="quote-count">0{active + 1} <i>/</i> 02</span>{motion && <button className="quote-pause" aria-label={paused ? "Tiếp tục luân phiên câu nói" : "Tạm dừng luân phiên câu nói"} aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? <Play size={13} /> : <Pause size={13} />}</button>}</div>
     </div>
-    <figure className="inspiration-art"><img src={assetUrl("/chess-becoming.png")} width={720} height={720} fetchPriority="high" alt="Quân tốt vàng trên bàn cờ, phía sau là bóng hình vương miện — tiềm năng trở thành của mỗi người." /><figcaption><span /> TIỀM NĂNG KHÔNG CÓ GIỚI HẠN</figcaption></figure>
+    <figure className="inspiration-art"><img src={assetUrl("/chess-becoming.webp")} width={720} height={720} fetchPriority="high" alt="Quân tốt vàng trên bàn cờ, phía sau là bóng hình vương miện — tiềm năng trở thành của mỗi người." /><figcaption><span /> TIỀM NĂNG KHÔNG CÓ GIỚI HẠN</figcaption></figure>
   </section>;
 });
