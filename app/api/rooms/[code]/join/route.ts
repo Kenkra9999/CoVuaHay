@@ -17,8 +17,8 @@ export async function POST(request: Request, context: { params: Promise<{ code: 
     const token = crypto.randomUUID();
     const now = Date.now();
     const result = await database().prepare(
-      "UPDATE rooms SET black_token = ?, black_name = ?, black_seen_at = ?, status = 'playing', turn_started_at = ?, version = version + 1, updated_at = ? WHERE code = ? AND black_token IS NULL AND status = 'waiting'")
-      .bind(await tokenHash(token), name, now, now, now, code).run();
+      "UPDATE rooms SET black_token = ?, black_name = ?, black_seen_at = ?, version = version + 1, updated_at = ? WHERE code = ? AND black_token IS NULL AND status = 'waiting'")
+      .bind(await tokenHash(token), name, now, now, code).run();
     if (result.meta.changes !== 1) return error("Một người khác vừa nhận ghế. Hãy vào lại.", 409);
     const joined = await getRoom(code);
     if (!joined) return error("Không thể tham gia phòng.", 500);

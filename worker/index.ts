@@ -1,6 +1,7 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { roomCorsHeaders } from "../lib/room-cors";
 
 interface Env {
   ASSETS: Fetcher;
@@ -28,6 +29,14 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/rooms")) {
+      const cors = roomCorsHeaders(request.headers.get("Origin"));
+      if (request.method === "OPTIONS") return new Response(null, { status: cors ? 204 : 403, headers: cors || undefined });
+      const response = await handler.fetch(request, env, ctx);
+      const headers = new Headers(response.headers);
+      if (cors) new Headers(cors).forEach((value, key) => headers.set(key, value));
+      return new Response(response.body, { status: response.status, headers });
+    }
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];

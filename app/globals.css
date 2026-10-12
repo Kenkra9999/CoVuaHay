@@ -988,7 +988,11 @@ button, input { -webkit-tap-highlight-color: transparent; }
   --aura-speed: 4.8s;
   display: block;
 }
-.aura-queen { --aura-speed: 3.6s; }
+.aura-queen { --aura-speed: 7s; inset: -7%; opacity: .7; }
+.queen-silk-halo { position: absolute; inset: 18% 13% 10%; border-radius: 50%; background: radial-gradient(ellipse, transparent 45%, color-mix(in srgb, currentColor 25%, transparent) 65%, transparent 78%); animation: queen-silk-breathe 5.5s ease-in-out infinite; }
+.queen-crescent { position: absolute; inset: 13%; border: 1px solid transparent; border-top-color: currentColor; border-bottom-color: color-mix(in srgb, currentColor 35%, transparent); border-radius: 50%; opacity: .5; animation: royal-cyclone-spin 10s linear infinite; }
+.queen-crown-star { position: absolute; left: 50%; top: 9%; font-size: 12px; transform: translateX(-50%); color: currentColor; animation: queen-silk-breathe 5.5s ease-in-out infinite reverse; }
+@keyframes queen-silk-breathe { 0%,100% { opacity: .4; } 50% { opacity: .8; } }
 .aura-rook { --aura-speed: 7s; inset: -9%; opacity: .72; }
 .aura-rook .aura-core-glow { opacity: .37; }
 .aura-rook .aura-base-array { opacity: .42; border-width: 1px; box-shadow: 0 0 9px var(--aura); }
@@ -1606,8 +1610,8 @@ button, input { -webkit-tap-highlight-color: transparent; }
 .flight-haze, .flight-thread, .flight-ribbon { fill: none; stroke: currentColor; stroke-linecap: round; stroke-dasharray: var(--travel-length); stroke-dashoffset: var(--travel-length); animation: flight-thread-draw var(--travel-time) cubic-bezier(.22,.8,.24,1) forwards; }
 .flight-haze { stroke-width: 9; opacity: .12; }
 .flight-thread { stroke-width: 1.6; opacity: .5; }
-.travel-queen .flight-haze { stroke-width: 19; opacity: .2; }
-.travel-queen .flight-thread { stroke-width: 3; opacity: .85; filter: drop-shadow(0 0 3px currentColor); }
+.travel-queen .flight-haze { stroke-width: 12; opacity: .12; }
+.travel-queen .flight-thread { stroke-width: 2; opacity: .65; }
 .travel-king .flight-haze { stroke-width: 24; opacity: .15; }
 .travel-king .flight-thread { stroke: #fff7de; stroke-width: 2.5; opacity: .9; filter: drop-shadow(0 0 5px currentColor); }
 .flight-ribbon { stroke-width: 1; opacity: .65; }

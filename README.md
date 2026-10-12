@@ -32,9 +32,9 @@ Schema nằm trong `db/schema.ts`, migration trong `drizzle/`. Áp dụng migrat
 ## Phòng online
 
 1. Chọn **Tạo phòng**, nhập tên và kéo thanh thời gian: 5–100 phút **mỗi bên**, tối đa 60–300 giây **mỗi nước**. Đồng hồ chưa chạy khi đang đợi người thứ hai.
-2. Chia sẻ mã sáu ký tự hoặc link mời. Người tạo cầm Trắng; người đầu tiên vào bằng mã nhận Đen. Phòng đủ hai ghế thì người đến sau chỉ xem.
+2. Chia sẻ mã sáu ký tự hoặc link mời. Người tạo cầm Trắng; người đầu tiên vào bằng mã nhận Đen. Khi đủ hai người, bấm **Bắt đầu ván đấu**. Đồng hồ chỉ bắt đầu lúc đó; người đến sau chỉ xem.
 3. Người chơi sửa tên trực tiếp trên thẻ của mình. Máy còn lại nhận tên mới qua lần đồng bộ tiếp theo, thường trong khoảng một giây khi trang đang mở.
-4. Nước đi được máy chủ kiểm tra, lưu và đồng bộ; mỗi ghế có token riêng. Có đề nghị hòa, chấp nhận/từ chối, thu hồi đề nghị và xin thua.
+4. Nước đi được máy chủ kiểm tra, lưu và đồng bộ; mỗi ghế có token riêng. Cầu hòa, chấp nhận/từ chối, thu hồi đề nghị và đầu hàng đều cần xác nhận. Trận online không có nút chơi lại; kết quả được giữ nguyên.
 5. Tải lại hoặc mở lại trên **cùng trình duyệt còn dữ liệu lưu** sẽ khôi phục phòng và ghế. Cũng có thể nhập lại mã, mở link hoặc chọn phòng gần đây. Mã phòng chỉ xác định trận; quyền ghế đã có được khôi phục bằng token trên trình duyệt.
 6. Đồng hồ dựa trên thời gian máy chủ và tiếp tục chạy khi đóng trang. Hết thời gian tổng hoặc giới hạn một nước đều xử thua; khi quay lại sẽ thấy kết quả **Bạn đã thua do quá giờ**. Kết quả được ghi vào D1 khi có yêu cầu tiếp theo, kể cả khi cả hai đã đóng trang.
 
@@ -62,4 +62,6 @@ Quân cờ SVG hiện tại được thiết kế riêng cho Nước Cờ. Bộ 
 
 Engine [Stockfish.js](https://github.com/nmrugg/stockfish.js/tree/v19.0.1) được phân phối theo GNU GPL v3. JavaScript, WASM, giấy phép và liên kết mã nguồn tương ứng nằm trong `public/engine/`; giữ nguyên thông báo bản quyền.
 
-Dự án dùng vinext và Cloudflare Workers. Khi cập nhật qua Sites, giữ nguyên project ID, binding `DB` và các migration. Hosting tĩnh không chạy được `/api/rooms` vì luồng online cần Worker và D1.
+Dự án dùng vinext và Cloudflare Workers. Khi cập nhật qua Sites, giữ nguyên project ID, binding `DB` và các migration. Bản GitHub Pages gọi máy chủ phòng công khai tại `https://nuoc-co-chess-arena.kenkraz234.chatgpt.site`; Worker cho phép CORS từ `https://kenkra9999.github.io`. Deploy cả Worker và Pages khi thay đổi API. Bản Sites và localhost gọi API cùng nguồn.
+
+Đổi bàn, hiệu ứng hoặc bộ quân chỉ thay đổi giao diện trên thiết bị hiện tại. Hai người giữ lựa chọn riêng; giao diện không được gửi lên máy chủ, không đặt lại ván, đồng hồ hay kết quả. Hậu dùng hào quang lụa và quỹ đạo mảnh với ít lớp chuyển động hơn. Đồng bộ phòng có giới hạn chờ và tự thử lại khi mạng mất kết nối; bàn cờ và biên bản dùng dữ liệu ổn định để tránh vẽ lại theo nhịp đồng hồ.

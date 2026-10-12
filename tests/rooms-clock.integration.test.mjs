@@ -15,9 +15,12 @@ async function pair(settings = {}) {
   assert.equal(created.status, 201, JSON.stringify(created.data));
   const joined = await request('/' + created.data.room.code + '/join', 'POST', null, { name: 'An Đen' });
   assert.equal(joined.status, 200);
-  return { code: created.data.room.code, white: created.data.token, black: joined.data.token, room: joined.data.room };
+  assert.equal(joined.data.room.clock.turnStartedAt, null);
+  const started = await request('/' + created.data.room.code + '/start', 'POST', created.data.token);
+  assert.equal(started.status, 200);
+  return { code: created.data.room.code, white: created.data.token, black: joined.data.token, room: started.data.room };
 }
-test('server validates controls, preserves named seats, and starts clocks only on join', async () => {
+test('server validates controls, preserves named seats, and starts clocks only after explicit start', async () => {
   for (const settings of [{ totalMinutes: 4 }, { totalMinutes: 101 }, { moveSeconds: 59 }, { moveSeconds: 301 }, { totalMinutes: '5' }, { name: '' }, { name: 'a'.repeat(25) }]) {
     assert.equal((await request('', 'POST', null, { totalMinutes: 5, moveSeconds: 60, ...settings })).status, 400);
   }

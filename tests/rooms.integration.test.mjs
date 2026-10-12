@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 // Run separately against a local server: this creates disposable test rooms in local D1.
-const base = "http://localhost:3000";
+const base = process.env.CHESS_TEST_URL || "http://localhost:3000";
 async function request(path, method = "GET", token, body) {
   const response = await fetch(`${base}/api/rooms${path}`, {
     method,
@@ -18,15 +18,27 @@ test("room invitations, legal moves, authentication and switching rooms", async 
   const { code } = first.data.room;
   assert.match(code, /^[A-HJ-NP-Z2-9]{6}$/);
   const white = first.data.token;
+  assert.equal((await request(`/${code}/start`, "POST", white)).status, 409, "cannot start without opponent");
   const joined = await request(`/${code}/join`, "POST");
   assert.equal(joined.status, 200);
   assert.equal(joined.data.room.color, "b");
   const black = joined.data.token;
+  assert.equal(joined.data.room.status, "waiting");
+  assert.equal(joined.data.room.clock.turnStartedAt, null);
+  assert.equal((await request(`/${code}/move`, "POST", white, { from: "e2", to: "e4", version: joined.data.room.version })).status, 409, "joining never starts the game implicitly");
+  assert.equal((await request(`/${code}/start`, "POST")).status, 403);
+  const started = await request(`/${code}/start`, "POST", white);
+  assert.equal(started.status, 200);
+  assert.equal(started.data.room.status, "playing");
+  const version = started.data.room.version;
+  const repeatedStart = await request(`/${code}/start`, "POST", black);
+  assert.equal(repeatedStart.data.room.clock.turnStartedAt, started.data.room.clock.turnStartedAt, "repeated start does not reset clock");
+  assert.equal(repeatedStart.data.room.version, version);
   assert.equal((await request(`/${code}/join`, "POST")).status, 409);
-  assert.equal((await request(`/${code}/move`, "POST", undefined, { from: "e2", to: "e4", version: 1 })).status, 403);
-  assert.equal((await request(`/${code}/move`, "POST", black, { from: "e7", to: "e5", version: 1 })).status, 409);
-  assert.equal((await request(`/${code}/move`, "POST", white, { from: "e2", to: "e5", version: 1 })).status, 400);
-  const e4 = await request(`/${code}/move`, "POST", white, { from: "e2", to: "e4", version: 1 });
+  assert.equal((await request(`/${code}/move`, "POST", undefined, { from: "e2", to: "e4", version })).status, 403);
+  assert.equal((await request(`/${code}/move`, "POST", black, { from: "e7", to: "e5", version })).status, 409);
+  assert.equal((await request(`/${code}/move`, "POST", white, { from: "e2", to: "e5", version })).status, 400);
+  const e4 = await request(`/${code}/move`, "POST", white, { from: "e2", to: "e4", version });
   assert.equal(e4.status, 200);
   const e5 = await request(`/${code}/move`, "POST", black, { from: "e7", to: "e5", version: e4.data.room.version });
   assert.equal(e5.status, 200);
@@ -37,4 +49,10 @@ test("room invitations, legal moves, authentication and switching rooms", async 
   assert.notEqual(secondCode, code);
   assert.equal((await request(`/${secondCode}/join`, "POST")).data.room.color, "b");
   assert.equal((await request(`/${code}`, "GET", black)).data.room.color, "b", "joining another room does not invalidate the original seat");
+  const resigned = await request(`/${code}/resign`, "POST", black);
+  assert.equal(resigned.data.room.status, "white_won");
+  assert.equal(resigned.data.room.endReason, "resign");
+  assert.equal(resigned.data.room.clock.turnStartedAt, null);
+  assert.equal((await request(`/${code}`, "GET", white)).data.room.status, "white_won", "the opponent receives the same result");
+  assert.equal((await request(`/${code}/start`, "POST", white)).status, 409, "start cannot reset a completed game");
 });
