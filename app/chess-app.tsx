@@ -10,7 +10,7 @@ import { ChessAudio, DEFAULT_AUDIO, restoreAudio, type AudioChannel, type AudioS
 import { DEFAULT_PIECE_SET, PIECE_SETS, pieceImage, validPieceSet, type PieceSetId } from "@/lib/chess-pieces";
 import { ATMOSPHERES, BOARD_STYLES, STANDARD_BOARDS, VIP_BOARDS, COVER_SCENES, DEFAULT_VISUALS, restoreVisuals, realmBoardInset, type Atmosphere, type BoardStyle, type CoverScene, type VisualAppearance } from "@/lib/chess-appearance";
 import { ChessAtmosphere } from "./chess-atmosphere";
-import { BoardEnchantments, SovereignAura } from "./board-enchantments";
+import { BoardEnchantments, QueenAura, SovereignAura } from "./board-enchantments";
 import { DragonFrame } from "./dragon-frame";
 import { PieceMotion } from "./piece-motion";
 import { pieceTravelMs } from "@/lib/chess-motion";
@@ -83,13 +83,16 @@ type BoardActions = {
   up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
   cancel: () => void;
 };
+const QueenMetalGlint = memo(function QueenMetalGlint({ color, pieceSet }: { color: Color; pieceSet: PieceSetId }) {
+  return <span className="queen-metal-body" style={{ "--queen-mask": 'url("' + pieceImage({ color, type: "q" }, pieceSet) + '")' } as CSSProperties} aria-hidden="true"><i /></span>;
+});
 const RoyalAura = memo(function RoyalAura({ type, color, pieceSet }: { type: string; color: Color; pieceSet: PieceSetId }) {
   const gradientId = useId().replace(/:/g, "");
   if (type !== "k" && type !== "q" && type !== "r") return null;
   const isKing = type === "k";
   const isRook = type === "r";
   if (isKing) return <SovereignAura color={color} pieceSet={pieceSet} />;
-  if (type === "q") return <span className={"royal-aura aura-queen aura-" + color + " aura-set-" + pieceSet} aria-hidden="true"><span className="queen-silk-halo" /><span className="queen-crescent" /><span className="queen-crown-star">✦</span></span>;
+  if (type === "q") return <QueenAura color={color} pieceSet={pieceSet} />;
   return (
     <span className={"royal-aura aura-" + (isKing ? "king" : isRook ? "rook" : "queen") + " aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
       {(pieceSet === "dragon-abyss" || pieceSet === "celestial") && <span className="mythic-aura">
@@ -264,7 +267,7 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
       return <div key={piece.id} data-piece-type={piece.type} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
         style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", "--piece-travel-time": pieceTravelMs(piece.type) + "ms", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" } as CSSProperties}
         onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
-        <RoyalAura type={piece.type} color={piece.color} pieceSet={pieceSet} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" /></div>;
+        <RoyalAura type={piece.type} color={piece.color} pieceSet={pieceSet} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" />{piece.type === "q" && <QueenMetalGlint color={piece.color} pieceSet={pieceSet} />}</div>;
     })}
     <PieceMotion pieces={pieces} orientation={orientation} />
     {showHint && hintMove && (() => {
@@ -880,7 +883,7 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div ref={dragPieceRef} className={"drag-piece piece-" + draggedPiece.color} data-piece-type={draggedPiece.type} data-piece-set={appearance.pieceSet} style={{ left: 0, top: 0, transform: "translate3d(" + drag.x + "px," + drag.y + "px,0) translate(-50%,-50%)", width: drag.size, height: drag.size }}><span className="drag-flight-light" /><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" /></div>}
+    {drag && draggedPiece && <div ref={dragPieceRef} className={"drag-piece piece-" + draggedPiece.color} data-piece-type={draggedPiece.type} data-piece-set={appearance.pieceSet} style={{ left: 0, top: 0, transform: "translate3d(" + drag.x + "px," + drag.y + "px,0) translate(-50%,-50%)", width: drag.size, height: drag.size }}><span className="drag-flight-light" /><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" />{draggedPiece.type === "q" && <QueenMetalGlint color={draggedPiece.color} pieceSet={appearance.pieceSet} />}</div>}
     <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : modal === "effects" ? "Chọn hiệu ứng" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" || modal === "effects" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
       <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : modal === "effects" ? "HIỆU ỨNG CHO CUỘC CHƠI" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">

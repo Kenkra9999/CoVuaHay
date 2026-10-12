@@ -46,6 +46,19 @@ export const BoardEnchantments = memo(function BoardEnchantments({ theme }: { th
   </span>;
 });
 
+export const QueenAura = memo(function QueenAura({ color, pieceSet }: { color: "w" | "b"; pieceSet: string }) {
+  return <span className={"royal-aura aura-queen aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
+    <span className="queen-silk-halo" /><span className="queen-crescent" /><span className="queen-corona" />
+    <span className="queen-pressure-wave" /><span className="queen-crown-star">✦</span>
+    <svg className="queen-qi-streams" viewBox="0 0 100 100" fill="none">
+      <path d="M50 92C7 82 6 35 34 14M50 92C93 82 94 35 66 14" />
+      <path d="M18 75C-2 47 31 17 65 23S99 65 77 82" />
+      <path d="M30 86C4 64 36 38 50 8C64 38 96 64 70 86" />
+    </svg>
+    {[0, 1, 2, 3].map(i => <i key={i} className="queen-orbit-spark" style={{ "--queen-angle": i * 90 + "deg", "--queen-delay": -i * .7 + "s" } as CSSProperties} />)}
+  </span>;
+});
+
 export function SovereignAura({ color, pieceSet }: { color: "w" | "b"; pieceSet: string }) {
   return <span className={"royal-aura aura-king sovereign-aura aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
     <span className="sovereign-mantle" />

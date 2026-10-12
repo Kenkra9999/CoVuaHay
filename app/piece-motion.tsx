@@ -50,12 +50,12 @@ export const PieceMotion = memo(function PieceMotion({ pieces, orientation }: { 
       group.appendChild(shape("path", { d, class: "flight-haze" })); group.appendChild(shape("path", { d, class: "flight-thread" }));
       if (royal) {
         const nx = -dy / length * 7, ny = dx / length * 7;
-        for (const sign of [-1, 1]) group.appendChild(shape("path", {
+        for (const sign of (role === "queen" ? [-1.5, -.55, .55, 1.5] : [-1, 1])) group.appendChild(shape("path", {
           d: `M${from.x + nx * sign} ${from.y + ny * sign}Q${(from.x + to.x) / 2 + nx * sign * 2} ${(from.y + to.y) / 2 + ny * sign * 2} ${to.x} ${to.y}`,
           class: "flight-ribbon", pathLength: length,
         }));
       }
-      for (let i = 0; i < (role === "king" ? 12 : role === "queen" ? 10 : 3); i++) {
+      for (let i = 0; i < (role === "king" ? 12 : role === "queen" ? 14 : 3); i++) {
         const mote = shape("circle", { cx: from.x, cy: from.y, r: royal ? 1.8 + i % 3 * .7 : 1.6, class: "flight-mote" });
         mote.style.setProperty("--flight-delay", i * 17 + "ms");
         group.appendChild(mote);
