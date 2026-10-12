@@ -468,7 +468,8 @@ export default function ChessApp() {
       } catch { failures++; if (!stopped) setConnection("retrying"); }
       finally {
         inFlight = false;
-        if (!stopped) timer = setTimeout(poll, failures ? Math.min(8000, 1000 * 2 ** Math.min(failures - 1, 3)) : document.hidden ? 5000 : 750);
+        // Keep active online games responsive without polling while a tab is in the background.
+        if (!stopped) timer = setTimeout(poll, failures ? Math.min(8000, 1000 * 2 ** Math.min(failures - 1, 3)) : document.hidden ? 5000 : 250);
       }
     };
     const resume = () => { clearTimeout(timer); void poll(); };
@@ -658,7 +659,14 @@ export default function ChessApp() {
       playSound(Boolean(moved.captured), moved.san); return;
     }
     const session = { ...sessionRef.current };
+    const baseRoom = online;
+    const optimisticAt = Math.max(Date.now(), baseRoom.updatedAt + 1);
+    // Move locally at once; the room response below remains authoritative and can correct a conflict.
+    setOnline({ ...baseRoom, fen: nextGame.fen(), moves: [...baseRoom.moves, record], status: resultStatus(nextGame),
+      updatedAt: optimisticAt, serverNow: Date.now(), receivedAt: Date.now(),
+      clock: { ...baseRoom.clock, turnStartedAt: resultStatus(nextGame) === "playing" ? optimisticAt : null } });
     setBusy(true);
+    playSound(Boolean(moved.captured), moved.san);
     try {
       const response = await roomFetch("/api/rooms/" + session.code + "/move", { method: "POST",
         headers: { "Content-Type": "application/json", "x-player-token": session.token },
@@ -667,11 +675,16 @@ export default function ChessApp() {
       if (session.epoch !== sessionRef.current.epoch) return;
       if (data.room) applyRoom(data.room);
       if (!response.ok) throw new Error(data.error || "Không thể gửi nước đi.");
-      playSound(Boolean(moved.captured), moved.san);
     } catch (error) {
       if (session.epoch !== sessionRef.current.epoch) return;
       setMessage(errorText(error));
-      try { applyRoom(await fetchRoom(session.code, session.token)); } catch { setConnection("retrying"); }
+      try {
+        const room = await fetchRoom(session.code, session.token);
+        if (session.epoch === sessionRef.current.epoch) {
+          setOnline({ ...room, receivedAt: Date.now() });
+          setConnection("live");
+        }
+      } catch { setConnection("retrying"); }
     } finally { setBusy(false); }
   }
   function attemptMove(from: Square, to: Square) {
