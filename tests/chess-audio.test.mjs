@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { ChessAudio, DEFAULT_AUDIO, restoreAudio } from "../lib/chess-audio.ts";
+import { Chess } from "chess.js";
 
 class Parameter {
   value = 0;
@@ -97,5 +98,47 @@ test("background tabs suspend audio; returning starts only one scheduler, and ze
   assert.equal(timers.size, 1);
   audio.configure({ ...DEFAULT_AUDIO, music: 0 });
   assert.equal(timers.size, 0);
+  audio.dispose();
+});
+
+test("legal checks and checkmate add the check cue; quiet moves do not", async t => {
+  const { contexts } = environment(t), audio = new ChessAudio();
+  audio.configure({ ...DEFAULT_AUDIO, musicEnabled: false });
+  await audio.unlock();
+  const context = contexts[0];
+  const quiet = new Chess().move("e4");
+  const start = context.sounds;
+  audio.move(false, quiet.san);
+  const quietSounds = context.sounds - start;
+  const game = new Chess();
+  for (const move of ["e4", "d6"]) game.move(move);
+  const check = game.move("Bb5");
+  assert.ok(game.isCheck());
+  const beforeCheck = context.sounds;
+  audio.move(false, check.san);
+  assert.ok(context.sounds - beforeCheck > quietSounds);
+  const mate = new Chess();
+  for (const move of ["f3", "e5", "g4"]) mate.move(move);
+  const final = mate.move("Qh4");
+  assert.ok(mate.isCheckmate());
+  const beforeMate = context.sounds;
+  audio.move(false, final.san);
+  assert.ok(context.sounds - beforeMate > quietSounds);
+  audio.dispose();
+});
+
+test("check alerts respect placement volume, hidden tabs and gesture requirements", async t => {
+  const { contexts } = environment(t), audio = new ChessAudio();
+  audio.move(false, "Bb5+");
+  assert.equal(contexts.length, 0, "a checking position cannot autoplay");
+  audio.configure({ ...DEFAULT_AUDIO, musicEnabled: false, placement: 0 });
+  await audio.unlock();
+  const context = contexts[0], muted = context.sounds;
+  audio.move(true, "Qxf7#"); audio.effect("check");
+  assert.equal(context.sounds, muted);
+  audio.configure({ ...DEFAULT_AUDIO, musicEnabled: false });
+  audio.setHidden(true);
+  audio.move(false, "Bb5+");
+  assert.equal(context.sounds, muted);
   audio.dispose();
 });

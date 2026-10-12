@@ -83,11 +83,26 @@ export class ChessAudio {
     else if (this.context) void this.unlock();
   }
 
-  effect(channel: "pickup" | "placement", capture = false) {
-    if (!this.context || !this.gains || this.disposed || this.hidden || this.settings[channel] === 0) return;
+  move(capture = false, san = "") {
+    this.effect("placement", capture);
+    if (/[+#]$/.test(san)) this.effect("check");
+  }
+
+  effect(channel: "pickup" | "placement" | "check", capture = false) {
+    const volumeChannel = channel === "check" ? "placement" : channel;
+    if (!this.context || !this.gains || this.disposed || this.hidden || this.settings[volumeChannel] === 0) return;
     const time = this.context.currentTime + .005;
-    const output = this.gains[channel];
-    if (channel === "pickup") {
+    const output = this.gains[volumeChannel];
+    if (channel === "check") {
+      // Warm low impact, then a rising metallic fifth with a soft bell tail.
+      this.tone(hz(50), time, .32, .13, output, "triangle", hz(45));
+      this.brush(time, .09, .035, 1100, output);
+      [74, 81, 86].forEach((note, i) => {
+        this.tone(hz(note), time + .055 + i * .065, .58 - i * .06, .09 - i * .015, output);
+        this.tone(hz(note) * 2.01, time + .055 + i * .065, .3, .012, output);
+      });
+      this.tone(hz(86), time + .37, .4, .022, output);
+    } else if (channel === "pickup") {
       this.tone(640, time, .14, .09, output, "sine", 1020);
       this.tone(1280, time + .016, .15, .025, output);
       this.brush(time, .07, .035, 1700, output);

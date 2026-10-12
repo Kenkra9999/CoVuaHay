@@ -522,7 +522,7 @@ export default function ChessApp() {
     setAudioSettings(next); audioRef.current?.configure(next);
     remember("nuocco:audio:v1", JSON.stringify(next));
   }
-  const playSound = useCallback((capture = false) => { audioRef.current?.effect("placement", capture); }, []);
+  const playSound = useCallback((capture = false, san = "") => { audioRef.current?.move(capture, san); }, []);
   const heardOnlineMove = useRef({ code: "", count: 0 });
   useEffect(() => {
     const previous = heardOnlineMove.current;
@@ -531,7 +531,7 @@ export default function ChessApp() {
     if (!online || !ready || restoring || previous.code !== code || count !== previous.count + 1) return;
     const last = online.moves.at(-1)!;
     const mover = count % 2 === 1 ? "w" : "b";
-    if (mover !== online.color) playSound(last.flags.includes("c") || last.flags.includes("e"));
+    if (mover !== online.color) playSound(last.flags.includes("c") || last.flags.includes("e"), last.san);
   }, [online, ready, restoring, playSound]);
 
   useEffect(() => {
@@ -544,7 +544,7 @@ export default function ChessApp() {
         const nextGame = buildGame(local.moves), move = nextGame.move(result.move);
         const record: MoveRecord = { from: move.from, to: move.to, san: move.san, flags: move.flags, ...(move.promotion ? { promotion: move.promotion } : {}) };
         setLocal(previous => previous.version === local.version ? { fen: nextGame.fen(), moves: [...previous.moves, record], status: resultStatus(nextGame), version: previous.version + 1 } : previous);
-        playSound(Boolean(move.captured));
+        playSound(Boolean(move.captured), move.san);
       } catch { if (!controller.signal.aborted) { setAiFailed(true); setMessage("AI chưa tính được nước đi. Bạn có thể thử lại."); } }
     }, 220);
     return () => { clearTimeout(timer); controller.abort(); };
@@ -641,7 +641,7 @@ export default function ChessApp() {
     setSelected(null); setPromotion(null); setAiFailed(false); setReviewPly(null);
     if (!online) {
       setLocal({ fen: nextGame.fen(), moves: [...local.moves, record], status: resultStatus(nextGame), version: local.version + 1 });
-      playSound(Boolean(moved.captured)); return;
+      playSound(Boolean(moved.captured), moved.san); return;
     }
     const session = { ...sessionRef.current };
     setBusy(true);
@@ -653,7 +653,7 @@ export default function ChessApp() {
       if (session.epoch !== sessionRef.current.epoch) return;
       if (data.room) applyRoom(data.room);
       if (!response.ok) throw new Error(data.error || "Không thể gửi nước đi.");
-      playSound(Boolean(moved.captured));
+      playSound(Boolean(moved.captured), moved.san);
     } catch (error) {
       if (session.epoch !== sessionRef.current.epoch) return;
       setMessage(errorText(error));
@@ -898,7 +898,7 @@ export default function ChessApp() {
           <div className="audio-channel-heading"><span className="audio-channel-icon">{channel.icon}</span><label htmlFor={"audio-" + channel.id}><strong>{channel.title}</strong><small>{channel.detail}</small></label>{channel.id !== "music" && <button className="audio-preview" aria-label={"Nghe thử tiếng " + channel.title.toLowerCase()} onClick={() => audioRef.current?.effect(channel.id as "pickup" | "placement")}><Play size={12} /> Nghe thử</button>}</div>
           <div className="audio-volume"><VolumeX size={15} /><input id={"audio-" + channel.id} type="range" min="0" max="100" step="1" value={audioSettings[channel.id]} aria-label={"Âm lượng " + channel.title.toLowerCase()} onChange={event => changeAudio(channel.id, Number(event.target.value))} style={{ "--volume": audioSettings[channel.id] + "%" } as React.CSSProperties} /><Volume2 size={15} /><output htmlFor={"audio-" + channel.id}>{audioSettings[channel.id]}%</output></div>
         </section>)}</div>
-        <p className="audio-note">Âm lượng được lưu trên máy. Kéo về 0 để tắt riêng từng âm thanh.</p>
+        <button className="audio-preview check-audio-preview" aria-label="Nghe thử tiếng chiếu tướng" onClick={() => audioRef.current?.effect("check")}><Crown size={15} /> Nghe tiếng chiếu tướng</button><p className="audio-note">Chiếu tướng dùng âm lượng đặt quân. Âm lượng được lưu trên máy. Kéo về 0 để tắt riêng từng âm thanh.</p>
       </div>}
       {modal === "menu" && <div className="game-menu-content">
 <h2 id="game-menu-title">Nước đi của bạn.<small>Chọn cuộc chơi của bạn.</small></h2>
