@@ -83,9 +83,21 @@ type BoardActions = {
   up: (event: PointerEvent<HTMLDivElement>, piece: Piece) => void;
   cancel: () => void;
 };
-const QueenMetalGlint = memo(function QueenMetalGlint({ color, pieceSet }: { color: Color; pieceSet: PieceSetId }) {
-  return <span className="queen-metal-body" style={{ "--queen-mask": 'url("' + pieceImage({ color, type: "q" }, pieceSet) + '")' } as CSSProperties} aria-hidden="true"><i /></span>;
+const RoyalMetalGlint = memo(function RoyalMetalGlint({ color, pieceSet, type }: { color: Color; pieceSet: PieceSetId; type: "q" | "k" }) {
+  return <span className={"royal-metal-body metal-" + type} style={{ "--royal-mask": 'url("' + pieceImage({ color, type }, pieceSet) + '")' } as CSSProperties} aria-hidden="true"><i /></span>;
 });
+function flashRoyalPiece(target: HTMLDivElement) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.visualPaused === "true") return;
+  const flare = target.querySelector<HTMLElement>(".royal-touch-flare");
+  if (!flare) return;
+  flare.getAnimations().forEach(animation => animation.cancel());
+  flare.animate([
+    { opacity: 0, transform: "scale(.52)" },
+    { opacity: 1, transform: "scale(1.04)", offset: .27 },
+    { opacity: .82, transform: "scale(1.2)", offset: .53 },
+    { opacity: 0, transform: "scale(1.43)" },
+  ], { duration: target.dataset.pieceType === "r" ? 680 : 880, easing: "cubic-bezier(.18,.7,.25,1)" });
+}
 const RoyalAura = memo(function RoyalAura({ type, color, pieceSet }: { type: string; color: Color; pieceSet: PieceSetId }) {
   const gradientId = useId().replace(/:/g, "");
   if (type !== "k" && type !== "q" && type !== "r") return null;
@@ -265,9 +277,10 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
       const file = files.indexOf(piece.square[0]), rank = 8 - Number(piece.square[1]);
       const x = orientation === "w" ? file : 7 - file, y = orientation === "w" ? rank : 7 - rank;
       return <div key={piece.id} data-piece-type={piece.type} className={"piece piece-" + piece.color + (selected === piece.square ? " piece-selected" : "") + (dragFrom === piece.square ? " piece-dragging" : "")}
-        style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", "--piece-travel-time": pieceTravelMs(piece.type) + "ms", pointerEvents: canMove && piece.color === liveTurn(moves) ? "auto" : "none" } as CSSProperties}
-        onPointerDown={event => actions.down(event, piece)} onPointerMove={event => actions.move(event, piece)} onPointerUp={event => actions.up(event, piece)} onPointerCancel={actions.cancel}>
-        <RoyalAura type={piece.type} color={piece.color} pieceSet={pieceSet} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" />{piece.type === "q" && <QueenMetalGlint color={piece.color} pieceSet={pieceSet} />}</div>;
+        style={{ transform: "translate3d(" + x * 100 + "%," + y * 100 + "%,0)", "--piece-travel-time": pieceTravelMs(piece.type) + "ms", pointerEvents: canMove && piece.color === liveTurn(moves) || "kqr".includes(piece.type) ? "auto" : "none" } as CSSProperties}
+        onPointerDown={event => { if (event.button === 0 && "kqr".includes(piece.type)) flashRoyalPiece(event.currentTarget); actions.down(event, piece); }}
+        onPointerMove={event => actions.move(event, piece)} onPointerUp={event => { actions.up(event, piece); if (canMove && selected && legal.includes(piece.square) && piece.color !== liveTurn(moves)) actions.click(piece.square); }} onPointerCancel={actions.cancel}>
+        <RoyalAura type={piece.type} color={piece.color} pieceSet={pieceSet} /><img src={pieceImage(piece, pieceSet)} alt="" draggable={false} decoding="async" />{(piece.type === "q" || piece.type === "k") && <RoyalMetalGlint color={piece.color} pieceSet={pieceSet} type={piece.type} />}{"kqr".includes(piece.type) && <span className="royal-touch-flare" aria-hidden="true"><i className="touch-halo" /><i className="touch-qi" /><i className="touch-core" /></span>}</div>;
     })}
     <PieceMotion pieces={pieces} orientation={orientation} />
     {showHint && hintMove && (() => {
@@ -883,7 +896,7 @@ export default function ChessApp() {
       </aside>
     </main>
     {message && <div className="toast" role="alert"><span>{message}</span><button onClick={() => setMessage("")} aria-label="Đóng thông báo"><X size={16} /></button></div>}
-    {drag && draggedPiece && <div ref={dragPieceRef} className={"drag-piece piece-" + draggedPiece.color} data-piece-type={draggedPiece.type} data-piece-set={appearance.pieceSet} style={{ left: 0, top: 0, transform: "translate3d(" + drag.x + "px," + drag.y + "px,0) translate(-50%,-50%)", width: drag.size, height: drag.size }}><span className="drag-flight-light" /><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" />{draggedPiece.type === "q" && <QueenMetalGlint color={draggedPiece.color} pieceSet={appearance.pieceSet} />}</div>}
+    {drag && draggedPiece && <div ref={dragPieceRef} className={"drag-piece piece-" + draggedPiece.color} data-piece-type={draggedPiece.type} data-piece-set={appearance.pieceSet} style={{ left: 0, top: 0, transform: "translate3d(" + drag.x + "px," + drag.y + "px,0) translate(-50%,-50%)", width: drag.size, height: drag.size }}><span className="drag-flight-light" /><RoyalAura type={draggedPiece.type} color={draggedPiece.color} pieceSet={appearance.pieceSet} /><img src={pieceImage(draggedPiece, appearance.pieceSet)} alt="" />{(draggedPiece.type === "q" || draggedPiece.type === "k") && <RoyalMetalGlint color={draggedPiece.color} pieceSet={appearance.pieceSet} type={draggedPiece.type} />}</div>}
     <dialog id="game-menu-dialog" aria-label={modal === "menu" ? "Chọn cuộc chơi" : modal === "audio" ? "Âm nhạc và âm thanh" : modal === "effects" ? "Chọn hiệu ứng" : undefined} className={"atelier-modal " + (modal === "menu" ? "game-menu-modal" : modal === "pieces" ? "collection-modal" : modal === "appearance" || modal === "effects" ? "appearance-modal" : modal === "audio" ? "audio-modal" : "")} ref={modalRef} onCancel={() => setModal(null)}>
       <div className="modal-inner"><div className="modal-top"><span className="eyebrow">{modal === "menu" ? "NƯỚC CỜ · CUỘC CHƠI" : modal === "audio" ? "NƯỚC CỜ · ÂM THANH" : modal === "create" ? "HẸN NHAU TRÊN 64 Ô" : modal === "join" ? "BẠN ĐÃ CÓ LỜI MỜI" : modal === "pieces" ? "BỘ SƯU TẬP · NƯỚC CỜ" : modal === "appearance" ? "KHÔNG GIAN CỦA RIÊNG BẠN" : modal === "effects" ? "HIỆU ỨNG CHO CUỘC CHƠI" : "CHƠI HAY, CHƠI ĐÚNG"}</span><button onClick={() => setModal(null)} aria-label="Đóng"><X size={19} /></button></div>
       {modal === "audio" && <div className="audio-studio">
