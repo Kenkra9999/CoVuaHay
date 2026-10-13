@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Local vector pieces stay crisp at every board size. */
 
 import { Chess, type Square } from "chess.js";
-import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Music2, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Users, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, ArrowUpDown, Bot, Check, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Clock3, Copy, Crown, Download, Flag, Flame, Hash, History, Link2, LoaderCircle, Maximize2, Minimize2, Music2, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Swords, Users, Volume2, VolumeX, X } from "lucide-react";
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from "react";
 import type { MoveRecord, RoomStatus, RoomView } from "@/lib/rooms";
 import { chessClock } from "@/lib/chess-clock";
@@ -20,6 +20,7 @@ import type { Difficulty } from "@/lib/chess-ai";
 import { describeMove, parseUciMove, principalVariation, searchStockfish, type EngineAnalysis, type EngineLine } from "@/lib/stockfish";
 import { assetUrl } from "../lib/asset-url";
 import { roomFetch } from "@/lib/room-api";
+import { createBoardFocus } from "@/lib/board-focus";
 
 type Color = "w" | "b";
 type Mode = "ai" | "local";
@@ -248,10 +249,10 @@ const RealmTileEffects = memo(function RealmTileEffects({ light, celestial, vari
     </svg>
   </span>;
 });
-const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, boardTheme, splitTheme, liteMode, litePieces, dragFrom, boardRef, showHint, hintMove, actions }: {
+const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, selected, legal, checkKing, canMove, pieceSet, boardTheme, splitTheme, liteMode, litePieces, viewOnly, dragFrom, boardRef, showHint, hintMove, actions }: {
   pieces: Piece[]; moves: MoveRecord[]; orientation: Color; selected: Square | null; legal: Square[];
   checkKing?: Square | null; canMove: boolean; pieceSet: PieceSetId; boardTheme: BoardStyle; splitTheme: "icefire" | "celestial" | null; dragFrom?: Square;
-  boardRef: RefObject<HTMLDivElement | null>; showHint: boolean; hintMove?: { from: Square; to: Square } | null; actions: BoardActions; liteMode: boolean; litePieces: boolean;
+  boardRef: RefObject<HTMLDivElement | null>; showHint: boolean; hintMove?: { from: Square; to: Square } | null; actions: BoardActions; liteMode: boolean; litePieces: boolean; viewOnly: boolean;
 }) {
   const last = moves.at(-1);
   const coordinates = (square: Square) => {
@@ -262,7 +263,7 @@ const ChessBoard = memo(function ChessBoard({ pieces, moves, orientation, select
     {Array.from({ length: 8 }, (_, rank) => Array.from({ length: 8 }, (_, file) => {
       const square = (files[orientation === "w" ? file : 7 - file] + (orientation === "w" ? 8 - rank : rank + 1)) as Square;
       const piece = pieces.find(item => item.square === square);
-      return <button type="button" key={square} data-square={square} data-realm={Number(square[1]) <= 4 ? "light" : "dark"}
+      return <button type="button" key={square} tabIndex={viewOnly ? -1 : undefined} aria-disabled={viewOnly || undefined} data-square={square} data-realm={Number(square[1]) <= 4 ? "light" : "dark"}
         className={"square " + ((rank + file) % 2 === 0 ? "square-light" : "square-dark") + (selected === square ? " square-selected" : "") + (last?.from === square || last?.to === square ? " square-last" : "") + (last?.from === square ? " square-last-from" : "") + (last?.to === square ? " square-last-to" : "") + (square === checkKing ? " square-check" : "")}
         style={{ "--tile-delay": -((rank * 8 + file) % 13) * .47 + "s" } as CSSProperties}
         aria-label={square + (piece ? ", " + names[piece.type] + " " + (piece.color === "w" ? "trắng" : "đen") : "")} onClick={() => actions.click(square)}>
@@ -330,6 +331,12 @@ export default function ChessApp() {
   const [analysisState, setAnalysisState] = useState<{ key: string; lines: EngineLine[]; result?: EngineAnalysis; loading: boolean; error?: string } | null>(null);
   const [pendingAnalysis, setPendingAnalysis] = useState<boolean | null>(null);
   const [drag, setDrag] = useState<{ from: Square; x: number; y: number; size: number } | null>(null);
+  const [boardFocused, setBoardFocused] = useState(false);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const expandRef = useRef<HTMLButtonElement>(null);
+  const exitFocusRef = useRef<HTMLButtonElement>(null);
+  const focusController = useRef<ReturnType<typeof createBoardFocus> | null>(null);
+  const wasBoardFocused = useRef(false);
   const sessionRef = useRef({ code: "", token: "", epoch: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
   const dragPieceRef = useRef<HTMLDivElement>(null);
@@ -337,6 +344,22 @@ export default function ChessApp() {
   const promotionRef = useRef<HTMLDialogElement>(null);
   const audioRef = useRef<ChessAudio | null>(null);
   const pointerRef = useRef<{ from: Square; x: number; y: number; moved: boolean } | null>(null);
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    const controller = createBoardFocus(shell, setBoardFocused);
+    focusController.current = controller;
+    return () => { controller.dispose(); focusController.current = null; };
+  }, []);
+  useEffect(() => {
+    if (boardFocused) exitFocusRef.current?.focus();
+    else if (wasBoardFocused.current) expandRef.current?.focus();
+    wasBoardFocused.current = boardFocused;
+  }, [boardFocused]);
+  function expandBoard() {
+    setSelected(null); setDrag(null); pointerRef.current = null;
+    void focusController.current?.enter();
+  }
   const analysisAbort = useRef<AbortController | null>(null);
   const current = online || local;
   const liveGame = useMemo(() => buildGame(current.moves), [current.moves]);
@@ -352,7 +375,7 @@ export default function ChessApp() {
   const serverNow = online ? online.serverNow + Math.max(0, tick - online.receivedAt) : tick;
   const clock = online ? chessClock({ fen: online.fen, status: online.status, whiteMs: online.clock.whiteMs, blackMs: online.clock.blackMs,
     turnStartedAt: online.clock.turnStartedAt, moveLimitSeconds: online.clock.moveLimitSeconds }, serverNow) : null;
-  const canMove = ready && !restoring && !busy && reviewPly === null && current.status === "playing" && !clock?.expired
+  const canMove = !boardFocused && ready && !restoring && !busy && reviewPly === null && current.status === "playing" && !clock?.expired
     && (online ? online.hasBlack && online.color === turn && connection === "live" : !aiMode || turn === humanColor);
   const legal = useMemo(() => selected && canMove ? game.moves({ square: selected, verbose: true }).map(move => move.to) : [], [selected, canMove, game]);
   const positionKey = (online?.code || localMode) + ":" + current.version + ":" + game.fen();
@@ -500,14 +523,14 @@ export default function ChessApp() {
 
   useEffect(() => {
     const dialog = modalRef.current;
-    if (modal && dialog && !dialog.open) dialog.showModal();
-    if (!modal && dialog?.open) dialog.close();
-  }, [modal]);
+    if (modal && !boardFocused && dialog && !dialog.open) dialog.showModal();
+    if ((!modal || boardFocused) && dialog?.open) dialog.close();
+  }, [modal, boardFocused]);
   useEffect(() => {
     const dialog = promotionRef.current;
-    if (promotion && dialog && !dialog.open) dialog.showModal();
-    if (!promotion && dialog?.open) dialog.close();
-  }, [promotion]);
+    if (promotion && !boardFocused && dialog && !dialog.open) dialog.showModal();
+    if ((!promotion || boardFocused) && dialog?.open) dialog.close();
+  }, [promotion, boardFocused]);
   useEffect(() => {
     analysisAbort.current?.abort();
     return () => analysisAbort.current?.abort();
@@ -869,8 +892,9 @@ export default function ChessApp() {
     </div>;
   }
 
-  return <div className={"site-shell battlefield-" + currentBoardStyle.world + " piece-style-" + appearance.pieceSet + (appearance.motionOn ? "" : " motion-off") + (appearance.liteMode ? " lite-mode" : "")}>
-    <VisualPerformance />{!appearance.liteMode && <ChessAtmosphere effect={appearance.effect} />}
+  return <div ref={shellRef} className={"site-shell battlefield-" + currentBoardStyle.world + " piece-style-" + appearance.pieceSet + (appearance.motionOn ? "" : " motion-off") + (appearance.liteMode ? " lite-mode" : "") + (boardFocused ? " board-focused" : "")}>
+    {boardFocused && <button ref={exitFocusRef} className="exit-board-focus" aria-label="Thoát màn hình lớn" title="Thoát màn hình lớn (Esc)" onClick={() => focusController.current?.exit()}><Minimize2 size={20} /><span>Thoát</span></button>}
+    <VisualPerformance />{!appearance.liteMode && !boardFocused && <ChessAtmosphere effect={appearance.effect} />}
     <header className="topbar">
       <button className="brand" onClick={() => online ? setActiveTab("room") : newLocal()} aria-label={online ? "Nước Cờ - Phòng đấu" : "Nước Cờ - Ván mới"}><span className="brand-mark"><img src={pieceImage({ color: "w", type: "n" }, appearance.pieceSet, appearance.litePieces)} alt="" /></span><span>Nước Cờ<small>THE CHESS ATELIER</small></span></button>
       <nav className="header-style-controls" aria-label="Tùy chỉnh bàn cờ">
@@ -886,18 +910,18 @@ export default function ChessApp() {
 
       <section className={"board-column theme-" + appearance.boardTheme + (vipBoard ? " board-vip" : "") + (splitRealms ? " board-split-realms realm-" + (orientation === "w" ? "white-bottom" : "white-top") : "")} aria-label="Bàn cờ vua">
         <div className="board-stage">
-          <div className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": splitRealms ? realmBoardInset(vipBoard.inset, orientation) : vipBoard.inset } as CSSProperties : undefined}>
+          <div inert={boardFocused} className={"board-frame" + (vipBoard ? " vip-frame" : "")} style={vipBoard ? { "--vip-inset": splitRealms ? realmBoardInset(vipBoard.inset, orientation) : vipBoard.inset } as CSSProperties : undefined}>
             {vipBoard && <>{appearance.boardTheme === "vip-dragon" && !appearance.liteMode ? <DragonFrame /> : <img className="vip-board-art" src={assetUrl(vipBoard.art)} width={1254} height={1254} alt="" draggable={false} />}{!appearance.liteMode && <VipFrameEffects />}{!appearance.liteMode && appearance.boardTheme === "vip-celestial" && <CelestialFrameWings />}</>}
             <ChessBoard pieces={pieces} moves={displayMoves} orientation={orientation} selected={selected} legal={legal}
             checkKing={checkKing} canMove={canMove} pieceSet={appearance.pieceSet} boardTheme={appearance.boardTheme} splitTheme={appearance.boardTheme === "vip-icefire" ? "icefire" : appearance.boardTheme === "vip-celestial" ? "celestial" : null} dragFrom={drag?.from} boardRef={boardRef}
-            showHint={showHint} hintMove={hintMove} actions={stableBoardActions} liteMode={appearance.liteMode} litePieces={appearance.litePieces} />
+            showHint={showHint} hintMove={hintMove} actions={stableBoardActions} liteMode={appearance.liteMode} litePieces={appearance.litePieces} viewOnly={boardFocused} />
           {ended && <div className="result-overlay" role="dialog" aria-labelledby="result-title" aria-describedby="result-detail"><div className="result-panel"><span className="result-crown"><Crown size={22} /></span><span className="eyebrow">KẾT THÚC VÁN ĐẤU</span><h2 id="result-title">{resultTitle}</h2><p id="result-detail">{resultDetail}</p>
             {online?.color && <><div className="rematch-status" aria-live="polite"><span className={myRematchReady ? "ready-dot" : ""}>{myRematchReady ? "✓" : "○"} Bạn {myRematchReady ? "đã sẵn sàng" : "chưa sẵn sàng"}</span><span className={opponentRematchReady ? "ready-dot" : ""}>{opponentRematchReady ? "✓" : "○"} Đối thủ {opponentRematchReady ? "đã sẵn sàng" : "chưa sẵn sàng"}</span></div><button className="primary-button rematch-button" disabled={busy || myRematchReady} onClick={() => void requestRematch()}><RotateCcw size={16} />{busy ? "Đang gửi…" : myRematchReady ? "Đã sẵn sàng · Chờ đối thủ" : "Chơi lại cùng mã phòng"}</button><small className="rematch-hint">Ván mới bắt đầu khi cả hai cùng sẵn sàng. Mã mời được giữ nguyên.</small></>}
             {online && !online.color && <small className="rematch-hint">Chỉ hai người đang giữ ghế mới có thể chơi lại.</small>}
             {!online && <button className="primary-button" onClick={() => newLocal(localMode)}><RotateCcw size={16} /> Đấu lại</button>}
           </div></div>}
           </div>
-          <div className={"game-status " + (ended ? "game-ended" : "") + (aiThinking ? " thinking-status difficulty-" + difficulty : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}{aiThinking && <span className="thinking-dots" aria-hidden="true"><i /><i /><i /></span>}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}{!online && <button className="status-new-game" onClick={() => newLocal()}><RotateCcw size={14} /> Ván mới</button>}</div>
+          <div className={"game-status " + (ended ? "game-ended" : "") + (aiThinking ? " thinking-status difficulty-" + difficulty : "")} role="status"><span>{aiThinking || restoring ? <LoaderCircle size={15} className="spin" /> : ended ? <Crown size={15} /> : <span className="status-dot" />}{statusLabel}{aiThinking && <span className="thinking-dots" aria-hidden="true"><i /><i /><i /></span>}</span>{online && current.status === "playing" && clock && <span className={"move-clock " + (clock.moveRemainingMs <= 15000 ? "clock-low" : "")}><Clock3 size={13} /> Lượt này {clockText(clock.moveRemainingMs)}</span>}<span className="board-status-actions"><button ref={expandRef} className="board-expand" aria-label="Phóng to bàn cờ toàn màn hình" title="Phóng to bàn cờ · Chỉ xem" onClick={expandBoard}><Maximize2 size={16} /></button>{!online && <button className="status-new-game" onClick={() => newLocal()}><RotateCcw size={14} /> Ván mới</button>}</span></div>
           {online?.color && online.status === "playing" && online.drawOffer && <div className="draw-notice">{online.drawOffer === online.color ? <><span>Đã gửi đề nghị hòa</span><button onClick={() => void roomAction("cancel")}>Thu hồi</button></> : <><span>Đối thủ đề nghị hòa</span><button onClick={() => void roomAction("accept")}>Đồng ý</button><button onClick={() => void roomAction("decline")}>Tiếp tục</button></>}</div>}
           {reviewPly !== null && <div className="replay-controls"><button onClick={() => setReviewPly(0)} aria-label="Về đầu ván"><ChevronFirst size={16} /></button><button onClick={() => setReviewPly(Math.max(0, reviewPly - 1))} aria-label="Nước trước"><ChevronLeft size={16} /></button><span>{reviewPly} / {current.moves.length}</span><button onClick={() => setReviewPly(Math.min(current.moves.length, reviewPly + 1))} aria-label="Nước tiếp"><ChevronRight size={16} /></button><button onClick={() => { setReviewPly(null); setSelected(null); }}><ChevronLast size={16} /> Trở lại trận</button></div>}
         </div>

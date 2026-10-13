@@ -2216,3 +2216,99 @@ html[data-visual-paused="true"] .aura-queen * { animation-play-state: paused; }
 .piece-lite-toggle[aria-pressed="true"] .lite-status { background: #a5d9c5; }
 @media (max-width: 420px) { .piece-lite-setting { align-items: flex-start; flex-direction: column; } }
 @media (prefers-reduced-motion: reduce) { .aura-queen * { animation: none !important; } }
+
+/* Fit the three-column atelier to the available browser viewport on desktop. */
+@media (min-width: 960px) {
+  .site-shell { --atelier-header: clamp(62px, 7.8vh, 82px); --atelier-side: clamp(210px, 19vw, 360px); --atelier-gap: clamp(12px, 1.6vw, 32px); --atelier-player: clamp(80px, 12vh, 122px); }
+  .topbar { height: var(--atelier-header); min-height: var(--atelier-header); grid-template-columns: auto minmax(0, 1fr) auto; padding: 0 clamp(12px, 1.8vw, 36px); gap: clamp(8px, 1.3vw, 24px); }
+  .brand, .header-actions, .header-style-controls { grid-column: auto; grid-row: auto; }
+  .header-style-controls { width: min(100%, 670px); justify-self: center; gap: 8px; }
+  .header-style-controls button { justify-content: flex-start; min-height: 42px; padding: 6px 9px; }
+  .header-style-controls small { display: block; }
+  .arena-layout { --board-fit: min(calc(100vh - var(--atelier-header) - 84px), calc(100vw - 2 * var(--atelier-side) - 4 * var(--atelier-gap))); display: grid; grid-template-columns: var(--atelier-side) minmax(0, var(--board-fit)) var(--atelier-side); grid-template-rows: var(--atelier-player) auto; grid-template-areas: "left board right" "hero board tools"; column-gap: var(--atelier-gap); row-gap: 14px; max-width: none; width: 100%; margin: 0 auto; padding: 10px var(--atelier-gap) 24px; justify-content: center; align-items: start; }
+  .arena-layout > .board-column { width: 100%; --board-size: min(100%, var(--board-fit)); }
+  .side-player .player-card { min-height: var(--atelier-player); height: var(--atelier-player); grid-template-columns: clamp(32px, 4.6vh, 44px) minmax(0, 1fr); gap: clamp(6px, 1vh, 10px); padding: clamp(8px, 1.3vh, 14px); }
+  .side-player .player-avatar { width: clamp(32px, 4.6vh, 44px); height: clamp(34px, 4.9vh, 46px); }
+  .side-player .player-name, .side-player .player-name-static { font-size: clamp(12px, 1.5vh, 14px); }
+  .side-player .player-detail { font-size: clamp(9px, 1.2vh, 11px); }
+  .side-player .player-clock > span { font-size: clamp(22px, 3vh, 32px); }
+  .side-player .player-clock { padding-top: 6px; }
+  .arena-layout > .inspiration-hero { height: min(550px, calc(var(--board-fit) - var(--atelier-player) - 14px)); margin: 0; }
+  .arena-layout > .inspiration-hero .inspiration-top { padding: clamp(10px, 1.7vh, 16px) clamp(10px, 1.4vw, 18px) 0; gap: 8px; }
+  .arena-layout > .inspiration-hero .inspiration-collection { gap: 7px; }
+  .arena-layout > .inspiration-hero .inspiration-collection > span { font-size: clamp(8px, .8vw, 11px); letter-spacing: .8px; }
+  .arena-layout > .inspiration-hero .inspiration-collection img { width: clamp(26px, 3.6vh, 38px); height: clamp(30px, 4.2vh, 44px); }
+  .arena-layout > .inspiration-hero .game-menu-toggle { min-height: 32px; padding: 6px 9px; gap: 5px; }
+  .arena-layout > .inspiration-hero .game-menu-toggle span { font-size: 10px; }
+  .arena-layout > .inspiration-hero .inspiration-copy { padding: clamp(10px, 1.8vh, 18px) clamp(14px, 1.5vw, 20px) 10px; }
+  .arena-layout > .inspiration-hero .inspiration-quote-space { min-height: clamp(90px, 14vh, 135px); }
+  .arena-layout > .inspiration-hero .inspiration-quote em { font-size: clamp(17px, 2.6vh, 25px); }
+  .arena-layout > .inspiration-hero .inspiration-quote p > span { font-size: clamp(12px, 1.9vh, 18px); }
+  .arena-layout > .inspiration-hero .inspiration-controls { margin-top: 6px; padding-top: 7px; }
+  .arena-layout > .inspiration-hero .inspiration-art { flex: 1 1 0; min-height: 0; max-height: none; aspect-ratio: auto; }
+  .arena-layout > .right-rail { max-height: calc(100vh - var(--atelier-header) - var(--atelier-player) - 40px); overflow-y: auto; scrollbar-width: thin; margin: 0; }
+  .arena-layout > .right-rail .tools-panel { flex-shrink: 0; }
+  .analysis-panel, .moves-panel, .room-panel { padding: clamp(12px, 2.3vh, 22px) clamp(12px, 1.5vw, 20px) 12px; }
+  .tools-tabs { gap: clamp(4px, .8vw, 12px); padding-inline: 8px; }
+  .tools-tabs button { min-height: clamp(38px, 5.4vh, 52px); padding: 9px 1px; font-size: clamp(10px, 1vw, 13px); gap: 4px; }
+  .engine-heading h2 { font-size: clamp(20px, 3vh, 28px); }
+  .engine-heading > div > span { font-size: clamp(8px, 1.15vh, 11px); }
+  .analysis-empty { display: block; text-align: center; padding: clamp(8px, 2.5vh, 24px) 0 clamp(8px, 2.3vh, 22px); }
+  .analysis-orbit { width: clamp(64px, 11vh, 106px); height: clamp(64px, 11.8vh, 112px); margin: 0 auto; }
+  .analysis-orbit img { width: 76%; height: 79%; margin-top: 10%; }
+  .analysis-empty h3 { font-size: clamp(22px, 3.5vh, 34px); margin: clamp(6px, 1.9vh, 18px) 0 clamp(6px, 1.35vh, 13px); }
+  .analysis-empty p { font-size: clamp(11px, 1.45vh, 14px); line-height: 1.6; }
+  .analysis-subactions { margin: 7px 0 8px; }
+  .analysis-subactions button { min-height: 28px; font-size: clamp(10px, 1.3vh, 12px); }
+  .engine-foot { font-size: clamp(10px, 1.3vh, 12px); }
+}
+@media (min-width: 960px) and (max-width: 1280px) {
+  .header-music span, .header-join span { display: none; }
+  .header-actions { gap: 6px; }
+  .brand { gap: 8px; }
+  .brand-mark { width: 34px; height: 39px; }
+  .brand > span:last-child { font-size: 24px; }
+  .brand small { font-size: 8px; letter-spacing: 1px; }
+  .header-style-controls small { font-size: 8px; }
+  .header-style-controls strong { font-size: 10px; }
+}
+@media (min-width: 960px) and (max-height: 780px) {
+  .analysis-empty { padding-block: 8px; }
+  .analysis-orbit { width: 64px; height: 66px; }
+  .analysis-empty h3 { margin: 6px 0; font-size: 23px; }
+  .analysis-empty p { line-height: 1.45; }
+  .engine-foot { margin-top: 10px; padding-top: 10px; }
+}
+
+.board-status-actions { margin-left: auto; flex-shrink: 0; }
+.board-expand { display: inline-grid; place-items: center; width: 32px; height: 30px; background: #c6ac8110; border: 1px solid #c6ac813b; border-radius: 6px; color: var(--gold-light); }
+.board-expand:hover { background: #c6ac8130; }
+
+/* One stable board instance; only the exit control is interactive in the large view. */
+.site-shell.board-focused { position: fixed; inset: 0; z-index: 1000; width: 100%; height: 100vh; min-height: 0; overflow: hidden; background: radial-gradient(ellipse at center, #1e2b2d, #080e10 75%); }
+.site-shell.board-focused::before, .site-shell.board-focused::after,
+.site-shell.board-focused > :not(.arena-layout):not(.exit-board-focus) { display: none; }
+.site-shell.board-focused .arena-layout { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "board"; place-items: center; width: 100%; height: 100%; max-width: none; padding: 0; margin: 0; gap: 0; }
+.site-shell.board-focused .arena-layout > :not(.board-column),
+.site-shell.board-focused .board-column > :not(.board-stage),
+.site-shell.board-focused .board-stage > :not(.board-frame),
+.site-shell.board-focused .result-overlay { display: none; }
+.site-shell.board-focused .arena-layout > .board-column { --board-size: min(85vh, 85vw); width: var(--board-size); margin: 0; padding: 0; }
+.site-shell.board-focused .board-stage { display: block; width: 100%; margin: 0; }
+.site-shell.board-focused .board-stage > .board-frame { width: 100%; margin: 0; pointer-events: none; }
+.exit-board-focus { position: fixed; top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); z-index: 1001; display: inline-flex; align-items: center; gap: 7px; padding: 10px 13px; border: 1px solid #c6ac8150; border-radius: 9px; background: #101a1de6; color: #f1dfc0; font-size: 12px; }
+.exit-board-focus:hover { background: #243632; }
+@media (min-width: 960px) and (max-height: 620px) {
+  .analysis-panel, .moves-panel, .room-panel { padding: 10px 12px; }
+  .engine-heading .engine-icon { display: none; }
+  .engine-heading h2 { font-size: 18px; line-height: 1.12; margin-bottom: 3px; }
+  .engine-heading > div > span { font-size: 8px; line-height: 1.2; }
+  .analysis-empty { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 6px 8px; align-items: center; padding: 8px 0; }
+  .analysis-orbit { grid-column: 1; grid-row: 1; width: 40px; height: 44px; margin: 0; }
+  .analysis-empty h3 { grid-column: 2; grid-row: 1; text-align: left; font-size: 18px; line-height: 1.1; margin: 0; }
+  .analysis-empty p { grid-column: 1 / -1; font-size: 11px; line-height: 1.4; }
+  .analyze-button { min-height: 36px; padding: 8px 12px; font-size: 12px; }
+  .analysis-subactions { margin: 4px 0; }
+  .analysis-subactions button { min-height: 24px; padding: 2px 0; }
+  .engine-foot { margin-top: 6px; padding-top: 6px; font-size: 9px; line-height: 1.35; }
+}
