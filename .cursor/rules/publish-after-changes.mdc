@@ -1,0 +1,16 @@
+---
+description: Automatically publish completed user-requested code changes and refresh GitNexus
+alwaysApply: true
+---
+
+# Publish after completing changes
+
+The user authorizes this workflow for code changes in this repository without asking for confirmation again:
+
+1. Complete the requested change and run checks appropriate to its scope.
+2. Review and commit the task's intended changes, preserving unrelated user work.
+3. Push the commit to the existing GitHub remote and current branch; this project's usual target is `origin/main`.
+4. Update GitNexus from the repository root with `gitnexus analyze --index-only`.
+5. Verify that GitHub and the GitNexus index match the completed commit, and report the outcome.
+
+Respect later user instructions. Read-only questions do not require a commit. If credentials or another concrete limitation block publication or indexing, report that limitation accurately rather than claiming completion.

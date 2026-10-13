@@ -997,11 +997,17 @@ button, input { -webkit-tap-highlight-color: transparent; }
 }
 .aura-queen { --aura-speed: 4s; inset: -15%; opacity: 1; }
 .royal-metal-body { position: absolute; inset: 4%; z-index: 2; pointer-events: none; mask-image: var(--royal-mask); mask-size: 100% 100%; mask-repeat: no-repeat; transition: transform 180ms cubic-bezier(.2,.7,.25,1); }
-.royal-metal-body > i { position: absolute; inset: -10%; background: linear-gradient(115deg, transparent 31%, #ffcc6c70 41%, #fff9decc 48%, #fffffffa 51%, #ffd6769c 58%, transparent 68%); opacity: 0; animation: royal-metal-sweep 2s ease-in-out infinite; }
-.piece-b .royal-metal-body > i { background: linear-gradient(115deg, transparent 31%, #cab4ff70 41%, #e7e3ffcc 48%, #fffffffa 51%, #bda8ff9c 58%, transparent 68%); animation-delay: -1s; }
+.royal-metal-body > i { position: absolute; inset: -10%; background: linear-gradient(115deg, transparent 24%, #e9b84a70 35%, #ffdf91d9 44%, #fffef4 49%, #ffffff 52%, #ffe7b8f2 56%, #e8b85c80 64%, transparent 74%); opacity: 0; animation: royal-metal-sweep 1.9s ease-in-out infinite; }
+.piece-b .royal-metal-body > i { background: linear-gradient(115deg, transparent 27%, #6588bd65 37%, #b2d6ffc9 45%, #eef7ff 49%, #ffffff 52%, #c4e1ffdb 56%, #668aba65 65%, transparent 74%); animation-delay: -.95s; }
+.royal-metal-body::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 28%, #ffe29b38 43%, #fffbed52 49%, transparent 62%); }
+.piece-b .royal-metal-body::before { background: linear-gradient(115deg, transparent 28%, #89b8ed20 43%, #e5f3ff38 49%, transparent 62%); }
+.royal-metal-body::after { content: ""; position: absolute; inset: -10%; background: linear-gradient(115deg, transparent 42%, #fff6d85c 47%, #ffffff 50%, #ffe9ae8c 53%, transparent 59%); animation: royal-metal-sweep 2.3s ease-in-out infinite reverse; animation-delay: -.7s; }
+.piece-b .royal-metal-body::after { background: linear-gradient(115deg, transparent 42%, #c3deff50 47%, #f4faff 50%, #a7cfff7c 53%, transparent 59%); animation-delay: -1.6s; }
+.metal-k > i { animation-duration: 2.15s; }
+.metal-q::after { animation-duration: 1.85s; }
 .piece-selected .royal-metal-body { transform: scale(1.06) translateY(-2px); }
 .drag-piece .royal-metal-body { inset: 0; }
-@keyframes royal-metal-sweep { 0%, 13% { opacity: 0; transform: translate3d(-125%,0,0); } 22% { opacity: .9; } 49% { opacity: 1; } 63%, 100% { opacity: 0; transform: translate3d(125%,0,0); } }
+@keyframes royal-metal-sweep { 0% { opacity: .12; transform: translate3d(-100%,0,0); } 18% { opacity: .9; } 38%, 65% { opacity: 1; } 88% { opacity: .55; } 100% { opacity: .08; transform: translate3d(100%,0,0); } }
 .aura-rook { --aura-speed: 7s; inset: -9%; opacity: .72; }
 .aura-rook .aura-core-glow { opacity: .37; }
 .aura-rook .aura-base-array { opacity: .42; border-width: 1px; box-shadow: 0 0 9px var(--aura); }
@@ -2100,8 +2106,9 @@ html[data-visual-quality="balanced"] .piece-b img { filter: drop-shadow(0 2px 3p
 }
 
 /* Keep the metallic sweep lightweight and respect motion preferences. */
-html[data-visual-paused="true"] .royal-metal-body > i { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) { .royal-metal-body > i { display: none; } }
+html[data-visual-paused="true"] .royal-metal-body > i,
+html[data-visual-paused="true"] .royal-metal-body::after { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .royal-metal-body > i, .royal-metal-body::after { display: none; } }
 
 /* Living streams weave inward and outward without restarting on selection. */
 
@@ -2150,7 +2157,7 @@ html[data-visual-paused="true"] .royal-metal-body > i { animation-play-state: pa
 
 /* Side values come from the SVG itself, with one inexpensive grounding shadow. */
 .site-shell .piece > img, .site-shell .drag-piece > img { filter: drop-shadow(0 2px 1px #0008); }
-.site-shell .royal-metal-body { opacity: .18; }
+.site-shell .royal-metal-body { opacity: .94; }
 .inspiration-scene { filter: contrast(1.08) saturate(1.08); }
 .inspiration-art > img { filter: contrast(1.08) saturate(.98); }
 .vip-board-art { filter: contrast(1.06) saturate(1.04); }
