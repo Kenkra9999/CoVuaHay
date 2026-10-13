@@ -41,8 +41,8 @@ export function realmBoardInset(inset: string, orientation: "w" | "b") {
 }
 export type Atmosphere = typeof ATMOSPHERES[number]["id"];
 export type CoverScene = typeof COVER_SCENES[number]["id"];
-export type VisualAppearance = { boardTheme: BoardStyle; effect: Atmosphere; cover: CoverScene; particlesOn: true; motionOn: boolean };
-export const DEFAULT_VISUALS: VisualAppearance = { boardTheme: "sakura", effect: "sakura", cover: "duel", particlesOn: true, motionOn: true };
+export type VisualAppearance = { boardTheme: BoardStyle; effect: Atmosphere; cover: CoverScene; particlesOn: true; motionOn: boolean; liteMode: boolean; litePieces: boolean };
+export const DEFAULT_VISUALS: VisualAppearance = { boardTheme: "sakura", effect: "sakura", cover: "duel", particlesOn: true, motionOn: true, liteMode: false, litePieces: false };
 
 // Older palette names migrate without touching saved games or room state.
 export function restoreVisuals(read: (key: string) => string | null): VisualAppearance {
@@ -54,5 +54,7 @@ export function restoreVisuals(read: (key: string) => string | null): VisualAppe
     cover: COVER_SCENES.find(item => item.id === read("nuocco:cover"))?.id || DEFAULT_VISUALS.cover,
     particlesOn: true,
     motionOn: read("nuocco:coverMotion") !== "false",
+    liteMode: read("nuocco:liteMode") === "true",
+    litePieces: read("nuocco:litePieces") === "true",
   };
 }

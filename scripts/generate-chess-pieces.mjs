@@ -98,7 +98,12 @@ for (const [set, collection] of Object.entries(collections)) {
     if (silhouettes.has(shape)) throw new Error(`Duplicate design: ${set}/${type}`);
     silhouettes.add(shape);
     for (const [side, color] of [["white", "w"], ["black", "b"]]) {
-      const [light, middle, dark, shade, outline, accent, trimLight, trimDark] = collection[side];
+      // Keep the original sculpted forms and collection accents, with clear side values.
+      const white = color === "w";
+      const [, , , , , accent, trimLight, trimDark] = collection[side];
+      const [light, middle, dark, shade, outline] = white
+        ? ["#ffffff", "#f3f3ee", "#d9dfe5", "#9cabbc", "#43546b"]
+        : ["#3a4050", "#202432", "#10131f", "#04060d", "#8794a9"];
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="${side} ${set} ${names[type]}"><defs><linearGradient id="body" x1="0" x2="1" y1="0.2" y2="0.7"><stop stop-color="${light}"/><stop offset=".28" stop-color="${middle}"/><stop offset=".55" stop-color="${dark}"/><stop offset=".8" stop-color="${middle}"/><stop offset="1" stop-color="${shade}"/></linearGradient><linearGradient id="trim" x1="0" x2="1" y2=".6"><stop stop-color="${trimLight}"/><stop offset=".5" stop-color="${accent}"/><stop offset="1" stop-color="${trimDark}"/></linearGradient></defs><ellipse cx="50" cy="96" rx="31" ry="2" fill="#030711" opacity=".28"/><g style="--accent:${accent};--shine:${light};--cut:${shade}" stroke="${outline}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${collection.base}${shape}</g></svg>\n`;
       await writeFile(new URL(`${color}${type.toUpperCase()}.svg`, directory), svg);
     }

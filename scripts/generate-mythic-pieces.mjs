@@ -47,7 +47,11 @@ for (const [set, sides] of Object.entries(palettes)) {
   const directory = new URL(`../public/pieces/${set}/`, import.meta.url);
   await mkdir(directory, { recursive: true });
   for (const [side, colors] of Object.entries(sides)) {
-    const [light, mid, dark, shade, trim, energy, edge] = colors;
+    const white = side === "w";
+    const [, , , , trim, energy, edge] = colors;
+    const [light, mid, dark, shade] = white
+      ? ["#ffffff", "#edf6fa", "#cddfe8", "#8ca9bf"]
+      : ["#363343", "#1b1827", "#0b0c17", "#03040a"];
     const designs = set === "dragon-abyss" ? dragonShapes : celestialShapes(side === "b");
     for (const [role, design] of Object.entries(designs)) {
       const cracks = side === "b" ? line("M45 52L49 58L46 65L51 71M57 57L54 63L58 69", .9, 'opacity=".95"') : line("M44 53L42 67M56 53L58 67", .9, 'opacity=".7"');

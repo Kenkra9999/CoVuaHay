@@ -48,19 +48,18 @@ export const BoardEnchantments = memo(function BoardEnchantments({ theme }: { th
 
 export const QueenAura = memo(function QueenAura({ color, pieceSet }: { color: "w" | "b"; pieceSet: string }) {
   return <span className={"royal-aura aura-queen aura-" + color + " aura-set-" + pieceSet} aria-hidden="true">
-    <span className="queen-silk-halo" /><span className="queen-crescent" /><span className="queen-corona" /><span className="queen-sacred-halo" />
-    <span className="queen-life-wisp life-wisp-one" /><span className="queen-life-wisp life-wisp-two" /><span className="queen-life-wisp life-wisp-three" />
-    <svg className="queen-spirit-trails" viewBox="0 0 100 100" fill="none">
-      <path d="M4 68C30 90 20 14 56 25S68 81 96 48" />
-      <path d="M96 35C68 9 80 86 45 76S29 19 4 52" />
+    <span className="queen-air-plume" />
+    <span className="queen-air-plume queen-air-echo" />
+    <span className="queen-foot-ring"><svg viewBox="0 0 100 100" preserveAspectRatio="none" fill="none"><circle className="queen-ring-outer" cx="50" cy="50" r="43" /><circle className="queen-ring-inner" cx="50" cy="50" r="32" />{Array.from({ length: 8 }, (_, i) => <path key={i} className="queen-ring-rune" transform={"rotate(" + i * 45 + " 50 50)"} d="M50 5L52 9L50 13L48 9Z" />)}</svg></span>
+    <svg className="queen-air-streams" viewBox="0 0 100 100" fill="none">
+      <path className="queen-air-soft" d="M29 88C17 69 24 53 31 42S36 21 43 14M71 88C83 69 76 53 69 42S64 21 57 14" />
+      <path className="queen-air-thread" d="M30 86C21 66 33 56 30 43S34 23 42 16" />
+      <path className="queen-air-thread" d="M70 86C79 66 67 56 70 43S66 23 58 16" />
+      <path className="queen-air-core" d="M36 78C28 61 40 47 35 36M64 78C72 61 60 47 65 36" />
+      <path className="queen-air-thread queen-air-surge" d="M22 81C11 57 25 48 23 31S33 11 42 5M78 81C89 57 75 48 77 31S67 11 58 5" />
     </svg>
-    <span className="queen-pressure-wave" /><span className="queen-crown-star">✦</span>
-    <svg className="queen-qi-streams" viewBox="0 0 100 100" fill="none">
-      <path d="M50 92C7 82 6 35 34 14M50 92C93 82 94 35 66 14" />
-      <path d="M18 75C-2 47 31 17 65 23S99 65 77 82" />
-      <path d="M30 86C4 64 36 38 50 8C64 38 96 64 70 86" />
-    </svg>
-    {[0, 1, 2, 3].map(i => <i key={i} className="queen-orbit-spark" style={{ "--queen-angle": i * 90 + "deg", "--queen-delay": -i * .7 + "s" } as CSSProperties} />)}
+    <span className="queen-apex-light"><i /><b /><span className="queen-crown-rays" /></span>
+    {[0, 1, 2, 3, 4, 5].map(i => <i key={i} className="queen-air-ember" style={{ "--queen-delay": -i * .27 + "s", "--queen-drift": (i % 2 ? 8 : -8) + "px", left: (23 + i * 11) + "%" } as CSSProperties} />)}
   </span>;
 });
 

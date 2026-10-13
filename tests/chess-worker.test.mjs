@@ -29,6 +29,17 @@ test("deployment includes all 96 pieces in the eight selectable collections", ()
   }
 });
 
+test("deployment includes every Lite piece separately from the original artwork", () => {
+  for (const set of ["sakura", "elemental", "royal", "nebula", "jade", "mecha", "dragon-abyss", "celestial"]) {
+    for (const color of ["w", "b"]) for (const kind of ["P", "N", "B", "R", "Q", "K"]) {
+      const asset = `pieces/lite/${set}/${color}${kind}.svg`;
+      const lite = readFileSync(new URL(`../public/${asset}`, import.meta.url));
+      assert.deepEqual(readFileSync(new URL(`../dist/client/${asset}`, import.meta.url)), lite, asset);
+      assert.notDeepEqual(lite, readFileSync(new URL(`../public/pieces/${set}/${color}${kind}.svg`, import.meta.url)));
+    }
+  }
+});
+
 test("deployment preserves split board artwork and the transparent original wing layer", () => {
   for (const asset of ["icefire.png", "celestial.png", "celestial-wingless.png", "celestial-wings.png"]) {
     assert.deepEqual(readFileSync(new URL(`../dist/client/boards/vip/${asset}`, import.meta.url)), readFileSync(new URL(`../public/boards/vip/${asset}`, import.meta.url)), asset);

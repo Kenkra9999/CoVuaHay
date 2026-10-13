@@ -61,8 +61,10 @@ export const PieceMotion = memo(function PieceMotion({ pieces, orientation }: { 
         group.appendChild(mote);
       }
       const landing = shape("g", { class: "flight-landing", transform: `translate(${to.x} ${to.y})` });
-      landing.appendChild(shape("circle", { r: royal ? 31 : 23, class: "flight-landing-ring" }));
-      if (royal) {
+      if (role === "queen") {
+        landing.appendChild(shape("path", { d: "M-21 23C-32 4-22-11-13-28M21 23C32 4 22-11 13-28", class: "flight-queen-air" }));
+      } else landing.appendChild(shape("circle", { r: royal ? 31 : 23, class: "flight-landing-ring" }));
+      if (role === "king") {
         landing.appendChild(shape("circle", { r: 22, class: "flight-landing-inner" }));
         for (let i = 0; i < (role === "king" ? 8 : 6); i++) landing.appendChild(shape("path", {
           d: "M0 -27L0 -36", transform: "rotate(" + i * (role === "king" ? 45 : 60) + ")", class: "flight-landing-ray",

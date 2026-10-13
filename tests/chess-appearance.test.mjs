@@ -37,7 +37,7 @@ test("appearance preferences survive independently of saved games", () => {
   const saved = new Map([["nuocco:boardTheme", "lava"], ["nuocco:effect", "snow"], ["nuocco:cover", "frost"], ["nuocco:particles", "false"], ["nuocco:coverMotion", "false"]]);
   const game = { fen: "unchanged", moves: ["e4"], clock: 300000 };
   saved.set("nuocco:local:v2", JSON.stringify(game));
-  assert.deepEqual(restoreVisuals(key => saved.get(key) ?? null), { boardTheme: "lava", effect: "snow", cover: "frost", particlesOn: true, motionOn: false });
+  assert.deepEqual(restoreVisuals(key => saved.get(key) ?? null), { boardTheme: "lava", effect: "snow", cover: "frost", particlesOn: true, motionOn: false, liteMode: false, litePieces: false });
   assert.deepEqual(JSON.parse(saved.get("nuocco:local:v2")), game);
 });
 test("old palettes migrate and invalid device preferences fall back safely", () => {
@@ -87,4 +87,35 @@ test("legacy disabled effects stay visible and fall back to sakura without a sav
     assert.equal(selected.particlesOn, true);
     assert.equal(selected.effect, effect.id);
   }
+});
+
+test("Lite survives reloads without overwriting full-mode appearance or saved games", () => {
+  const saved = new Map([["nuocco:liteMode", "true"], ["nuocco:boardTheme", "vip-dragon"], ["nuocco:effect", "rain"], ["nuocco:coverMotion", "true"], ["nuocco:local:v2", "saved-game"]]);
+  const read = key => saved.get(key) ?? null;
+  const lite = restoreVisuals(read);
+  assert.equal(lite.liteMode, true);
+  assert.equal(lite.boardTheme, "vip-dragon");
+  assert.equal(lite.effect, "rain");
+  assert.equal(lite.motionOn, true);
+  saved.set("nuocco:liteMode", "false");
+  assert.deepEqual(restoreVisuals(read), { ...lite, liteMode: false });
+  assert.equal(saved.get("nuocco:local:v2"), "saved-game");
+});
+
+test("classic and Lite pieces are packaged separately for every role and collection", async () => {
+  for (const set of PIECE_SETS) for (const color of ["w", "b"]) for (const type of ["k", "q", "r", "b", "n", "p"]) {
+    const full = pieceImage({ color, type }, set.id);
+    const lite = pieceImage({ color, type }, set.id, true);
+    assert.equal(lite, '/pieces/lite/' + set.id + '/' + color + type.toUpperCase() + '.svg');
+    assert.notEqual(full, lite);
+    await access(new URL('../public' + lite, import.meta.url));
+  }
+});
+test("Lite pieces default off and restore independently from game Lite", () => {
+  for (const gameLite of [false, true]) for (const pieceLite of [false, true]) {
+    const restored = restoreVisuals(key => key === "nuocco:liteMode" ? String(gameLite) : key === "nuocco:litePieces" ? String(pieceLite) : null);
+    assert.equal(restored.liteMode, gameLite);
+    assert.equal(restored.litePieces, pieceLite);
+  }
+  assert.equal(DEFAULT_VISUALS.litePieces, false);
 });

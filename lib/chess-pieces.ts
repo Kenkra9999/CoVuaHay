@@ -17,6 +17,6 @@ export function validPieceSet(value: unknown): value is PieceSetId {
   return PIECE_SETS.some(set => set.id === value);
 }
 
-export function pieceImage(piece: { color: string; type: string }, set: PieceSetId = DEFAULT_PIECE_SET) {
-  return assetUrl("/pieces/" + set + "/" + piece.color + piece.type.toUpperCase() + ".svg");
+export function pieceImage(piece: { color: string; type: string }, set: PieceSetId = DEFAULT_PIECE_SET, litePieces = false) {
+  return assetUrl("/pieces/" + (litePieces ? "lite/" : "") + set + "/" + piece.color + piece.type.toUpperCase() + ".svg");
 }
